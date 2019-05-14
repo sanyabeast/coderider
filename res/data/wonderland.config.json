@@ -1,0 +1,83 @@
+{
+    "velocityMultiplier": 20,
+    "gravityMultiplier": 0.2,
+    "cameraFOV": 60,
+    "maxVelocity": 400,
+    "boxWallThickness": 1,
+    "bumpmappingLevel": 10,
+    "scaleLevels": [ 0.33, 0.66, 1, 1.666, 2.222 ],
+    "backgrounds": {
+        "stars": {
+            "shader": "stars.frag"
+        },
+        "party": {
+            "shader": "party.frag"
+        },
+        "helix": {
+            "shader": "helix.frag"
+        },
+        "rain": {
+            "shader": "rain.frag"
+        },
+        "psycho": {
+            "shader": "psycho.frag"
+        },
+        "waves": {
+            "shader": "waves.frag"
+        },
+        "rgb": {
+            "shader": "rgb.frag"
+        },
+        "electric": {
+            "shader": "electric.frag"
+        }
+    },
+    "cardTextures": {
+        "hearts_king": {
+            "texture": "res/pics/hearts_king.png",
+            "bumpmap": "res/pics/bumpmaps/paper.png",
+            "aspect": 0.71,
+            "count": 2
+        },
+        "hearts_queen": {
+            "texture": "res/pics/hearts_queen.png",
+            "bumpmap": "res/pics/bumpmaps/softpaper.jpg",
+            "aspect": 0.71,
+            "count": 2
+        },
+        "queen": {
+            "texture": "res/pics/queen.png",
+            "bumpmap": "res/pics/bumpmaps/paper.png",
+            "aspect": 0.71,
+            "count": 2
+        },
+        "eight": {
+            "texture": "res/pics/eight.png",
+            "bumpmap": "res/pics/bumpmaps/waves2.jpg",
+            "aspect": 0.71,
+            "count": 2
+        },
+        "brick": {
+            "texture": "res/pics/brick.png",
+            "bumpmap": "res/pics/bump_brick.png",
+            "aspect": 1,
+            "count": 1,
+            "geometry": "box"
+        },
+        "stone": {
+            "texture": "res/pics/stone.png",
+            "bumpmap": "res/pics/bump_stone.png",
+            "aspect": 1,
+            "count": 1,
+            "geometry": "ring"
+        },
+        "basketball": {
+            "texture": "res/pics/basketball.jpg",
+            "bumpmap": "res/pics/bumpmaps/basketball.jpg",
+            "segments": 48,
+            "aspect": 1,
+            "count": 1,
+            "geometry": "sphere"
+        }
+    }
+}

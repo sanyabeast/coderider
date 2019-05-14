@@ -1,0 +1,360 @@
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	-ms-touch-action: manipulation;
+	touch-action: manipulation;
+	background-color: #000000;
+}
+
+body {
+	position: fixed;
+	left: 0;
+	top: 0;
+	left: 0;
+	top: 0;
+	object-fit: cover;
+}
+
+* {
+	user-select: none;
+	font-family: 'Montserrat';
+}
+
+h1, h2 {
+	font-family: 'Montserrat', sans-serif;
+	margin: 0;
+}
+
+.euphoria {	
+	width: 100%;
+	height: 100%;
+	position: relative;
+	
+	.application--wrap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: auto;
+	}
+
+	p.pause-button {
+		color: #ffffff;
+	    font-size: 24px;
+	    font-weight: 800;
+	    width: 132px;
+	    height: 100px;
+	    text-align: center;
+	    position: absolute;
+	    top: 0;
+	    right: 0;
+	    z-index: 2;
+	    cursor: pointer;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+
+	    i {
+	    	font-size: 44px;
+	    	width: 58px;
+	    	color: #fff;
+	    	background: rgba(0, 0, 0, 0.57);
+	    }
+	}
+
+	p.mute-button {
+		color: #ffffff;
+	    font-size: 24px;
+	    font-weight: 800;
+	    width: 132px;
+	    height: 100px;
+	    text-align: center;
+	    position: absolute;
+	    top: 0;
+	    left: 0;
+	    z-index: 2;
+	    cursor: pointer;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+
+	    i {
+	    	font-size: 44px;
+	    	width: 58px;
+	    	color: #fff;
+	    	background: rgba(0, 0, 0, 0.57);
+	    }
+	}
+
+	.tokens {
+		display: flex;
+		flex-direction: row;
+		position: absolute;
+		bottom: 56px;
+		left: 0;
+		z-index: 2;
+		left: 26px;
+		align-items: center;
+
+		i {
+			color: #cacaca;
+			font-size: 20px;
+			margin: 0 4px;
+		}
+
+		.separator {
+			width: 4px;
+			height: 4px;
+			border-radius: 50%;
+			background: #cacaca;
+			margin: 0 4px;
+		}
+	}
+
+
+	.wonderland {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		left: 0;
+		top: 0;
+
+
+		canvas {
+			width: 100%!important;
+			height: 100%!important;
+		}
+
+		.test {
+			position: absolute;
+			left: 0;
+			top: 0;
+			opacity: 0.5;
+		}
+
+		.scores {
+			position: absolute;
+			left: 0;
+			bottom: 0;
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			z-index: 3;
+			justify-content: flex-start;
+			padding-left: 30px;
+
+			p {
+				color: #fff;
+				font-size: 20px;
+    			font-weight: 800;
+    			text-align: center;
+    			margin-right: 32px;
+
+    			&.gravity-x {
+    				color: #8bc34a;
+    			}
+
+    			&.gravity-y {
+    				color: #cddc39;
+    			}
+
+    			&.velocity-x {
+    				color: #f44336;
+    			}
+
+    			&.velocity-y {
+    				color: #e91e63;
+    			}
+
+    			
+			}
+		}
+
+		.total-score {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			margin-top: 24px;
+			font-size: 36px;
+			font-weight: 800;
+			color: #ffc107;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		
+	}
+
+	.pause-menu {
+	    width: 80%;
+	    z-index: 3;
+	}
+
+	.overlay {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		// background: #1f005163;
+		/* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#c4278a+0,1c5b9e85+100 */
+		background: #c4278a47; /* Old browsers */
+		background: -moz-linear-gradient(top,  #c4278a47 0%, #1c5b9e85 100%); /* FF3.6-15 */
+		background: -webkit-linear-gradient(top,  #c4278a47 0%,#1c5b9e85 100%); /* Chrome10-25,Safari5.1-6 */
+		background: linear-gradient(to bottom,  #c4278a47 0%,#1c5b9e85 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c4278a47', endColorstr='#1c5b9e85',GradientType=0 ); /* IE6-9 */
+
+		z-index: 1;
+	}
+
+	.settings-menu {
+		display: flex;
+    	flex-direction: column;
+		width: 80%;
+		max-width: 600px;
+		height: 75%;
+		min-height: 40%;
+		z-index: 3;
+
+		.v-tabs__wrapper {
+			overflow-x: auto;
+		}
+
+		.settings-actions {
+			flex-shrink: 0;
+
+			* {
+				flex-shrink: 0;
+			}
+		}
+
+		.window-content {
+			flex-grow: 1;
+			flex-shrink: 1!important;
+			overflow: hidden;
+
+			.tab-items {
+				overflow-y: auto;
+				overflow-x: hidden;
+			}
+		}
+
+		.vue-swatches {
+			height: 100%;
+			display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    margin-right: 16px;
+
+			.vue-swatches__container {
+				right: auto!important;
+				position: fixed;
+				max-width: 80vw;
+			    height: auto;
+			    left: 50%;
+			    top: 50%;
+			    transform: translate(-50%, -50%);
+			}
+		}
+	}
+
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-button {
+  width: 0px;
+  height: 0px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  border: 0px none #ffffff;
+  border-radius: 50px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.14);
+}
+::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.14);
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.0);
+  border: 0px none #ffffff;
+  border-radius: 50px;
+}
+::-webkit-scrollbar-track:hover {
+  background:rgba(0, 0, 0, 0.0);
+}
+::-webkit-scrollbar-track:active {
+  background: rgba(0, 0, 0, 0.0);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.pause-menu-fade-enter-active {
+  animation: pause-menu-fade-in .35s;
+}
+.pause-menu-fade-leave-active {
+  animation: pause-menu-fade-in .0s reverse;
+}
+
+[data-browser-name="safari"] {
+	.pause-menu-fade-enter-active {
+	  animation: pause-menu-fade-safari-in .35s;
+	}
+	.pause-menu-fade-leave-active {
+	  animation: pause-menu-fade-safari-in .0s reverse;
+	}
+}
+
+@keyframes pause-menu-fade-in {
+  0% {
+    clip-path: circle(1px at 50% 50%);
+  }
+
+  100% {
+    clip-path: circle(100% at 50% 50%);
+  }
+}
+
+@keyframes pause-menu-fade-safari-in {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1)
+  }
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
