@@ -3,8 +3,8 @@
 		"x": 300,
 		"y": 60
 	},
-	"accelerationTime": 1.25,
-	"decelerationTime": 0.77,
+	"accelerationTime": 0.33,
+	"decelerationTime": 0.22,
 	"composite": true,
 	"wheelVelocity": 0.333,
 	"corpseSpeed": 0.1,
@@ -12,6 +12,7 @@
 		"corpse": {
 			"texture": "caer_body_a.png",
 			"bumpMap": "caer_body_a.png",
+			"bumpScale": 3,
 			"textureFlip": true,
 			"geometry": "rectangle",
 			"color" : "#f44336",
@@ -27,6 +28,7 @@
 		"wheelA": {
 			"texture": "wheel.png",
 			"bumpMap": "bumps/wheel.png",
+			"bumpScale": 1,
 			"color": "#ffffff",
 			"geometry": "circle",
 			"radius": 11,
@@ -49,6 +51,7 @@
 		"wheelB": {
 			"texture": "wheel.png",
 			"bumpMap": "bumps/wheel.png",
+			"bumpScale": 1,
 			"color": "#ffffff",
 			"geometry": "circle",
 			"radius": 11,

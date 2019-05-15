@@ -1,0 +1,91 @@
+{
+	"can": {
+		"composite": false,
+		"bodies": {
+			"corpse": {
+				"texture": "can.png",
+				"bumpMap": "can.png",
+				"bumpScale": 2,
+				"textureFlip": true,
+				"geometry": "rectangle",
+				"width": 12,
+				"height": 18,
+				"color" : "#ffffff",
+				"radius": 10,
+				"mass": 0.0001,
+				"x": -10,
+				"y": 0,
+				"restitution": 0.5,
+				"zIndex": 1,
+				"friction": 0,
+				"frictionAir": 0.0001
+			}
+		}
+	},
+	"car": {
+		"composite": true,
+		"bodies": {
+			"corpse": {
+				"texture": "caer_body_a.png",
+				"bumpMap": "caer_body_a.png",
+				"bumpScale": 3,
+				"textureFlip": true,
+				"geometry": "rectangle",
+				"color" : "#f44336",
+				"width": 80,
+				"height": 32,
+				"mass": 0.02,
+				"x": -10,
+				"y": 0,
+				"zIndex": 1,
+				"friction": 0.05,
+				"frictionAir": 0.04
+			},
+			"wheelA": {
+				"texture": "wheel.png",
+				"bumpMap": "bumps/wheel.png",
+				"bumpScale": 1,
+				"color": "#ffffff",
+				"geometry": "circle",
+				"radius": 11,
+				"color": "#ff0000",
+				"mass": 0.01,
+				"constraint": {
+					"body": "corpse",
+					"point": {
+						"x": -20,
+						"y": 20
+					},
+					"stiffness": 0.555,
+					"length": 0.4
+				},
+				"friction": 0.88,
+				"re1itution": 0.99,
+				"x": 0,
+				"y": 0
+			},
+			"wheelB": {
+				"texture": "wheel.png",
+				"bumpMap": "bumps/wheel.png",
+				"bumpScale": 1,
+				"color": "#ffffff",
+				"geometry": "circle",
+				"radius": 11,
+				"mass": 0.01,
+				"constraint": {
+					"body": "corpse",
+					"point": {
+						"x": 25,
+						"y": 20
+					},
+					"stiffness": 0.555,
+					"length": 0.4
+				},
+				"friction": 0.88,
+				"restitution": 0.1,
+				"x": 37,
+				"y": 0
+			}
+		}
+	}
+}

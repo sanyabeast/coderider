@@ -3,6 +3,8 @@ import Device from "device.js/dist/device"
 import Bowser from "bowser"
 
 import config from "data/config.json"
+import daynight from "data/daynight.json"
+import objects from "data/objects.json"
 import carConfig from "data/car.json"
 
 const browser = Bowser.getParser(window.navigator.userAgent);
@@ -13,6 +15,8 @@ console.log(device)
 var state = {
 	carConfig,
 	config,
+	daynight,
+	objects: new Object( objects ),
 	savedProps: [
 		"soundMuted",
 	],
@@ -41,6 +45,7 @@ var state = {
 	wonderPathSmoothingPeriod: 3,
 	wonderWheelAngularVelocity: 0.1,
 	wonderMatterTestRenderer: !device.desktop ? false : false,
+	isAndroid: device.android,
 	wonderMatterTestRendererBounds: {
 		x: 0,
 		y: 0,

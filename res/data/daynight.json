@@ -1,0 +1,156 @@
+[
+	
+	{
+		"sunOffset": { 
+			"x": -600,
+			"y": 0,
+			"z": 1
+		},
+		"sunColor": "#ff877f",
+		"skyColor": "#78c4ce",
+		"intensity": 0.5
+	},
+	{
+		"sunOffset": { 
+			"x": -400,
+			"y": -200,
+			"z": 1
+		},
+		"sunColor": "#ffaa80",
+		"skyColor": "#b2e8ef",
+		"intensity": 0.75
+	},
+	{
+		"sunOffset": { 
+			"x": -200,
+			"y": -400,
+			"z": 1
+		},
+		"sunColor": "#ffd580",
+		"skyColor": "#fff390",
+		"intensity": 1
+	},
+	{
+		"sunOffset": { 
+			"x": 0,
+			"y": -800,
+			"z": 1
+		},
+		"sunColor": "#ffee96",
+		"skyColor": "#fff9c8",
+		"intensity": 1.5
+	},
+	{
+		"sunOffset": { 
+			"x": 0,
+			"y": -900,
+			"z": 1
+		},
+		"sunColor": "#ffee96",
+		"skyColor": "#fff9c8",
+		"intensity": 1.6
+	},
+	{
+		"sunOffset": { 
+			"x": 0,
+			"y": -1000,
+			"z": 1
+		},
+		"sunColor": "#ffee96",
+		"skyColor": "#fff9c8",
+		"intensity": 1.7
+	},
+	{
+		"sunOffset": { 
+			"x": 200,
+			"y": -400,
+			"z": 1
+		},
+		"sunColor": "#e9b3ff",
+		"skyColor": "#e9b3ff",
+		"intensity": 1
+	},
+	{
+		"sunOffset": { 
+			"x": 400,
+			"y": -200,
+			"z": 1
+		},
+		"sunColor": "#ff008b",
+		"skyColor": "#e9b3ff",
+		"intensity": 0.7	
+	},
+	{
+		"sunOffset": { 
+			"x": 600,
+			"y": 0,
+			"z": 1
+		},
+		"sunColor": "#ff5722",
+		"skyColor": "#52366b",
+		"intensity": 0.5
+	},
+
+
+
+	{
+		"sunOffset": { 
+			"x": 20,
+			"y": -40,
+			"z": 0.2
+		},
+		"sunColor": "#ffe28c",
+		"skyColor": "#232323",
+		"intensity": 0
+	},
+	{
+		"sunOffset": { 
+			"x": 20,
+			"y": -40,
+			"z": 0.2
+		},
+		"sunColor": "#ffe28c",
+		"skyColor": "#232323",
+		"intensity": 0.777
+	},
+	{
+		"sunOffset": { 
+			"x": 20,
+			"y": -40,
+			"z": 0.2
+		},
+		"sunColor": "#ffe28c",
+		"skyColor": "#232323",
+		"intensity": 0.777
+	},
+	{
+		"sunOffset": { 
+			"x": 20,
+			"y": -40,
+			"z": 0.2
+		},
+		"sunColor": "#ffe28c",
+		"skyColor": "#232323",
+		"intensity": 0.777
+	},
+	{
+		"sunOffset": { 
+			"x": 20,
+			"y": -40,
+			"z": 0.2
+		},
+		"sunColor": "#ffe28c",
+		"skyColor": "#232323",
+		"intensity": 0.777
+	},
+	{
+		"sunOffset": { 
+			"x": 20,
+			"y": -40,
+			"z": 0.2
+		},
+		"sunColor": "#ffe28c",
+		"skyColor": "#232323",
+		"intensity": 0
+	}
+]

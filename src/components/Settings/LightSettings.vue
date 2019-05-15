@@ -19,7 +19,7 @@
 	      </v-list-tile-content>
 	    </v-list-tile>
 
-	    <v-card flat color="transparent">
+	    <!-- <v-card flat color="transparent">
 	    	<v-subheader>Уровень бампмаппинга</v-subheader>
   
 		    <v-card-text class="pt-0">
@@ -31,9 +31,9 @@
 		        ></v-slider>
 		    </v-card-text>
     		
-    	</v-card>
+    	</v-card> -->
 
-    	<v-subheader>Источники света</v-subheader>
+    	<!-- <v-subheader>Источники света</v-subheader>
 
     	<v-list-tile>
     		<v-list-tile-action>
@@ -102,7 +102,7 @@
 		      ></v-slider>
 		    </v-card-text>
     		
-    	</v-card>
+    	</v-card> -->
 
     	
 
