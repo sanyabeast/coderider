@@ -21,6 +21,14 @@
         >
             <i class="material-icons">pause</i>
         </p>
+
+        <p 
+            class="respawn-button"
+            @click="$refs.wonderland.respawn()"
+        >
+            <i class="material-icons">replay</i>
+        </p>
+
         <p 
             class="mute-button"
             @click="$store.state.soundMuted = !$store.state.soundMuted; $store.dispatch( `checkFullscreen` )"

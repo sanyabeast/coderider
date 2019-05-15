@@ -218,9 +218,9 @@ export default {
         this.addChunk( 0 )
         this.addChunk( 1 )
         this.createCar()
-        this.createObject("can1", wonder.$store.state.objects.can, 250, 60)
-        this.createObject("can2", wonder.$store.state.objects.can, 250, 60)
-        this.createObject("can3", wonder.$store.state.objects.can, 250, 60)
+        this.createObject("can1", wonder.$store.state.objects.can, 100, -50)
+        this.createObject("can2", wonder.$store.state.objects.can, 100, -50)
+        this.createObject("can3", wonder.$store.state.objects.can, 100, -50)
 
         this.startRendering()
     },
@@ -290,6 +290,24 @@ export default {
             } )
 
         },
+        respawn () {
+            let car = this.modules.objects.car
+
+
+            // forEach( car.parts, ( part, name )=>{
+            //     Matter.Body.setStatic( part.matterBody, true )
+            // } )
+
+            Matter.Body.setAngle( car.parts.corpse.matterBody, 0 )
+
+            // forEach( car.parts, ( part, name )=>{
+            //     Matter.Body.setVelocity( part.matterBody, { x: 0, y: 0 } )
+            //     Matter.Body.setAngularVelocity( part.matterBody, 0 )
+            //     Matter.Body.setStatic( part.matterBody, false )
+            //     Matter.Body.setVelocity( part.matterBody, { x: 0, y: 0 } )
+            //     Matter.Body.setAngularVelocity( part.matterBody, 0 )
+            // } )
+        },  
         setupGestures () {
             // Create an instance of Hammer with the reference.
             var manager = new Hammer.Manager( this.$refs.root );
@@ -385,6 +403,15 @@ export default {
 
             TweenMax.to( camera.position, 3, {
                 z: this.$store.state.config.cameraPosition,
+            } )
+
+            TweenMax.fromTo( camera.rotation, 4, {
+                z: Math.PI + (-Math.PI / 257)
+            }, {
+                z: Math.PI + (Math.PI / 257),
+                repeat: -1,
+                yoyo: true,
+                ease: "Power1.easeInOut"
             } )
 
             let lightGroup = new THREE.Group()
@@ -554,6 +581,7 @@ export default {
             /* engine/break */
 
             if ( this.engineActive || this.breakActive ) {
+                // console.log( this.modules.objects.car.parts.wheelA.matterBody.velocity.x.toFixed(2), this.modules.objects.car.parts.wheelA.matterBody.velocity.y.toFixed(2) )
                 Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelA.matterBody, this.acceleration )
                 Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelB.matterBody, this.acceleration )
                 // Matter.Body.applyForce( this.modules.objects.car.parts.wheelA.matterBody, {
@@ -680,9 +708,9 @@ export default {
                             collisionFilter: {
                                 group: group
                             },
-                            // chamfer: {
-                            //     radius: bodyConfig.height * 0.5
-                            // },
+                            chamfer: {
+                                radius: bodyConfig.height * 0.2
+                            },
                         } )
 
                         // Matter.Body.translate( matterBody, { x: -bodyConfig.width / 2, y: 0 } )
@@ -737,6 +765,11 @@ export default {
 
                 let mesh = new THREE.Mesh( geometry, material )
                 mesh.position.z = zIndex
+
+                if ( bodyConfig.scale ) {
+                    mesh.scale.x = bodyConfig.scale.x
+                    mesh.scale.y = bodyConfig.scale.y
+                }
 
                 matterBody.restitution = typeof bodyConfig.restitution == "number" ? bodyConfig.restitution : 0.01
                 matterBody.frictionAir = typeof bodyConfig.frictionAir == "number" ? bodyConfig.frictionAir : 0.001

@@ -1,28 +1,32 @@
 {
 	"spawnPosition": {
-		"x": 300,
-		"y": 60
+		"x": 100,
+		"y": 100
 	},
 	"accelerationTime": 0.33,
 	"decelerationTime": 0.22,
 	"composite": true,
-	"wheelVelocity": 0.333,
+	"wheelVelocity": 0.444,
 	"corpseSpeed": 0.1,
 	"bodies": {
 		"corpse": {
 			"texture": "caer_body_a.png",
 			"bumpMap": "caer_body_a.png",
+			"scale": { 
+				"x": 1.1,
+				"y": 1.1
+			},
 			"bumpScale": 3,
 			"textureFlip": true,
 			"geometry": "rectangle",
 			"color" : "#f44336",
 			"width": 80,
 			"height": 32,
-			"mass": 0.02,
+			"mass": 2.1,
 			"x": -10,
 			"y": 0,
 			"zIndex": 1,
-			"friction": 0.05,
+			"friction": 0,
 			"frictionAir": 0.04
 		},
 		"wheelA": {
@@ -33,18 +37,18 @@
 			"geometry": "circle",
 			"radius": 11,
 			"color": "#ff0000",
-			"mass": 0.01,
+			"mass": 0.7,
 			"constraint": {
 				"body": "corpse",
 				"point": {
-					"x": -20,
-					"y": 20
+					"x": -23,
+					"y": 21
 				},
-				"stiffness": 0.555,
-				"length": 0.4
+				"stiffness": 0.744,
+				"length": 2.44
 			},
 			"friction": 0.88,
-			"re1itution": 0.99,
+			"restitution": 0.45,
 			"x": 0,
 			"y": 0
 		},
@@ -55,18 +59,18 @@
 			"color": "#ffffff",
 			"geometry": "circle",
 			"radius": 11,
-			"mass": 0.01,
+			"mass": 0.7,
 			"constraint": {
 				"body": "corpse",
 				"point": {
-					"x": 25,
-					"y": 20
+					"x": 28,
+					"y": 21
 				},
-				"stiffness": 0.555,
-				"length": 0.4
+				"stiffness": 0.744,
+				"length": 2.44
 			},
 			"friction": 0.88,
-			"restitution": 0.1,
+			"restitution": 0.45,
 			"x": 37,
 			"y": 0
 		}
