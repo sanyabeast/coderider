@@ -24,7 +24,7 @@ let webpackConfig = {
     devServer: {
         host: host,
         port: 8000,
-        https: true
+        // https: true
     },
     devtool: sourceMap ? 'cheap-module-eval-source-map' : undefined,
     mode: env,
