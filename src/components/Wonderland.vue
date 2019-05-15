@@ -62,7 +62,8 @@ export default {
             engineActive: false,
             breakActive: false,
             acceleration: 0,
-            currentChunkIndex: 0
+            currentChunkIndex: 0,
+            speedCamera: false
         }
     },
     computed: {
@@ -148,6 +149,9 @@ export default {
 	mounted () {
         window.wonder = this
         this.modules = {
+            lights: {
+
+            },
             data: {
 
             },
@@ -165,6 +169,7 @@ export default {
 
         this.setupRenderer()
         this.setupMatterEngine()
+        this.setupLights()
         this.updateSize()
 
         window.addEventListener( "resize", ()=>{
@@ -366,6 +371,18 @@ export default {
 
             // run the renderer
         },
+        setupLights () {
+            let modules = this.modules
+
+            let sun = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
+
+            modules.scene.add( sun )
+
+            modules.lights.sun = sun
+
+
+
+        },
         startRendering () {
             this.prevRenderedFrameTime = +new Date()
             this.renderingActive = true
@@ -396,11 +413,16 @@ export default {
             modules.camera.position.y =  modules.car.parts.wheelA.mesh.position.y + cameraOffset.y
             modules.camera.position.x =  modules.car.parts.wheelA.mesh.position.x + cameraOffset.x
 
-            modules.camera.position.z = _.smoothstep(
-                this.$store.state.config.cameraPosition,
-                this.$store.state.config.cameraSpeedPosition,
-                Math.abs( this.acceleration ) / this.$store.state.carConfig.wheelVelocity
-            )
+            modules.lights.sun.position.set( modules.camera.position.x,  modules.camera.position.y, modules.camera.position.z )
+
+            if ( this.speedCamera ) {
+                console.log(1)
+                modules.camera.position.z = _.smoothstep(
+                    this.$store.state.config.cameraPosition,
+                    this.$store.state.config.cameraSpeedPosition,
+                    Math.abs( this.acceleration ) / this.$store.state.carConfig.wheelVelocity
+                )
+            }
 
             /* engine/break */
 
@@ -545,7 +567,7 @@ export default {
 
                 if ( bodyConfig.texture ) texture = this.laodTexture( bodyConfig.texture )
 
-                material = new THREE.MeshBasicMaterial( {
+                material = new THREE.MeshPhongMaterial( {
                     color,
                     map: texture,
                     transparent: true,
@@ -693,11 +715,26 @@ export default {
             let modules = this.modules
 
             let geometry = this.generatePathGeometry( points )
-            let material = this.modules.data.groundMaterial || new THREE.MeshBasicMaterial( {
+            let material = this.modules.data.groundMaterial || new THREE.MeshPhongMaterial( {
                 side: THREE.DoubleSide,
                 color: _.cssHex2Hex( this.$store.state.config.groundColor ),
-                map: this.laodTexture( this.$store.state.config.groundTexture )
+                map: this.laodTexture( this.$store.state.config.groundTexture ),
+                transparent: true
             } )
+
+            if ( this.$store.state.config.groundBumpMap ) {
+                material.bumpMap = this.laodTexture( this.$store.state.config.groundBumpMap )
+                material.bumpMap.flipY = false
+                material.bumpMap.needsUpdate = true
+
+                if ( this.$store.state.config.groundBumpMapScale  ) {
+                    material.bumpScale = this.$store.state.config.groundBumpMapScale
+                }
+
+            }
+
+            material.map.flipY = false
+            material.map.needsUpdate = true
 
             this.modules.data.groundMaterial = material
 
@@ -721,9 +758,14 @@ export default {
             let bufferGeometry = new THREE.BufferGeometry()
 
             bufferGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array( points.length * 18 ), 3));
+            bufferGeometry.addAttribute("normal", new THREE.BufferAttribute(new Float32Array( points.length * 18 ), 3));
             bufferGeometry.addAttribute("uv", new THREE.BufferAttribute(new Float32Array( points.length * 12 ), 2));
 
             let position = 0
+            let groundTextureSize = this.$store.state.config.groundTextureSize
+            let pointsStep = this.$store.state.config.curve.pointsStep
+            let groundTextureUVYScale = this.$store.state.config.groundTextureUVYScale
+
             forEach( points, ( point, index )=>{
                 let nextPoint = points[ index + 1 ]
 
@@ -731,21 +773,42 @@ export default {
 
                 } else {
 
+                    let scaleGroundTextureSize = groundTextureSize * pointsStep
+// 
                     let chunkLength = this.chunkLength
+                    let uvx = ( ( point.x ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
+                    let uvxNext = ( (nextPoint.x ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
+                    let uvy = groundTextureUVYScale
 
+                    if ( uvxNext < uvx ) {
+                        uvxNext = 1
+                    }
+
+                    bufferGeometry.attributes.uv.setXY( position, uvx, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, point.y, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 1 )
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 0 )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 1 )
 
+                    bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 0)
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, this.$store.state.config.groundHeight, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 0)
+
+                    bufferGeometry.attributes.uv.setXY( position, uvx, uvy )
+                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 1 )
+
+
+
+                    bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
+
+                    bufferGeometry.attributes.uv.setXY( position, uvxNext, uvy)
+                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, this.$store.state.config.groundHeight, 0 )
+
+                    bufferGeometry.attributes.uv.setXY( position, uvx, uvy)
+                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
 
                 }
 

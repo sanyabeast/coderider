@@ -40,7 +40,7 @@ var state = {
 	wonderWheelRadius: 3,
 	wonderPathSmoothingPeriod: 3,
 	wonderWheelAngularVelocity: 0.1,
-	wonderMatterTestRenderer: !device.desktop ? false : true,
+	wonderMatterTestRenderer: !device.desktop ? false : false,
 	wonderMatterTestRendererBounds: {
 		x: 0,
 		y: 0,

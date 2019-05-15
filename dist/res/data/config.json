@@ -1,7 +1,10 @@
 {
     "cameraPosition": -140,
     "cameraSpeedPosition": -160,
-    "groundTexture" : "ground_a.png",
+    "groundTexture" : "dirt_a.jpg",
+    "groundBumpMap" : "bumps/ground.png",
+    "groundBumpMapScale": 0.1,
+    "sunColor": "#ffc107",
     "cameraOffset": {
         "x": 60,
         "y": 0
@@ -10,6 +13,8 @@
     "chunkSize": 50,
     "groundFriction": 1,
     "groundHeight": 2000,
+    "groundTextureSize": 20,
+    "groundTextureUVYScale": 7,
     "gravityY": 0.666,
     "curve": {
         "pointsStep": 10,
