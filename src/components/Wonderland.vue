@@ -63,7 +63,7 @@ export default {
             breakActive: false,
             acceleration: 0,
             currentChunkIndex: 0,
-            speedCamera: false
+            speedCamera: true
         }
     },
     computed: {
@@ -79,7 +79,6 @@ export default {
             this.checkChunks( value )
         },
         engineActive ( value ) {
-             console.log(`engine: ${value}`)
 
              if ( value ) {
                 if ( this.__accelerationTween ) {
@@ -113,7 +112,6 @@ export default {
 
         },
         breakActive ( value ) {
-            console.log(`break: ${value}`)
 
             if ( value ) {
                 if ( this.__decelerationTween ) {
@@ -240,7 +238,6 @@ export default {
                    let newGravityX = gamma * config.gravityMultiplier
                    let newGravityY = beta * config.gravityMultiplier
 
-                   // console.log(alpha, beta, gamma)
 
                    modules.gyro.set( newGravityX, newGravityY  )
 
@@ -307,9 +304,9 @@ export default {
 
             lightGroup.add( pointLight )
 
-            scene.add(lightGroup)
+            // scene.add(lightGroup)
 
-            renderer.setClearColor(0xa4e1ff)            
+            renderer.setClearColor(0xfff17f)            
 
             this.modules.scene = scene
             this.modules.camera = camera
@@ -327,7 +324,11 @@ export default {
 
 
             // create an engine
-            var engine = Matter.Engine.create();
+            var engine = Matter.Engine.create( {
+                // positionIterations: 20,
+                // velocityIterations: 20,
+                // constraintIterations: 10
+            } );
 
 
             // add all of the bodies to the world
@@ -394,7 +395,7 @@ export default {
             let now = +new Date()
             let delta = now - this.prevRenderedFrameTime
 
-            if ( delta > 100 ) delta = 100
+            if ( delta > 64 ) delta = 64
 
             this.prevRenderedFrameTime = now
 
@@ -413,10 +414,9 @@ export default {
             modules.camera.position.y =  modules.car.parts.wheelA.mesh.position.y + cameraOffset.y
             modules.camera.position.x =  modules.car.parts.wheelA.mesh.position.x + cameraOffset.x
 
-            modules.lights.sun.position.set( modules.camera.position.x,  modules.camera.position.y, modules.camera.position.z )
+            modules.lights.sun.position.set( modules.camera.position.x,  modules.camera.position.y, modules.camera.position.z * 2 )
 
             if ( this.speedCamera ) {
-                console.log(1)
                 modules.camera.position.z = _.smoothstep(
                     this.$store.state.config.cameraPosition,
                     this.$store.state.config.cameraSpeedPosition,
@@ -426,8 +426,16 @@ export default {
 
             /* engine/break */
 
-            if ( this.acceleration ) {
+            if ( this.engineActive || this.breakActive ) {
                 Matter.Body.setAngularVelocity( this.modules.car.parts.wheelA.matterBody, this.acceleration )
+                Matter.Body.setAngularVelocity( this.modules.car.parts.wheelB.matterBody, this.acceleration )
+                // Matter.Body.applyForce( this.modules.car.parts.wheelA.matterBody, {
+                //     x: this.modules.car.parts.wheelA.matterBody.position.x,
+                //     y: this.modules.car.parts.wheelA.matterBody.position.y
+                // }, {
+                //     x: this.acceleration / 10000,
+                //     y: 0
+                // } )
             }
             // Matter.Body.setAngularVelocity( 
             //     this.modules.car.parts.corpse.matterBody, 
@@ -436,19 +444,13 @@ export default {
 
             /****************/
 
-            if ( !window.kek ) {
-                Matter.Engine.update(modules.matter.engine, delta);
+            Matter.Engine.update(modules.matter.engine, delta);
 
-                forEach( modules.car.parts, ( part, name )=>{
-                    part.mesh.position.x = part.matterBody.position.x
-                    part.mesh.position.y = part.matterBody.position.y
-                    part.mesh.rotation.z = part.matterBody.angle                    
-                } )
-
-                // modules.car.body.mesh.position.x = modules.car.body.matterBody.position.x
-                // modules.car.body.mesh.position.y = modules.car.body.matterBody.position.y
-                // modules.car.body.mesh.rotation.z = modules.car.body.matterBody.angle
-            }
+            forEach( modules.car.parts, ( part, name )=>{
+                part.mesh.position.x = part.matterBody.position.x
+                part.mesh.position.y = part.matterBody.position.y
+                part.mesh.rotation.z = part.matterBody.angle                    
+            } )
 
             if ( this.modules.car.parts.corpse ) {
                 let chunkLength = this.chunkLength
@@ -468,7 +470,6 @@ export default {
 
 
 
-            // console.log( modules.car.parts.wheelA.matterBody.position )
         },
         renderFrame ( ) {
             this.modules.renderer.render( this.modules.scene, this.modules.camera )
@@ -512,7 +513,6 @@ export default {
 
             let carConfig = this.$store.state.carConfig
 
-            console.log( carConfig )
 
             let spawnX = carConfig.spawnPosition.x
             let spawnY = carConfig.spawnPosition.y
@@ -574,6 +574,26 @@ export default {
                     side: THREE.DoubleSide
                 } )
 
+                if ( typeof bodyConfig.textureFlip == "boolean" ) {
+                    material.map.flipY = !bodyConfig.textureFlip
+                    material.map.needsUpdate = true
+                }
+
+                if ( bodyConfig.bumpMap ) {
+                    material.bumpMap = this.laodTexture( bodyConfig.bumpMap )
+
+                    if ( typeof bodyConfig.bumpScale == "number" ) {
+                        material.bumpScale = bodyConfig.bumpScale
+                    }
+
+                    if ( typeof bodyConfig.textureFlip == "boolean" ) {
+                        material.bumpMap.flipY = !bodyConfig.textureFlip
+                        material.bumpMap.needsUpdate = true
+                    }
+
+
+                }
+
                 let mesh = new THREE.Mesh( geometry, material )
                 mesh.position.z = zIndex
 
@@ -623,8 +643,6 @@ export default {
                         let bodyA = modules.car.parts[ name ].matterBody
                         let bodyB = modules.car.parts[ constraint.body ] ? modules.car.parts[ constraint.body ].matterBody : undefined
 
-                        console.log(bodyA, bodyB)
-                        console.log(constraint.point.x)
 
                         Matter.Composite.add( composite, Matter.Constraint.create( {
                             bodyA,
@@ -727,7 +745,7 @@ export default {
                 material.bumpMap.flipY = false
                 material.bumpMap.needsUpdate = true
 
-                if ( this.$store.state.config.groundBumpMapScale  ) {
+                if ( typeof this.$store.state.config.groundBumpMapScale == "number" ) {
                     material.bumpScale = this.$store.state.config.groundBumpMapScale
                 }
 
@@ -739,10 +757,15 @@ export default {
             this.modules.data.groundMaterial = material
 
             let mesh = new THREE.Mesh( geometry, material )
+            mesh.position.z = 1
             this.modules.scene.add( mesh )
 
             let matterBody = this.generateCurveMatterBody( points )
+
             matterBody.friction = this.$store.state.config.groundFriction
+            matterBody.restitution = this.$store.state.config.groundRestirution
+            matterBody.frictionAir = this.$store.state.config.groundFrictionAir
+
             Matter.World.add(modules.matter.engine.world, [ matterBody ]);
 
             this.modules.chunks[ chunkIndex ] = {
@@ -754,7 +777,6 @@ export default {
 
         },
         generatePathGeometry ( points ) {
-            // console.log(points)
             let bufferGeometry = new THREE.BufferGeometry()
 
             bufferGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array( points.length * 18 ), 3));
@@ -785,29 +807,29 @@ export default {
                     }
 
                     bufferGeometry.attributes.uv.setXY( position, uvx, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, point.y, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvx, uvy )
-                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
 
 
 
                     bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvxNext, uvy)
-                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, this.$store.state.config.groundHeight, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvx, uvy)
-                    bufferGeometry.attributes.normal.setXYZ( position, 1, 1, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
 
                 }
@@ -821,7 +843,6 @@ export default {
             return bufferGeometry
         },
         generateCurveMatterBody ( points ) {
-            // console.log( points )
 
             let matterPoints = points.slice()
 
@@ -858,21 +879,17 @@ export default {
             //     { x: 100, y: 0 }
             // ]
 
-            // console.log( points )
 
             let body = Matter.Bodies.fromVertices( 0, 0, matterPoints, {
                 isStatic: true
             } )
 
-            // console.log( ( body.bounds.max.y - body.bounds.min.y ) )
 
 
             Matter.Body.translate( body, { x: firstPoint.x - ( body.bounds.min.x ), y: ( this.$store.state.config.groundHeight - body.bounds.max.y ) } )
-            console.log( body.bounds.min, body.bounds.max )
 
             body.restitution = 0
 
-            console.log(body)
 
             // body.static = true
 

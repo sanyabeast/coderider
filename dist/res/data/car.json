@@ -1,61 +1,66 @@
 {
 	"spawnPosition": {
-		"x": 250,
-		"y": 80
+		"x": 300,
+		"y": 60
 	},
 	"accelerationTime": 1.25,
 	"decelerationTime": 0.77,
 	"composite": true,
-	"wheelVelocity": 0.666,
+	"wheelVelocity": 0.333,
 	"corpseSpeed": 0.1,
 	"bodies": {
 		"corpse": {
+			"texture": "caer_body_a.png",
+			"bumpMap": "caer_body_a.png",
+			"textureFlip": true,
 			"geometry": "rectangle",
 			"color" : "#f44336",
-			"width": 60,
-			"height": 24,
-			"mass": 8,
-			"x": 0,
+			"width": 80,
+			"height": 32,
+			"mass": 0.02,
+			"x": -10,
 			"y": 0,
-			"zIndex": -100,
+			"zIndex": 1,
 			"friction": 0.05,
-			"frictionAir": 0.15
+			"frictionAir": 0.04
 		},
 		"wheelA": {
 			"texture": "wheel.png",
+			"bumpMap": "bumps/wheel.png",
 			"color": "#ffffff",
 			"geometry": "circle",
-			"radius": 13,
+			"radius": 11,
 			"color": "#ff0000",
-			"mass": 1,
+			"mass": 0.01,
 			"constraint": {
 				"body": "corpse",
 				"point": {
-					"x": -28,
-					"y": 14
+					"x": -20,
+					"y": 20
 				},
-				"stiffness": 0.888,
-				"length": 0
+				"stiffness": 0.555,
+				"length": 0.4
 			},
 			"friction": 0.88,
-			"restitution": 0.1,
+			"re1itution": 0.99,
 			"x": 0,
 			"y": 0
 		},
 		"wheelB": {
 			"texture": "wheel.png",
+			"bumpMap": "bumps/wheel.png",
 			"color": "#ffffff",
 			"geometry": "circle",
-			"radius": 12,
-			"mass": 3,
+			"radius": 11,
+			"mass": 0.01,
 			"constraint": {
 				"body": "corpse",
 				"point": {
 					"x": 25,
-					"y": 14
+					"y": 20
 				},
-				"stiffness": 0.888,
-				"length": 0
+				"stiffness": 0.555,
+				"length": 0.4
 			},
 			"friction": 0.88,
 			"restitution": 0.1,

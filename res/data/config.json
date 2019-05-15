@@ -2,9 +2,9 @@
     "cameraPosition": -140,
     "cameraSpeedPosition": -160,
     "groundTexture" : "dirt_a.jpg",
-    "groundBumpMap" : "bumps/ground.png",
-    "groundBumpMapScale": 0.1,
-    "sunColor": "#ffc107",
+    "groundBumpMap" : "bumps/dirt_a.jpg",
+    "groundBumpMapScale": 1,
+    "sunColor": "#ff9800",
     "cameraOffset": {
         "x": 60,
         "y": 0
@@ -12,6 +12,8 @@
     "groundColor": "#ffffff",
     "chunkSize": 50,
     "groundFriction": 1,
+    "groundRestirution": 0,
+    "groundFrictionAir": 0,
     "groundHeight": 2000,
     "groundTextureSize": 20,
     "groundTextureUVYScale": 7,
