@@ -13,6 +13,14 @@ class Helpers {
 	static cssHex2Hex ( hexString ) {
 		return parseInt( hexString.substring(1), 16 )
 	}
+
+	static nearestMult (num, div, greater, include) {
+        return (greater ? Math.ceil((num + (include?0:1))/div)*div: Math.floor((num - (include?0:1))/div)*div) || 0;
+    }
+
+    static smoothstep ( from, to, transition ) {
+    	return to + ( ( from - to ) * ( 1 - transition ) )
+    }
 }
 
 export default Helpers

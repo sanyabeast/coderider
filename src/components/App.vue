@@ -10,10 +10,6 @@
             ref="wonderland"
         ></Wonderland>
 
-        <Tokens
-
-        />
-
         <div class="overlay"
             v-if="pauseMenuShown || settingsMenuShown"
         ></div>

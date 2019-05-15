@@ -19,21 +19,23 @@
 
         <div 
             class="car-control engine"
+            v-bind:class="{ active: engineActive }"
             @mousedown="engineActive = true"
             @mouseup="engineActive = false"
             @touchstart="engineActive = true"
             @touchend="engineActive = false"
         >
-            
+            <p>Engine</p>
         </div>
         <div 
             class="car-control break"
+            v-bind:class="{ active: breakActive }"
             @mousedown="breakActive = true"
             @mouseup="breakActive = false"
             @touchstart="breakActive = true"
             @touchend="breakActive = false"
         >
-            
+            <p>Break</p>
         </div>
     </div>
 </template>
@@ -59,13 +61,22 @@ export default {
             prevRenderedFrameTime: +new Date(),
             engineActive: false,
             breakActive: false,
-            acceleration: 0
+            acceleration: 0,
+            currentChunkIndex: 0
         }
     },
-    computed: mapState([
+    computed: {
+        chunkLength () {
+            return this.$store.state.config.chunkSize * this.$store.state.config.curve.pointsStep
+        },  
+        ...mapState([
 
-    ]),
+        ])
+    },
     watch: {
+        currentChunkIndex ( value ) {
+            this.checkChunks( value )
+        },
         engineActive ( value ) {
              console.log(`engine: ${value}`)
 
@@ -77,7 +88,7 @@ export default {
 
                 this.__accelerationTween = TweenMax.to( this, this.$store.state.carConfig.accelerationTime, {
                     acceleration: this.$store.state.carConfig.wheelVelocity,
-                    ease: "linear",
+                    ease: "Power3.easeIn",
                     onComplete: ()=>{
                         delete this.__accelerationTween
                     }
@@ -92,7 +103,7 @@ export default {
 
                 this.__decelerationTween = TweenMax.to( this, this.$store.state.carConfig.accelerationTime, {
                     acceleration: 0,
-                    ease: "linear",
+                    ease: "Power3.easeOut",
                     onComplete: ()=>{
                         delete this.__decelerationTween
                     }
@@ -111,7 +122,7 @@ export default {
 
                 this.__decelerationTween = TweenMax.to( this, this.$store.state.carConfig.decelerationTime, {
                     acceleration: -this.$store.state.carConfig.wheelVelocity,
-                    ease: "linear",
+                    ease: "Power3.easeOut",
                     onComplete: ()=>{
                         delete this.__decelerationTween
                     }
@@ -124,7 +135,7 @@ export default {
 
                 this.__accelerationTween = TweenMax.to( this, this.$store.state.carConfig.decelerationTime, {
                     acceleration: 0,
-                    ease: "linear",
+                    ease: "Power3.easeIn",
                     onComplete: ()=>{
                         delete this.__accelerationTween
                     }
@@ -137,9 +148,15 @@ export default {
 	mounted () {
         window.wonder = this
         this.modules = {
+            data: {
+
+            },
             time: new THREE.Vector2( 0, 0 ),
             matter: {},
-            chunks: [],
+            chunks: {},
+            activeChunks: {
+
+            },
             size: new THREE.Vector2( 1, 1 ),
             car: {
                 parts: {}
@@ -168,9 +185,9 @@ export default {
         // this.modules.scene.add( mesh )
         /**/
 
-        this.addChunk( this.generatePoints(0, 500) )
-        this.addChunk( this.generatePoints(500, 500) )
-        this.addChunk( this.generatePoints(1000, 500) )
+        this.addChunk( 0 )
+        this.addChunk( 1 )
+        this.addChunk( 2 )
         this.createCar()
 
         this.startRendering()
@@ -313,23 +330,30 @@ export default {
             modules.matter.engine = engine
             
             // modules.matter.engine.world.gravity.x = this.$store.state.gravityX
-            modules.matter.engine.world.gravity.y = 1
+            modules.matter.engine.world.gravity.y = this.$store.state.config.gravityY 
             // modules.matter.render = render
             
 
             // run the renderer
             if ( this.$store.state.wonderMatterTestRenderer ) {
-                 let render = Matter.Render.create({
+                let boundsConfig = this.$store.state.wonderMatterTestRendererBounds
+
+                let minx = boundsConfig.x
+                let miny = boundsConfig.y
+                let maxy = boundsConfig.y + boundsConfig.height
+                let maxx = boundsConfig.x + boundsConfig.width
+
+                let render = Matter.Render.create({
                     element: this.$refs.test,
                     engine: engine,
                     bounds: {
                         min: {
-                            x: 9,
-                            y: 9
+                            x: minx,
+                            y: miny
                         },
                         max: {
-                            x: 1000,
-                            y: 1000
+                            x: maxx,
+                            y: maxy
                         }
                     }
                 });
@@ -368,16 +392,26 @@ export default {
         updateThings (delta) {
             let modules = this.modules
 
-            modules.camera.position.y =  modules.car.parts.wheelA.mesh.position.y
-            modules.camera.position.x =  modules.car.parts.wheelA.mesh.position.x
+            let cameraOffset = this.$store.state.config.cameraOffset
+            modules.camera.position.y =  modules.car.parts.wheelA.mesh.position.y + cameraOffset.y
+            modules.camera.position.x =  modules.car.parts.wheelA.mesh.position.x + cameraOffset.x
+
+            modules.camera.position.z = _.smoothstep(
+                this.$store.state.config.cameraPosition,
+                this.$store.state.config.cameraSpeedPosition,
+                Math.abs( this.acceleration ) / this.$store.state.carConfig.wheelVelocity
+            )
 
             /* engine/break */
 
-            Matter.Body.setAngularVelocity( this.modules.car.parts.wheelA.matterBody, this.acceleration )
-            Matter.Body.setAngularVelocity( 
-                this.modules.car.parts.corpse.matterBody, 
-                -(this.acceleration * this.$store.state.carConfig.corpseSpeed )
-            )
+            if ( this.acceleration ) {
+                Matter.Body.setAngularVelocity( this.modules.car.parts.wheelA.matterBody, this.acceleration )
+            }
+            // Matter.Body.setAngularVelocity( 
+            //     this.modules.car.parts.corpse.matterBody, 
+            //     -(this.acceleration * this.$store.state.carConfig.corpseSpeed )
+            // )
+
             /****************/
 
             if ( !window.kek ) {
@@ -393,6 +427,23 @@ export default {
                 // modules.car.body.mesh.position.y = modules.car.body.matterBody.position.y
                 // modules.car.body.mesh.rotation.z = modules.car.body.matterBody.angle
             }
+
+            if ( this.modules.car.parts.corpse ) {
+                let chunkLength = this.chunkLength
+
+                let currentChunkIndex = _.nearestMult( 
+                    this.modules.car.parts.corpse.mesh.position.x, 
+                    ( chunkLength ),
+                    false,
+                    true
+                ) / ( chunkLength )
+
+                this.currentChunkIndex = currentChunkIndex
+
+            }
+
+
+
 
 
             // console.log( modules.car.parts.wheelA.matterBody.position )
@@ -467,9 +518,9 @@ export default {
                             collisionFilter: {
                                 group: group
                             },
-                            chamfer: {
-                                radius: bodyConfig.height * 0.5
-                            },
+                            // chamfer: {
+                            //     radius: bodyConfig.height * 0.5
+                            // },
                         } )
 
                         // Matter.Body.translate( matterBody, { x: -bodyConfig.width / 2, y: 0 } )
@@ -511,6 +562,11 @@ export default {
                 if ( typeof bodyConfig.density == "number" ) {
                     Matter.Body.setDensity( matterBody , bodyConfig.density );
                 }
+
+                if ( typeof bodyConfig.mass == "number" ) {
+                    Matter.Body.setMass( matterBody , bodyConfig.mass );
+                }
+
 
                 if ( typeof bodyConfig.angle == "number" ) {
                     Matter.Body.setAngle( matterBody , bodyConfig.angle );
@@ -564,15 +620,19 @@ export default {
                 Matter.World.add(modules.matter.engine.world, [ composite ]);
             }
         },
+        generatePoints ( chunkIndex ) {
 
-        generatePoints ( start, count ) {
+            let count = this.$store.state.config.chunkSize
+            let start = chunkIndex * count
+
             let points = []
             let index = 0
+            let step = this.$store.state.config.curve.pointsStep
 
-            for( var a = start; a < start + count; a++ ) {
+            for( var a = start; a <= start + count; a++ ) {
                 index = points.length
                 points.push( {
-                    x: a * 10,
+                    x: a * step,
                     y: 0
                     // index: a
                 } )
@@ -581,83 +641,80 @@ export default {
                 forEach( this.$store.state.config.curve.sinMap, ( tuple )=>{
                     points[ index ].y += Math.sin( a / tuple[ 0 ] ) * tuple[ 1 ]
                 } )
-
-                // points[ a ].y += Math.sin( a * 2) * 5
-                // points[ a ].y += Math.sin( a / 4 ) * 25
-                // points[ a ].y += Math.sin( a / 8 ) * 50
-                // points[ a ].y += Math.sin( a / 16 ) * 40
-                // points[ a ].y += Math.sin( a / 32 ) * 80
-                // points[ a ].y += Math.sin( a / 128 ) * 200
-
             }
-
-            // let smoothed = []
-
-            // forEach( points, ( point, index )=>{
-            //     let sum = 0
-            //     let count = 0
-
-            //     for ( var a = 0; a < this.$store.state.wonderPathSmoothingPeriod; a++ ) {
-            //         if ( points[ index + a ] ) {
-            //             sum+= points[ index + a ].y
-            //             count++
-            //         }
-            //     }
-
-            //     smoothed[ index ] = { x: point.x, y: ( sum / count ) }
-
-            // } )
 
             return points
         },
-        addChunk ( points ) {
+        checkChunks () {
+            let currentChunkIndex = this.currentChunkIndex
+            let modules = this.modules
+
+            let prevChunkIndex = currentChunkIndex - 1
+            let nextChunkIndex = currentChunkIndex + 1
+
+            this.addChunk( currentChunkIndex )
+            this.addChunk( prevChunkIndex )
+            this.addChunk( nextChunkIndex )
+
+            forEach ( this.modules.activeChunks, ( active, chunkIndex )=>{
+                if ( active ) {
+                    if ( (chunkIndex != currentChunkIndex) && (chunkIndex != prevChunkIndex) && (chunkIndex != nextChunkIndex) ) {
+                        this.hideChunk( chunkIndex )
+                    }
+                }
+            } )
+
+        },
+        hideChunk ( chunkIndex ) {
+            if ( !this.modules.activeChunks[ chunkIndex ] ) {
+                return
+            } else {
+                this.modules.activeChunks[ chunkIndex ] = false 
+                this.modules.scene.remove( this.modules.chunks[ chunkIndex ].mesh )
+
+            }
+            
+        },
+        showChunk ( chunkIndex ) {
+            if ( this.modules.activeChunks[ chunkIndex ] ) {
+                return
+            } else {
+                this.modules.activeChunks[ chunkIndex ] = true 
+                this.modules.scene.add( this.modules.chunks[ chunkIndex ].mesh )
+            }
+        },
+        addChunk ( chunkIndex ) {
+            if ( this.modules.chunks[ chunkIndex ] ) {
+                this.showChunk( chunkIndex )
+                return
+            }
+
+            let points = this.generatePoints( chunkIndex )
             let modules = this.modules
 
             let geometry = this.generatePathGeometry( points )
-            let material = new THREE.MeshBasicMaterial( {
+            let material = this.modules.data.groundMaterial || new THREE.MeshBasicMaterial( {
                 side: THREE.DoubleSide,
                 color: _.cssHex2Hex( this.$store.state.config.groundColor ),
                 map: this.laodTexture( this.$store.state.config.groundTexture )
             } )
 
-            geometry.computeBoundingBox()
-
-            console.log( geometry.boundingBox )
+            this.modules.data.groundMaterial = material
 
             let mesh = new THREE.Mesh( geometry, material )
-            mesh.geometry.translate( 
-                0, 
-                (this.$store.state.wonderGroundHeight - geometry.boundingBox.min.y),
-                0 
-            )
-
-            // let pivot = new THREE.Object3D()
-            // pivot.add( mesh )
-
             this.modules.scene.add( mesh )
 
-            // mesh.frustumCulled = false
-
-            // console.log(geometry)
-
             let matterBody = this.generateCurveMatterBody( points )
-            matterBody.friction = 0.4
-
-            mesh.geometry.translate( 
-                0, 
-                -(geometry.boundingBox.max.y - matterBody.bounds.max.y),
-                0 
-            )
-
+            matterBody.friction = this.$store.state.config.groundFriction
             Matter.World.add(modules.matter.engine.world, [ matterBody ]);
 
-            this.modules.chunks.push( {
+            this.modules.chunks[ chunkIndex ] = {
                 mesh,
                 matterBody
-            } )
+            }
 
+            this.modules.activeChunks[ chunkIndex ] = true
 
-            // console.log( matterBody )
         },
         generatePathGeometry ( points ) {
             // console.log(points)
@@ -674,19 +731,21 @@ export default {
 
                 } else {
 
+                    let chunkLength = this.chunkLength
+
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, point.y, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / 5000, 1 )
+                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 1 )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / 5000, 0 )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.wonderGroundHeight, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / 5000, 1 )
+                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 0 )
+                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
+                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 1 )
 
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / 5000, 0 )
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, this.$store.state.wonderGroundHeight, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / 5000, 0 )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.wonderGroundHeight, 0 )
-                    bufferGeometry.attributes.uv.setXY( position, point.x / 5000, 1 )
+                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 0)
+                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, this.$store.state.config.groundHeight, 0 )
+                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 0)
+                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
+                    bufferGeometry.attributes.uv.setXY( position, point.x / (chunkLength ), 1 )
 
                 }
 
@@ -709,18 +768,18 @@ export default {
             forEachRight( points, ( point )=>{
                 matterPoints.push( {
                     x: point.x,
-                    y: this.$store.state.wonderGroundHeight
+                    y: this.$store.state.config.groundHeight
                 } )
             } )
 
             // points.push( {
             //     x: lastPoint.x,
-            //     y: this.$store.state.wonderGroundHeight,
+            //     y: this.$store.state.config.groundHeight,
             // } )
 
             // points.push( {
             //     x: firstPoint.x,
-            //     y: this.$store.state.wonderGroundHeight
+            //     y: this.$store.state.config.groundHeight
             // } )
 
             points.push( {
@@ -742,9 +801,11 @@ export default {
                 isStatic: true
             } )
 
-            console.log( body.bounds.min.y)
+            // console.log( ( body.bounds.max.y - body.bounds.min.y ) )
 
-            Matter.Body.translate( body, { x: firstPoint.x - ( body.bounds.min.x ), y: this.$store.state.wonderGroundHeight- body.bounds.min.y } )
+
+            Matter.Body.translate( body, { x: firstPoint.x - ( body.bounds.min.x ), y: ( this.$store.state.config.groundHeight - body.bounds.max.y ) } )
+            console.log( body.bounds.min, body.bounds.max )
 
             body.restitution = 0
 

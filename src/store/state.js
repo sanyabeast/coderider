@@ -39,9 +39,14 @@ var state = {
 	settingsMenuShown: false,
 	wonderWheelRadius: 3,
 	wonderPathSmoothingPeriod: 3,
-	wonderGroundHeight: 1200,
 	wonderWheelAngularVelocity: 0.1,
-	wonderMatterTestRenderer: !device.desktop ? false : false
+	wonderMatterTestRenderer: !device.desktop ? false : true,
+	wonderMatterTestRendererBounds: {
+		x: 0,
+		y: 0,
+		width: 2000,
+		height: 2000
+	}
 };
 
 export default state;
