@@ -134,8 +134,9 @@ export default {
         onSettingsLeave ( el, done ) {
             done()
         },
-        onAppClick () {            
-        }
+        onAppClick () {  
+                  
+        },
     }
 
 }

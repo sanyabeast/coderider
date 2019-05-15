@@ -1,0 +1,84 @@
+{
+	"spawnPosition": {
+		"x": 600,
+		"y": 640
+	},
+	"accelerationTime": 3,
+	"decelerationTime": 1.3,
+	"composite": true,
+	"wheelVelocity": 0.29,
+	"corpseSpeed": 0.88,
+	"bodies": {
+		"corpse": {
+			"geometry": "rectangle",
+			"color" : "#f44336",
+			"width": 60,
+			"density": 0.00001,
+			"height": 24,
+			"x": 0,
+			"y": 0,
+			"zIndex": 100
+		},
+		"wheelA": {
+			"texture": "wheel.png",
+			"color": "#ffffff",
+			"geometry": "circle",
+			"radius": 13,
+			"density": 0.001,
+			"color": "#ff0000",
+			"constraint": {
+				"body": "corpse",
+				"point": {
+					"x": -28,
+					"y": 10
+				},
+				"stiffness": 0.5,
+				"length": 0.0
+			},
+			"friction": 0.79,
+			"restitution": 0.2,
+			"x": 0,
+			"y": 0
+		},
+		"wheelB": {
+			"texture": "wheel.png",
+			"color": "#ffffff",
+			"geometry": "circle",
+			"radius": 12,
+			"density": 0.001,
+			"constraint": {
+				"body": "corpse",
+				"point": {
+					"x": 25,
+					"y": 10
+				},
+				"stiffness": 0.5,
+				"length": 0.0
+			},
+			"friction": 0.79,
+			"restitution": 0.2,
+			"x": 37,
+			"y": 0
+		},
+		"springA": {
+			"geometry": "rectangle",
+			"color" : "#ff0000",
+			"density": 0.0002,
+			"width": 2,
+			"height": 12,
+			"x": -28,
+			"y": 10,
+			"zIndex": 100,
+			"constraint": {
+				"body": "corpse",
+				"point": {
+					"x": -28,
+					"y": -10
+				},
+				"stiffness": 0.5,
+				"length": 0.0
+			}
+		}
+
+	}
+}

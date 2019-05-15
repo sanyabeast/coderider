@@ -35,7 +35,7 @@
 <script type="text/javascript">
 	import { map } from "lodash"
 
-	const config = require("data/wonderland.config.json")
+	const config = require("data/config.json")
 	
 	export default {
 		data () {

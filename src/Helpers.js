@@ -9,6 +9,10 @@ class Helpers {
 		document.execCommand('copy');
 		document.body.removeChild(el);
 	}
+
+	static cssHex2Hex ( hexString ) {
+		return parseInt( hexString.substring(1), 16 )
+	}
 }
 
 export default Helpers
