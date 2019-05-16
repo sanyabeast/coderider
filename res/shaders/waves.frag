@@ -2,31 +2,28 @@
 precision mediump float;
 #endif
 
-uniform vec2 resolution;
-uniform float time;
+uniform vec3 camera;
 
-const float Pi = 3.14159;
 
-float sinApprox(float x) {
-    x = Pi + (2.0 * Pi) * floor(x / (2.0 * Pi)) - x;
-    return (4.0 / Pi) * x - (4.0 / Pi / Pi) * x * abs(x);
-}
+uniform vec3 diffuse;
+uniform vec3 diffuseB;
+uniform float grid;
+uniform float waves;
+uniform float amplitude;
 
-float cosApprox(float x) {
-    return sinApprox(x + 8.9 * Pi);
-}
+varying vec2 vUv;
+varying float cameraX;
 
-void main()
-{
-    vec2 p=5.0*(2.0*gl_FragCoord.xy-resolution)/max(resolution.x,resolution.y);
-    for(int i=1;i<2;i++)
-    {
-        vec2 newp=p;
-        float speed = 2.0 *(time * 1.); // speed control
-        newp.x+=0.6/float(i)*sin(float(i)*p.y+(time * 1.)/(100.0/speed)+0.3*float(i))+1.0;
-        newp.y+=0.6/float(i)*cos(float(i)*p.x+(time * 1.)/(100.0/speed)+0.3*float(i+10))-1.4;
-        p=newp;
-    }
-    vec3 col=vec3(sin(p.x),0.,tan(p.x+p.y));
-    gl_FragColor=vec4(col, 1.0);
+void main( void ) {
+	float gridS = grid;
+	float layer = floor( (vUv.y+0.5) * gridS ) / gridS;
+	float parallax = 30.;
+	float speed = 0.000001;
+	float cameraOffset = ( camera.x / ( 1. / (speed) ) ) * ( gridS / (( pow(layer, 6.))) * parallax );
+	float offset = (sin((vUv.x+cameraOffset) * (waves + layer)) / ( waves )) * ( amplitude * layer );
+	float y = mod( ( mod( vUv.y + offset, 1. ) ), ( 1. / (gridS) ) ) * (gridS);
+
+
+
+	gl_FragColor = vec4( mix(diffuse.xyz, diffuseB.xyz, y ), 1.0 );
 }

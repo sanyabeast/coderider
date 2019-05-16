@@ -18,7 +18,7 @@
     "groundTextureSize": 20,
     "groundTextureUVYScale": 7,
     "gravityY": 0.7777,
-    "daynightHourDuration": 30,
+    "daynightHourDuration": 5,
     "curve": {
         "pointsStep": 10,
         "sinMap": [

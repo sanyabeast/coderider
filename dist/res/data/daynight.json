@@ -7,17 +7,25 @@
 			"z": 1
 		},
 		"sunColor": "#ffe083",
-		"skyColor": "#aef6ff",
-		"intensity": 3
+		"skyColorB": "#cacaca",
+		"skyColor": "#bdf8ff",
+		"intensity": 3,
+		"grid": 3,
+		"waves": 20,
+		"amplitude": 0.4
 	},
 	{
 		"sunOffset": { 
 			"x": 20,
 			"y": -40,
-			"z": 0.1
+			"z": 0.03
 		},
-		"sunColor": "#ffabc7",
+		"sunColor": "#ff9800",
+		"skyColorB": "#000000",
 		"skyColor": "#111111",
-		"intensity": 0.75
+		"intensity": 0.75,
+		"grid": 3,
+		"waves": 20,
+		"amplitude": 0.4
 	}
 ]

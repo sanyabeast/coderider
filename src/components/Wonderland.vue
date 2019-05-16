@@ -304,14 +304,22 @@ export default {
             let hourData = this.$store.state.daynight[ hour ]
             let sun = this.modules.lights.sun
             let duration = this.$store.state.config.daynightHourDuration / 2
+            let bg_uniforms = modules.bg.material.uniforms
+
+            /*colors*/
             let sunColor = new THREE.Color()
             sunColor.setHex( _.cssHex2Hex( hourData.sunColor ) )
             let skyColor = new THREE.Color()
             skyColor.setHex( _.cssHex2Hex( hourData.skyColor ) )
+            let skyColorB = new THREE.Color()
+            skyColorB.setHex( _.cssHex2Hex( hourData.skyColorB ) )
 
 
             if ( immediately ) {
                 sun.intensity = hourData.intensity
+                bg_uniforms.amplitude.value = hourData.amplitude
+                bg_uniforms.waves.value = hourData.waves
+                bg_uniforms.grid.value = hourData.grid
 
                 this.sunOffset.x = hourData.sunOffset.x
                 this.sunOffset.y = hourData.sunOffset.y
@@ -321,9 +329,13 @@ export default {
                 sun.color.g = sunColor.g
                 sun.color.b = sunColor.b
 
-                modules.bg.material.uniforms.diffuse.value.r = skyColor.r
-                modules.bg.material.uniforms.diffuse.value.g = skyColor.g
-                modules.bg.material.uniforms.diffuse.value.b = skyColor.b
+                bg_uniforms.diffuse.value.r = skyColor.r
+                bg_uniforms.diffuse.value.g = skyColor.g
+                bg_uniforms.diffuse.value.b = skyColor.b
+
+                bg_uniforms.diffuseB.value.r = skyColorB.r
+                bg_uniforms.diffuseB.value.g = skyColorB.g
+                bg_uniforms.diffuseB.value.b = skyColorB.b
 
 
             } else {
@@ -331,6 +343,23 @@ export default {
                     intensity: hourData.intensity,
                     ease: "linear"
                 } )
+
+                TweenMax.to( bg_uniforms.amplitude, duration, {
+                    value: hourData.amplitude,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( bg_uniforms.waves, duration, {
+                    value: hourData.waves,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( bg_uniforms.grid, duration, {
+                    value: hourData.grid,
+                    ease: "linear"
+                } )
+
+
 
                 TweenMax.to( this.sunOffset, duration, {
                     x: hourData.sunOffset.x,
@@ -347,10 +376,17 @@ export default {
                 } )
 
 
-                TweenMax.to( modules.bg.material.uniforms.diffuse.value, duration, {
+                TweenMax.to( bg_uniforms.diffuse.value, duration, {
                     r: skyColor.r,
                     g: skyColor.g,
                     b: skyColor.b,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( bg_uniforms.diffuseB.value, duration, {
+                    r: skyColorB.r,
+                    g: skyColorB.g,
+                    b: skyColorB.b,
                     ease: "linear"
                 } )
             }
@@ -438,13 +474,16 @@ export default {
                 canvas: canvasElement,
             })
 
-            camera.position.z = -500
+            camera.position.z = this.$store.state.freeCameraZ
             camera.rotation.z = Math.PI
             camera.rotation.y = Math.PI
 
-            TweenMax.to( camera.position, 3, {
-                z: this.$store.state.config.cameraPosition,
-            } )
+            // if ( !this.freeCamera ) {
+            //     TweenMax.to( camera.position, 3, {
+            //         z: this.$store.state.config.cameraPosition,
+            //     } )
+
+            // }
 
             TweenMax.fromTo( camera.rotation, 4, {
                 z: Math.PI + (-Math.PI / 257)
@@ -551,7 +590,7 @@ export default {
             let modules = this.modules
 
             let vertShader = require( "raw-loader!shaders/bg.vert" ).default
-            let fragShader = require( "raw-loader!shaders/stars.frag" ).default
+            let fragShader = require( "raw-loader!shaders/waves.frag" ).default
             // let fragShader = require( "raw-loader!shaders/helix.frag" ).default
 
             let geometry = new THREE.PlaneGeometry( 1, 1, 1)
@@ -563,6 +602,21 @@ export default {
                 uniforms: {
                     diffuse: {
                         value: new THREE.Color(),
+                    },
+                    diffuseB: {
+                        value: new THREE.Color()
+                    },
+                    amplitude: {
+                        value: 1,
+                    },
+                    waves: {
+                        value: 20
+                    },
+                    grid: {
+                        value: 5
+                    },
+                    camera: {
+                        value: modules.camera.position
                     }
                 },
                 side: THREE.DoubleSide,

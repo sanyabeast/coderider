@@ -76,7 +76,7 @@ var state = {
 	freeCamera: false,
 	freeCameraZ: 400,
 	bumpmappingEnabled: true,
-	bumpmapMultiplier: 1
+	bumpmapMultiplier: 0.75
 };
 
 export default state;
