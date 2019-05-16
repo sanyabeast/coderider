@@ -218,10 +218,10 @@ export default {
         this.addChunk( 0 )
         this.addChunk( 1 )
         this.createCar()
-        this.createObject("somecar", wonder.$store.state.objects.car, 541, 440)
-        this.createObject("can1", wonder.$store.state.objects.can, 700, -250)
-        this.createObject("can2", wonder.$store.state.objects.can, 700, -250)
-        this.createObject("can3", wonder.$store.state.objects.can, 700, -250)
+        this.createObject("moto", wonder.$store.state.objects.moto, 541, 440)
+        this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
+        // this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
+        // this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
 
         this.startRendering()
     },
@@ -597,8 +597,8 @@ export default {
                 // } )
             }
 
-            Matter.Body.setAngularVelocity( this.modules.objects.somecar.parts.wheelA.matterBody, 0.35 )
-            Matter.Body.setAngularVelocity( this.modules.objects.somecar.parts.wheelB.matterBody, 0.35 )
+            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.35 )
+            // Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.35 )
 
             // Matter.Body.setAngularVelocity( 
             //     this.modules.objects.car.parts.corpse.matterBody, 
@@ -918,8 +918,13 @@ export default {
             } else {
                 delete this.modules.activeChunks[ chunkIndex ]
                 this.modules.scene.remove( this.modules.chunks[ chunkIndex ].mesh )
-                Matter.World.remove( this.modules.matter.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
 
+                if ( this.modules.chunks[ chunkIndex ].matterBody ) {
+                    Matter.World.remove( this.modules.matter.world, this.modules.chunks[ chunkIndex ].matterBody )
+                    // Matter.Composite.remove( this.modules.matter.world, [ y ] )
+                    // this.modules.matter.world.remove( this.modules.chunks[ chunkIndex ].matterBod )
+
+                }
             }
             
         },

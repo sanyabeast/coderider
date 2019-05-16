@@ -15,14 +15,14 @@
 				"mass": 0.01,
 				"x": -10,
 				"y": 0,
-				"restitution": 0,
+				"restitution": 0.4,
 				"zIndex": 1,
 				"friction": 0,
 				"frictionAir": 0.0001
 			}
 		}
 	},
-	"car": {
+	"moto": {
 		"composite": true,
 			"bodies": {
 			"hanger": {
@@ -31,9 +31,9 @@
 					"y": 1.1
 				},
 				"geometry": "rectangle",
-				"width": 80,
+				"width": 60,
 				"height": 4,
-				"mass": 4,
+				"mass": 2,
 				"x": -10,
 				"y": 0,
 				"zIndex": 1,
@@ -41,9 +41,30 @@
 				"frictionAir": 0.0,
 				"opacity": 0
 			},
+			"wheelA": {
+				"texture": "moto_wheel.png",
+				"bumpScale": 1,
+				"color": "#ffffff",
+				"geometry": "circle",
+				"radius": 11,
+				"color": "#ff9800",
+				"mass": 0.4,
+				"constraint": {
+					"body": "hanger",
+					"pointB": {
+						"x": -23,
+						"y": 6
+					},
+					"stiffness": 0.9,
+					"length": 0.07
+				},
+				"friction": 0.99,
+				"re11tution": 0.333,
+				"x": 0,
+				"y": 0
+			},
 			"corpse": {
-				"texture": "caer_body_a.png",
-				"bumpMap": "caer_body_a.png",
+				"texture": "moto.png",
 				"scale": { 
 					"x": 1.1,
 					"y": 1.1
@@ -51,10 +72,9 @@
 				"bumpScale": 3,
 				"textureFlip": true,
 				"geometry": "rectangle",
-				"color" : "#3739ad",
-				"width": 80,
+				"width": 60,
 				"height": 32,
-				"mass": 1,
+				"mass": 0.5,
 				"x": -10,
 				"y": 0,
 				"zIndex": 1,
@@ -89,42 +109,18 @@
 					}
 				]
 			},
-			"wheelA": {
-				"texture": "wheel.png",
-				"bumpMap": "bumps/wheel.png",
-				"bumpScale": 1,
-				"color": "#ffffff",
-				"geometry": "circle",
-				"radius": 11,
-				"color": "#ff9800",
-				"mass": 0.7,
-				"constraint": {
-					"body": "hanger",
-					"pointB": {
-						"x": -23,
-						"y": 6
-					},
-					"stiffness": 0.9,
-					"length": 0.07
-				},
-				"friction": 0.99,
-				"re11tution": 0.333,
-				"x": 0,
-				"y": 0
-			},
 			"wheelB": {
-				"texture": "wheel.png",
-				"bumpMap": "bumps/wheel.png",
+				"texture": "moto_wheel.png",
 				"bumpScale": 1,
 				"color": "#ff9800",
 				"geometry": "circle",
 				"radius": 11,
-				"mass": 0.7,
+				"mass": 0.4,
 				"constraint": {
 					"body": "hanger",
 					"pointB": {
-						"x": 28,
-						"y": 6
+						"x": 22,
+						"y": 4
 					},
 					"stiffness": 0.9,
 					"length": 0.07
