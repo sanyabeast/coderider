@@ -916,8 +916,9 @@ export default {
             if ( !this.modules.activeChunks[ chunkIndex ] ) {
                 return
             } else {
-                this.modules.activeChunks[ chunkIndex ] = false 
+                delete this.modules.activeChunks[ chunkIndex ]
                 this.modules.scene.remove( this.modules.chunks[ chunkIndex ].mesh )
+                Matter.World.remove( this.modules.matter.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
 
             }
             
@@ -928,6 +929,7 @@ export default {
             } else {
                 this.modules.activeChunks[ chunkIndex ] = true 
                 this.modules.scene.add( this.modules.chunks[ chunkIndex ].mesh )
+                Matter.World.add( this.modules.matter.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
             }
         },
         addChunk ( chunkIndex ) {
