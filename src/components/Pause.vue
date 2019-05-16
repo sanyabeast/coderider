@@ -17,7 +17,7 @@
 
       <v-list>
         
-        <v-list-tile>
+        <!-- <v-list-tile>
             <v-btn
                 v-if="!$store.state.isHybridApp"
                 href="app.apk"
@@ -25,7 +25,7 @@
             >
                 Скачать APK
             </v-btn>
-        </v-list-tile>
+        </v-list-tile> -->
         <v-list-tile avatar>
           <v-btn
                 outline color="red"
@@ -35,7 +35,7 @@
             </v-btn>
         </v-list-tile>
 
-        <v-list-tile>
+        <!-- <v-list-tile>
             <v-btn
                 @click="$store.dispatch(`loadDefaults`)"
                 outline color="normal"
@@ -43,7 +43,7 @@
                 Сбросить настройки
             </v-btn>
         </v-list-tile>
-
+ -->
       </v-list>
 
 
@@ -54,7 +54,7 @@
         
         <v-btn flat color="primary" @click="onResumeClick">Продолжить</v-btn>
         
-        <v-btn  flat color="secondary" @click="onSettingsClick">Настройки</v-btn>
+        <!-- <v-btn  flat color="secondary" @click="onSettingsClick">Настройки</v-btn> -->
       </v-card-actions>
     </v-card>
     <!-- <div

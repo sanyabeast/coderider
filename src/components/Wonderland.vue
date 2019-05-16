@@ -136,7 +136,7 @@ export default {
                 }
 
                 this.__accelerationTween = TweenMax.to( this, this.$store.state.carConfig.decelerationTime, {
-                    acceleration: -this.$store.state.carConfig.wheelVelocity,
+                    acceleration: -this.$store.state.carConfig.wheelVelocity / 2,
                     ease: "Power3.easeOut",
                     onComplete: ()=>{
                         delete this.__accelerationTween
@@ -219,7 +219,7 @@ export default {
         this.addChunk( 1 )
         this.createCar()
         this.createObject("moto", wonder.$store.state.objects.moto, 541, 440)
-        this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
+        // this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
         // this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
         // this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
 
@@ -239,7 +239,7 @@ export default {
             
             this.hoursCount = this.$store.state.daynight.length
 
-            this.setDaytime( this.hour )
+            this.setDaytime( this.hour, true )
 
             this.daynightInterval = setInterval( ()=>{
                 this.hour++
@@ -250,44 +250,61 @@ export default {
 
 
         },
-        setDaytime ( hour ) {
+        setDaytime ( hour, immediately ) {
             let modules = this.modules
             let hourData = this.$store.state.daynight[ hour ]
             let sun = this.modules.lights.sun
-            let duration = this.$store.state.config.daynightHourDuration
-
-            TweenMax.to( sun, duration, {
-                intensity: hourData.intensity,
-                ease: "linear"
-            } )
-
-            TweenMax.to( this.sunOffset, duration, {
-                x: hourData.sunOffset.x,
-                y: hourData.sunOffset.y,
-                z: hourData.sunOffset.z,
-                ease: "linear"
-            } )
-
+            let duration = this.$store.state.config.daynightHourDuration / 2
             let sunColor = new THREE.Color()
             sunColor.setHex( _.cssHex2Hex( hourData.sunColor ) )
-
-            TweenMax.to( sun.color, duration, {
-                r: sunColor.r,
-                g: sunColor.g,
-                b: sunColor.b,
-                ease: "linear"
-            } )
-
             let skyColor = new THREE.Color()
-
             skyColor.setHex( _.cssHex2Hex( hourData.skyColor ) )
 
-            TweenMax.to( modules.bg.material.uniforms.diffuse.value, duration, {
-                r: skyColor.r,
-                g: skyColor.g,
-                b: skyColor.b,
-                ease: "linear"
-            } )
+
+            if ( immediately ) {
+                sun.intensity = hourData.intensity
+
+                this.sunOffset.x = hourData.sunOffset.x
+                this.sunOffset.y = hourData.sunOffset.y
+                this.sunOffset.z = hourData.sunOffset.z
+
+                sun.color.r = sunColor.r
+                sun.color.g = sunColor.g
+                sun.color.b = sunColor.b
+
+                modules.bg.material.uniforms.diffuse.value.r = skyColor.r
+                modules.bg.material.uniforms.diffuse.value.g = skyColor.g
+                modules.bg.material.uniforms.diffuse.value.b = skyColor.b
+
+
+            } else {
+                TweenMax.to( sun, duration, {
+                    intensity: hourData.intensity,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( this.sunOffset, duration, {
+                    x: hourData.sunOffset.x,
+                    y: hourData.sunOffset.y,
+                    z: hourData.sunOffset.z,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( sun.color, duration, {
+                    r: sunColor.r,
+                    g: sunColor.g,
+                    b: sunColor.b,
+                    ease: "linear"
+                } )
+
+
+                TweenMax.to( modules.bg.material.uniforms.diffuse.value, duration, {
+                    r: skyColor.r,
+                    g: skyColor.g,
+                    b: skyColor.b,
+                    ease: "linear"
+                } )
+            }
 
         },
         respawn () {
@@ -517,7 +534,6 @@ export default {
 
             let geometry = new THREE.PlaneGeometry( 1, 1, 1)
             // geometry.translate( height / 2, width / 2, 0 )
-            console.log(fragShader)
 
             let bg = new THREE.Mesh ( geometry, new THREE.ShaderMaterial( {
                 vertexShader: vertShader,
@@ -598,6 +614,9 @@ export default {
             }
 
             Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.35 )
+
+            // console.log( this.modules.objects.moto.parts.corpse.matterBody.position )
+
             // Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.35 )
 
             // Matter.Body.setAngularVelocity( 
@@ -996,7 +1015,7 @@ export default {
         fillChunk ( chunkIndex ) {
             let chunk = this.modules.chunks[ chunkIndex ]
 
-            console.log( chunk )
+            // console.log( chunk )
 
         },
         generatePathGeometry ( points ) {
