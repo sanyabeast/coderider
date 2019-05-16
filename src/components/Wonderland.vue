@@ -279,7 +279,6 @@ export default {
 
             let skyColor = new THREE.Color()
 
-            console.log( _.cssHex2Hex( hourData.skyColor ))
             skyColor.setHex( _.cssHex2Hex( hourData.skyColor ) )
 
             TweenMax.to( modules.bg.material.uniforms.diffuse.value, duration, {
@@ -446,6 +445,10 @@ export default {
                 // positionIterations: 20,
                 // velocityIterations: 20,
                 // constraintIterations: 10
+                positionIterations: 1,
+                velocityIterations: 1,
+                constraintIterations: 1,
+                enableSleeping: false,
             } );
 
 
@@ -1006,8 +1009,8 @@ export default {
                     let scaleGroundTextureSize = groundTextureSize * pointsStep
 // 
                     let chunkLength = this.chunkLength
-                    let uvx = ( ( point.x ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
-                    let uvxNext = ( (nextPoint.x ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
+                    let uvx = ( ( Math.abs(point.x) ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
+                    let uvxNext = ( ( Math.abs(nextPoint.x) ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
                     let uvy = groundTextureUVYScale
 
                     if ( uvxNext < uvx ) {

@@ -44,7 +44,7 @@ var state = {
 	wonderWheelRadius: 3,
 	wonderPathSmoothingPeriod: 3,
 	wonderWheelAngularVelocity: 0.1,
-	wonderMatterTestRenderer: !device.desktop ? false : true,
+	wonderMatterTestRenderer: !device.desktop ? false : false,
 	isAndroid: device.android,
 	wonderMatterTestRendererBounds: {
 		x: 500,

@@ -1,12 +1,12 @@
 {
 	"spawnPosition": {
-		"x": 120,
-		"y": 120
+		"x": 741,
+		"y": 441
 	},
 	"accelerationTime": 0.33,
 	"decelerationTime": 0.22,
 	"composite": true,
-	"wheelVelocity": 0.333,
+	"wheelVelocity": 0.4,
 	"corpseSpeed": 0.1,
 	"bodies": {
 		"hanger": {
@@ -18,7 +18,7 @@
 			"color" : "#ffffff",
 			"width": 80,
 			"height": 4,
-			"mass": 3,
+			"mass": 4,
 			"x": -10,
 			"y": 0,
 			"zIndex": 1,
@@ -39,7 +39,7 @@
 			"color" : "#f44336",
 			"width": 80,
 			"height": 32,
-			"mass": 0.1,
+			"mass": 1,
 			"x": -10,
 			"y": 0,
 			"zIndex": 1,
@@ -56,8 +56,8 @@
 						"x": -24,
 						"y": 16
 					},
-					"stiffness": 0.3,
-					"length": 3
+					"stiffness": 0.6,
+					"length": 2
 				},
 				{
 					"body": "hanger",
@@ -69,8 +69,8 @@
 						"x": 24,
 						"y": 16
 					},
-					"stiffness": 0.3,
-					"length": 3
+					"stiffness": 0.6,
+					"length": 2
 				}
 			]
 		},
@@ -89,11 +89,11 @@
 					"x": -23,
 					"y": 6
 				},
-				"stiffness": 0.99,
-				"length": 0.01
+				"stiffness": 0.9,
+				"length": 0.07
 			},
-			"friction": 0.88,
-			"restitution": 0.333,
+			"friction": 0.99,
+			"re11tution": 0.333,
 			"x": 0,
 			"y": 0
 		},
@@ -111,11 +111,11 @@
 					"x": 28,
 					"y": 6
 				},
-				"stiffness": 0.99,
-				"length": 0.01
+				"stiffness": 0.9,
+				"length": 0.07
 			},
-			"friction": 0.88,
-			"restitution": 0.333,
+			"friction": 0.99,
+			"restitution": 0.11,
 			"x": 37,
 			"y": 0
 		}
