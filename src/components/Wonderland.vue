@@ -759,8 +759,10 @@ export default {
                         material.bumpMap.flipY = !bodyConfig.textureFlip
                         material.bumpMap.needsUpdate = true
                     }
+                }
 
-
+                if ( typeof bodyConfig.opacity == "number" ) {
+                    material.opacity = bodyConfig.opacity
                 }
 
                 let mesh = new THREE.Mesh( geometry, material )
@@ -787,6 +789,11 @@ export default {
                 if ( typeof bodyConfig.angle == "number" ) {
                     Matter.Body.setAngle( matterBody , bodyConfig.angle );
                 }
+
+                if ( typeof bodyConfig.static == "boolean" ) {
+                    Matter.Body.setStatic( matterBody, bodyConfig.static )
+                }
+
 
 
                 modules.objects[ objectName ].parts[ name ] = {
@@ -821,12 +828,30 @@ export default {
                         Matter.Composite.add( composite, Matter.Constraint.create( {
                             bodyA,
                             bodyB,
-                            pointB: { x: constraint.point.x, y: constraint.point.y },
+                            pointA: constraint.pointA,
+                            pointB: constraint.pointB,
                             stiffness: typeof constraint.stiffness == "number" ? constraint.stiffness : 1,
                             length: typeof constraint.length == "number" ? constraint.length : 1
                         } ) )
-
                     }
+
+                    if ( bodyConfig.constraints ) {
+                        forEach( bodyConfig.constraints, ( constraint, index )=>{
+                            let bodyA = modules.objects[ objectName ].parts[ name ].matterBody
+                            let bodyB = modules.objects[ objectName ].parts[ constraint.body ] ? modules.objects[ objectName ].parts[ constraint.body ].matterBody : undefined;
+
+
+                            Matter.Composite.add( composite, Matter.Constraint.create( {
+                                bodyA,
+                                bodyB,
+                                pointA: constraint.pointA,
+                                pointB: constraint.pointB,
+                                stiffness: typeof constraint.stiffness == "number" ? constraint.stiffness : 1,
+                                length: typeof constraint.length == "number" ? constraint.length : 1
+                            } ) )
+                        } )
+                    }
+
                 } )
 
     

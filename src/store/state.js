@@ -47,10 +47,10 @@ var state = {
 	wonderMatterTestRenderer: !device.desktop ? false : true,
 	isAndroid: device.android,
 	wonderMatterTestRendererBounds: {
-		x: 0,
+		x: 500,
 		y: 0,
-		width: 2000,
-		height: 2000
+		width: 500,
+		height: 500
 	}
 };
 

@@ -1,14 +1,31 @@
 {
 	"spawnPosition": {
-		"x": 100,
-		"y": 100
+		"x": 120,
+		"y": 120
 	},
 	"accelerationTime": 0.33,
 	"decelerationTime": 0.22,
 	"composite": true,
-	"wheelVelocity": 0.444,
+	"wheelVelocity": 0.333,
 	"corpseSpeed": 0.1,
 	"bodies": {
+		"hanger": {
+			"scale": { 
+				"x": 1.1,
+				"y": 1.1
+			},
+			"geometry": "rectangle",
+			"color" : "#ffffff",
+			"width": 80,
+			"height": 4,
+			"mass": 3,
+			"x": -10,
+			"y": 0,
+			"zIndex": 1,
+			"friction": 0,
+			"frictionAir": 0.0,
+			"opacity": 0
+		},
 		"corpse": {
 			"texture": "caer_body_a.png",
 			"bumpMap": "caer_body_a.png",
@@ -22,12 +39,40 @@
 			"color" : "#f44336",
 			"width": 80,
 			"height": 32,
-			"mass": 2.1,
+			"mass": 0.1,
 			"x": -10,
 			"y": 0,
 			"zIndex": 1,
 			"friction": 0,
-			"frictionAir": 0.04
+			"frictionAir": 0.0,
+			"constraints": [
+				{
+					"body": "hanger",
+					"pointB": {
+						"x": -24,
+						"y": 0
+					},
+					"pointA": {
+						"x": -24,
+						"y": 16
+					},
+					"stiffness": 0.3,
+					"length": 3
+				},
+				{
+					"body": "hanger",
+					"pointB": {
+						"x": 24,
+						"y": 0
+					},
+					"pointA": {
+						"x": 24,
+						"y": 16
+					},
+					"stiffness": 0.3,
+					"length": 3
+				}
+			]
 		},
 		"wheelA": {
 			"texture": "wheel.png",
@@ -39,16 +84,16 @@
 			"color": "#ff0000",
 			"mass": 0.7,
 			"constraint": {
-				"body": "corpse",
-				"point": {
+				"body": "hanger",
+				"pointB": {
 					"x": -23,
-					"y": 21
+					"y": 6
 				},
-				"stiffness": 0.744,
-				"length": 2.44
+				"stiffness": 0.99,
+				"length": 0.01
 			},
 			"friction": 0.88,
-			"restitution": 0.45,
+			"restitution": 0.333,
 			"x": 0,
 			"y": 0
 		},
@@ -61,16 +106,16 @@
 			"radius": 11,
 			"mass": 0.7,
 			"constraint": {
-				"body": "corpse",
-				"point": {
+				"body": "hanger",
+				"pointB": {
 					"x": 28,
-					"y": 21
+					"y": 6
 				},
-				"stiffness": 0.744,
-				"length": 2.44
+				"stiffness": 0.99,
+				"length": 0.01
 			},
 			"friction": 0.88,
-			"restitution": 0.45,
+			"restitution": 0.333,
 			"x": 37,
 			"y": 0
 		}
