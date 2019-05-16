@@ -10,7 +10,7 @@
         "y": 0
     },
     "groundColor": "#ffffff",
-    "chunkSize": 50,
+    "chunkSize": 100,
     "groundFriction": 0.888,
     "groundRestirution": 0,
     "groundFrictionAir": 0,

@@ -218,9 +218,10 @@ export default {
         this.addChunk( 0 )
         this.addChunk( 1 )
         this.createCar()
-        this.createObject("can1", wonder.$store.state.objects.can, 100, -50)
-        this.createObject("can2", wonder.$store.state.objects.can, 100, -50)
-        this.createObject("can3", wonder.$store.state.objects.can, 100, -50)
+        this.createObject("somecar", wonder.$store.state.objects.car, 541, 440)
+        this.createObject("can1", wonder.$store.state.objects.can, 700, -250)
+        this.createObject("can2", wonder.$store.state.objects.can, 700, -250)
+        this.createObject("can3", wonder.$store.state.objects.can, 700, -250)
 
         this.startRendering()
     },
@@ -595,6 +596,10 @@ export default {
                 //     y: 0
                 // } )
             }
+
+            Matter.Body.setAngularVelocity( this.modules.objects.somecar.parts.wheelA.matterBody, 0.35 )
+            Matter.Body.setAngularVelocity( this.modules.objects.somecar.parts.wheelB.matterBody, 0.35 )
+
             // Matter.Body.setAngularVelocity( 
             //     this.modules.objects.car.parts.corpse.matterBody, 
             //     -(this.acceleration * this.$store.state.carConfig.corpseSpeed )
