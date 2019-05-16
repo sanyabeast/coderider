@@ -1,2 +1,2 @@
 # DEMO 101
-[run](https://sanyabeast.github.io/euphoria/dist/index.html)
+[run](https://sanyabeast.github.io/coderider/dist/index.html)
