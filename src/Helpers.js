@@ -21,6 +21,13 @@ class Helpers {
     static smoothstep ( from, to, transition ) {
     	return to + ( ( from - to ) * ( 1 - transition ) )
     }
+
+    static getter( object, name, getter, setter ) {
+    	Object.defineProperty( object, name, {
+    		get: getter,
+    		set: setter
+    	} )
+    }
 }
 
 export default Helpers

@@ -2,6 +2,7 @@
     <div 
         ref="root"
         class="wonderland root"
+        @click="onRootClick"
         @keydown.right.stop.prevent="engineActive = true"
         @keyup.right.stop.prevent="engineActive = false"
         @keydown.left.stop.prevent="breakActive = true"
@@ -63,7 +64,6 @@ import decomp from 'poly-decomp'
 window.decomp = decomp
 
 const Matter = window.Matter = require("matter-js")
-
 const DPR = window.devicePixelRatio
 
 export default {
@@ -74,7 +74,6 @@ export default {
             breakActive: false,
             acceleration: 0,
             currentChunkIndex: 0,
-            speedCamera: true,
             lightsZ: 1,
             hour: 0,
             sunOffset: { x: 0, y: 0, z: 0 },
@@ -87,10 +86,56 @@ export default {
         },  
         ...mapState([
             "bumpmappingEnabled",
-            "daynight"
+            "daynight",
+            "saveChunks",
+            "gravityX",
+            "gravityY",
+            "speedCamera",
+            "freeCamera",
+            "freeCameraZ",
+            "physicsEnabled",
+            "bumpmapMultiplier",
+            "paused",
+            "mainThemePlays",
+            "soundMuted"
         ])
     },
     watch: {
+        mainThemePlays ( plays ) {
+            if ( plays ) {
+                this.modules.soundBlaster.play( "main_theme", 0.333, true )
+            } else {
+                this.modules.soundBlaster.stop( "main_theme" )
+            }
+        },
+        soundMuted ( muted ) {
+            this.modules.soundBlaster.mute( muted )
+            this.$store.dispatch( "save" )
+        },
+        paused ( value ) {
+            if ( value ) {
+                TweenMax.pauseAll( TweenMax.getAllTweens() )
+            } else {
+                TweenMax.resumeAll( TweenMax.getAllTweens() )
+            }
+        },
+        bumpmapMultiplier ( value ) {
+            this.renderFrame()
+        },
+        bumpmappingEnabled ( value ) {
+            this.$bumpmappingEnabled = value
+            this.renderFrame()
+        },
+        freeCameraZ ( value ) {
+            this.modules.camera.position.z = -value
+            this.renderFrame()
+        },
+        gravityX ( value ) {
+            this.modules.matter.engine.world.gravity.x = value
+        },
+        gravityY ( value ) {
+            this.modules.matter.engine.world.gravity.y = value
+        },
         currentChunkIndex ( value ) {
             this.checkChunks( value )
         },
@@ -162,7 +207,11 @@ export default {
     },
 	mounted () {
         window.wonder = this
+
+        this.$bumpmappingEnabled = true
+
         this.modules = {
+            soundBlaster: new SoundBlaster(),
             objects: {
 
             },
@@ -199,33 +248,33 @@ export default {
         } )
 
         
-
-        /**/
-        // let geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 )
-        // let material = new THREE.MeshBasicMaterial( {
-        //     color: 0xFF0000,
-        //     side: THREE.DoubleSide,
-        //     transparent: true
-        // } )
-
-        // let mesh = new THREE.Mesh( geometry, material )
-        // this.modules.scene.add( mesh )
-        /**/
-
         this.setupDaynight()
 
         this.addChunk( -1 )
         this.addChunk( 0 )
         this.addChunk( 1 )
         this.createCar()
+
         this.createObject("moto", wonder.$store.state.objects.moto, 541, 440)
+        // this.createObject("truck", wonder.$store.state.objects.truck, 900, 400)
         // this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
         // this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
         // this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
 
         this.startRendering()
+
+        if ( this.$store.state.isHybridApp ) {
+            this.$store.state.mainThemePlays = true
+        }
+
+        this.modules.soundBlaster.mute( this.$store.state.soundMuted )
     },
     methods: {
+        onRootClick () {
+            if ( !this.mainThemePlays && !this.$store.state.isHybridApp ) {
+                this.$store.state.mainThemePlays = true
+            }
+        },
         laodTexture ( name ) {
             let texture = this.modules.data.textures[ name ]
 
@@ -309,21 +358,7 @@ export default {
         },
         respawn () {
             let car = this.modules.objects.car
-
-
-            // forEach( car.parts, ( part, name )=>{
-            //     Matter.Body.setStatic( part.matterBody, true )
-            // } )
-
             Matter.Body.setAngle( car.parts.corpse.matterBody, 0 )
-
-            // forEach( car.parts, ( part, name )=>{
-            //     Matter.Body.setVelocity( part.matterBody, { x: 0, y: 0 } )
-            //     Matter.Body.setAngularVelocity( part.matterBody, 0 )
-            //     Matter.Body.setStatic( part.matterBody, false )
-            //     Matter.Body.setVelocity( part.matterBody, { x: 0, y: 0 } )
-            //     Matter.Body.setAngularVelocity( part.matterBody, 0 )
-            // } )
         },  
         setupGestures () {
             // Create an instance of Hammer with the reference.
@@ -391,17 +426,6 @@ export default {
 
             });
 
-            // window.addEventListener('devicemotion', ( event )=> {
-            //     let ax = Math.floor( event.acceleration.x )
-            //     let ay = Math.floor( event.acceleration.y )
-
-            //     this.setVelocity(ax, ay)
-
-
-            // });
-
-            // window.addEventListener('compassneedscalibration', function(event) {
-            // });
         },  
         setupRenderer () {
             let canvasElement = this.$refs.canvas
@@ -460,9 +484,6 @@ export default {
 
             // create an engine
             var engine = Matter.Engine.create( {
-                // positionIterations: 20,
-                // velocityIterations: 20,
-                // constraintIterations: 10
                 positionIterations: 1,
                 velocityIterations: 1,
                 constraintIterations: 1,
@@ -500,7 +521,8 @@ export default {
                             x: maxx,
                             y: maxy
                         }
-                    }
+                    },
+                    // wireframes: true
                 });
 
                 Matter.Render.run(render)
@@ -590,7 +612,7 @@ export default {
                 (this.lightsZ * modules.camera.position.z * 4 ) * this.sunOffset.z
             )
 
-            if ( this.speedCamera ) {
+            if ( this.speedCamera && !this.freeCamera ) {
                 modules.camera.position.z = _.smoothstep(
                     this.$store.state.config.cameraPosition,
                     this.$store.state.config.cameraSpeedPosition,
@@ -613,20 +635,12 @@ export default {
                 // } )
             }
 
-            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.35 )
-
-            // console.log( this.modules.objects.moto.parts.corpse.matterBody.position )
-
-            // Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.35 )
-
-            // Matter.Body.setAngularVelocity( 
-            //     this.modules.objects.car.parts.corpse.matterBody, 
-            //     -(this.acceleration * this.$store.state.carConfig.corpseSpeed )
-            // )
-
+            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, this.acceleration )
             /****************/
 
-            Matter.Engine.update(modules.matter.engine, delta);
+            if ( this.physicsEnabled ) {
+                Matter.Engine.update(modules.matter.engine, delta);
+            }
 
             forEach( modules.objects, ( object, name )=>{
                 forEach( object.parts, ( part, name )=>{
@@ -738,6 +752,9 @@ export default {
                             chamfer: {
                                 radius: bodyConfig.height * 0.2
                             },
+                            render: {
+                                fillStyle: bodyConfig.color
+                            }
                         } )
 
                         // Matter.Body.translate( matterBody, { x: -bodyConfig.width / 2, y: 0 } )
@@ -776,15 +793,23 @@ export default {
                 }
 
                 if ( bodyConfig.bumpMap ) {
-                    material.bumpMap = this.laodTexture( bodyConfig.bumpMap )
+                    let bumpMap = this.laodTexture( bodyConfig.bumpMap )
+                    material.bumpMap = bumpMap
+
+                    _.getter( material, "bumpScale", ()=>{
+                        if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier)
+                    }, ( value )=>{
+                        material._bumpScale = value
+                    } )
+
 
                     if ( typeof bodyConfig.bumpScale == "number" ) {
                         material.bumpScale = bodyConfig.bumpScale * DPR
                     }
 
                     if ( typeof bodyConfig.textureFlip == "boolean" ) {
-                        material.bumpMap.flipY = !bodyConfig.textureFlip
-                        material.bumpMap.needsUpdate = true
+                        bumpMap.flipY = !bodyConfig.textureFlip
+                        bumpMap.needsUpdate = true
                     }
                 }
 
@@ -931,18 +956,27 @@ export default {
             } )
 
         },
-        hideChunk ( chunkIndex ) {
+        hideChunk ( chunkIndex, remove ) {
             if ( !this.modules.activeChunks[ chunkIndex ] ) {
                 return
             } else {
                 delete this.modules.activeChunks[ chunkIndex ]
+
                 this.modules.scene.remove( this.modules.chunks[ chunkIndex ].mesh )
+                
+                if ( remove || !this.saveChunks ) {
+                    this.modules.chunks[ chunkIndex ].mesh.geometry.dispose()
+                }
 
                 if ( this.modules.chunks[ chunkIndex ].matterBody ) {
-                    Matter.World.remove( this.modules.matter.world, this.modules.chunks[ chunkIndex ].matterBody )
+                    Matter.Composite.remove( this.modules.matter.engine.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
                     // Matter.Composite.remove( this.modules.matter.world, [ y ] )
                     // this.modules.matter.world.remove( this.modules.chunks[ chunkIndex ].matterBod )
 
+                }
+                
+                if ( remove || !this.saveChunks ) {
+                    delete this.modules.chunks[ chunkIndex ]
                 }
             }
             
@@ -953,7 +987,7 @@ export default {
             } else {
                 this.modules.activeChunks[ chunkIndex ] = true 
                 this.modules.scene.add( this.modules.chunks[ chunkIndex ].mesh )
-                Matter.World.add( this.modules.matter.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
+                Matter.World.add( this.modules.matter.engine.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
             }
         },
         addChunk ( chunkIndex ) {
@@ -961,6 +995,7 @@ export default {
                 this.showChunk( chunkIndex )
                 return
             }
+
 
             let points = this.generatePoints( chunkIndex )
             let modules = this.modules
@@ -973,10 +1008,21 @@ export default {
                 transparent: true
             } )
 
+            this.modules.data.groundMaterial = material
+
             if ( this.$store.state.config.groundBumpMap ) {
-                material.bumpMap = this.laodTexture( this.$store.state.config.groundBumpMap )
-                material.bumpMap.flipY = false
-                material.bumpMap.needsUpdate = true
+                let bumpMap = this.laodTexture( this.$store.state.config.groundBumpMap )
+
+                _.getter( material, "bumpScale", ()=>{
+                    if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier)
+                }, ( value )=>{
+                    material._bumpScale = value
+                } )
+
+
+                material.bumpMap = bumpMap
+                bumpMap.flipY = false
+                bumpMap.needsUpdate = true
 
                 if ( typeof this.$store.state.config.groundBumpMapScale == "number" ) {
                     material.bumpScale = this.$store.state.config.groundBumpMapScale * DPR
@@ -987,7 +1033,7 @@ export default {
             material.map.flipY = false
             material.map.needsUpdate = true
 
-            this.modules.data.groundMaterial = material
+            
 
             let mesh = new THREE.Mesh( geometry, material )
             mesh.position.z = 1
@@ -1098,32 +1144,18 @@ export default {
                 } )
             } )
 
-            // points.push( {
-            //     x: lastPoint.x,
-            //     y: this.$store.state.config.groundHeight,
-            // } )
-
-            // points.push( {
-            //     x: firstPoint.x,
-            //     y: this.$store.state.config.groundHeight
-            // } )
 
             points.push( {
                 x: firstPoint.x,
                 y: firstPoint.y
             } )
 
-            // points = [
-            //     { x: 0, y: 0 },
-            //     { x: 0, y: 100 },
-            //     { x: 50, y: 50 },
-            //     { x: 100, y: 100 },
-            //     { x: 100, y: 0 }
-            // ]
-
 
             let body = Matter.Bodies.fromVertices( 0, 0, matterPoints, {
-                isStatic: true
+                isStatic: true,
+                render: {
+                    fillStyle: "#ff0000"
+                }
             } )
 
 

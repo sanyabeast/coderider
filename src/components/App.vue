@@ -1,5 +1,6 @@
 <template>
     <v-app
+        dark
         class="euphoria root"
         v-bind:class="{ overlayActive: (pauseMenuShown || settingsMenuShown) }"
         :data-browser-name="$store.state.browserName"
@@ -14,29 +15,31 @@
             v-if="pauseMenuShown || settingsMenuShown"
         ></div>
 
-        <p 
-            class="pause-button"
+        <div 
+            class="pause-button topbar-button"
             @click="onPauseClick"
             v-if="!$store.state.pauseMenuShown && !$store.state.settingsMenuShown"
         >
-            <i class="material-icons">pause</i>
-        </p>
+            <div>
+                <i class="material-icons">pause</i>
+            </div>
+        </div>
 
-        <p 
-            class="respawn-button"
+        <div 
+            class="respawn-button topbar-button"
             @click="$refs.wonderland.respawn()"
         >
-            <i class="material-icons">replay</i>
-        </p>
+            <div><i class="material-icons">replay</i></div>
+        </div>
 
-        <p 
-            class="mute-button"
+        <div 
+            class="mute-button topbar-button"
             @click="$store.state.soundMuted = !$store.state.soundMuted; $store.dispatch( `checkFullscreen` )"
         >
-            <i 
+            <div><i 
                 class="material-icons"
-            >{{ $store.state.soundMuted ? `volume_muted` : `volume_up` }}</i>
-        </p>
+            >{{ $store.state.soundMuted ? `volume_muted` : `volume_up` }}</i></div>
+        </div>
 
         <Pause
             v-show="pauseMenuShown"
@@ -108,7 +111,12 @@ export default {
             } )
         } )
 
-       
+        this.$store.dispatch( "native", {
+            method: "setScreenOrientation",
+            args: [
+                "landscape"
+            ]
+        } )
 
 	},
     methods: {

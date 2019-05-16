@@ -105,6 +105,7 @@
 			"geometry": "circle",
 			"radius": 11,
 			"mass": 0.7,
+			"zIndex": 100,
 			"constraint": {
 				"body": "hanger",
 				"pointB": {

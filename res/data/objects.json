@@ -131,5 +131,115 @@
 				"y": 0
 			}
 		}
+	},
+	"truck": {
+		"composite": true,
+			"bodies": {
+			"hanger": {
+				"scale": { 
+					"x": 1.1,
+					"y": 1.1
+				},
+				"geometry": "rectangle",
+				"width": 60,
+				"height": 4,
+				"mass": 4,
+				"x": -10,
+				"y": 0,
+				"zIndex": 1,
+				"friction": 0,
+				"frictionAir": 0.0,
+				"opacity": 0
+			},
+			"corpse": {
+				"texture": "truck.png",
+				"scale": { 
+					"x": 1.1,
+					"y": 1.1
+				},
+				"bumpScale": 3,
+				"textureFlip": true,
+				"geometry": "rectangle",
+				"width": 60,
+				"height": 32,
+				"mass": 2,
+				"x": -10,
+				"y": 0,
+				"zIndex": 1,
+				"friction": 0,
+				"frictionAir": 0.0,
+				"constraints": [
+					{
+						"body": "hanger",
+						"pointB": {
+							"x": -24,
+							"y": 0
+						},
+						"pointA": {
+							"x": -24,
+							"y": 16
+						},
+						"stiffness": 0.333,
+						"length": 1
+					},
+					{
+						"body": "hanger",
+						"pointB": {
+							"x": 24,
+							"y": 0
+						},
+						"pointA": {
+							"x": 24,
+							"y": 16
+						},
+						"stiffness": 0.333,
+						"length": 1
+					}
+				]
+			},
+			"wheelA": {
+				"texture": "truck_wheel.png",
+				"bumpScale": 1,
+				"color": "#ffffff",
+				"geometry": "circle",
+				"radius": 6,
+				"color": "#ff9800",
+				"mass": 0.7,
+				"constraint": {
+					"body": "hanger",
+					"pointB": {
+						"x": -21,
+						"y": 7
+					},
+					"stiffness": 0.9,
+					"length": 0.07
+				},
+				"friction": 0.99,
+				"re11tution": 0.333,
+				"x": 0,
+				"y": 0
+			},
+			"wheelB": {
+				"texture": "truck_wheel.png",
+				"bumpScale": 1,
+				"color": "#ff9800",
+				"geometry": "circle",
+				"radius": 6,
+				"mass": 0.7,
+				"constraint": {
+					"body": "hanger",
+					"pointB": {
+						"x": 18,
+						"y": 7
+					},
+					"stiffness": 0.9,
+					"length": 0.07
+				},
+				"friction": 0.99,
+				"restitution": 0.11,
+				"x": 37,
+				"y": 0
+			}
+		}
 	}
 }

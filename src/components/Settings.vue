@@ -15,16 +15,20 @@
             <v-tabs
                v-model="tab"
                dark
-               color="deep-orange"
+               color="teal"
             >
                <v-tabs-slider color="yellow"></v-tabs-slider>
-               <v-tab key="0">
-                  Освещение
-               </v-tab>
+
                <v-tab key="1">
-                  Симуляция
+                  Общие
                </v-tab>
                <v-tab key="2">
+                  Освещение
+               </v-tab>
+               <v-tab key="3">
+                  Симуляция
+               </v-tab>
+               <v-tab key="4">
                   Дополнительно
                </v-tab>
             </v-tabs>
@@ -35,19 +39,26 @@
                 touchless
                 ref="tabsItems"
             >
-               <v-tab-item key="0">
+
+                <v-tab-item key="0">
                   <v-card flat>
-                     <LightSettings
+                     <AppSettings
                      />
                   </v-card>
                </v-tab-item>
                <v-tab-item key="1">
                   <v-card flat>
-                     <SimSettings
+                     <LightSettings
                      />
                   </v-card>
                </v-tab-item>
                <v-tab-item key="2">
+                  <v-card flat>
+                     <SimSettings
+                     />
+                  </v-card>
+               </v-tab-item>
+               <v-tab-item key="3">
                     <v-card flat>
                         <ExtraSettings
                         />
@@ -76,9 +87,10 @@ import data from "data/data.json"
 import LightSettings from "components/Settings/LightSettings.vue"
 import SimSettings from "components/Settings/SimSettings.vue"
 import ExtraSettings from "components/Settings/ExtraSettings.vue"
+import AppSettings from "components/Settings/AppSettings.vue"
 
 export default {
-    components : { LightSettings, SimSettings, ExtraSettings },
+    components : { LightSettings, SimSettings, ExtraSettings, AppSettings },
     data () {
         return {
             apk_dl_url: data.apk_dl_url,

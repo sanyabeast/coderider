@@ -8,7 +8,7 @@
 
 	    <v-subheader>Настройки бамаппинга</v-subheader>
 
-	    <v-list-tile>
+	    <!-- <v-list-tile>
 	      <v-list-tile-action>
 	        <v-checkbox v-model="$store.state.bumpmappingEnabled"></v-checkbox>
 	      </v-list-tile-action>
@@ -18,20 +18,21 @@
 	        <v-list-tile-sub-title>Включает или отключает бампмаппинг</v-list-tile-sub-title>
 	      </v-list-tile-content>
 	    </v-list-tile>
-
-	    <!-- <v-card flat color="transparent">
+ -->
+	    <v-card flat color="transparent">
 	    	<v-subheader>Уровень бампмаппинга</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      	<v-slider
-	            	v-model="$store.state.bumpmappingLevel"
+	            	v-model="$store.state.bumpmapMultiplier"
 	            	thumb-label="always"
-	            	min="1"
-	            	max="100"
+	            	min="0"
+	            	step="0.1"
+	            	max="10"
 		        ></v-slider>
 		    </v-card-text>
     		
-    	</v-card> -->
+    	</v-card>
 
     	<!-- <v-subheader>Источники света</v-subheader>
 
