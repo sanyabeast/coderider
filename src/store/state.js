@@ -28,6 +28,8 @@ var state = {
 		"gravityY",
 		"physicsEnabled",
 		"saveChunks",
+		"enginePower",
+		"groundFriction"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -38,8 +40,11 @@ var state = {
 		freeCamera: false,
 		freeCameraZ: 400,
 		bumpmappingEnabled: true,
-		bumpmapMultiplier: 1,
-		saveChunks: true
+		bumpmapMultiplier: 0.5,
+		saveChunks: true,
+		enginePower: 1,
+		groundFriction: config.groundFriction,
+		groundRestirution: config.groundRestirution
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -60,14 +65,14 @@ var state = {
 	soundMuted: false,
 	pauseMenuShown: false,
 	settingsMenuShown: false,
-	wonderMatterTestRenderer: !device.desktop ? false : false,
+	wonderMatterTestRenderer: !device.desktop ? false : true,
 	isAndroid: device.android,
 	saveChunks: false,
 	wonderMatterTestRendererBounds: {
-		x: 0,
+		x: 500,
 		y: 0,
-		width: 2000,
-		height: 2000
+		width: 1000,
+		height: 1000
 	},
 	physicsEnabled: true,
 	gravityX: 0,
@@ -76,7 +81,10 @@ var state = {
 	freeCamera: false,
 	freeCameraZ: 400,
 	bumpmappingEnabled: true,
-	bumpmapMultiplier: 0.75
+	bumpmapMultiplier: 0.5,
+	enginePower: 1,
+	groundFriction: config.groundFriction,
+	groundRestirution: config.groundRestirution
 };
 
 export default state;

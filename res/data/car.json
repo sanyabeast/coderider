@@ -1,7 +1,7 @@
 {
 	"spawnPosition": {
-		"x": 741,
-		"y": 441
+		"x": 747,
+		"y": 440
 	},
 	"accelerationTime": 0.33,
 	"decelerationTime": 0.22,
@@ -16,7 +16,7 @@
 			},
 			"geometry": "rectangle",
 			"color" : "#ffffff",
-			"width": 80,
+			"width": 60,
 			"height": 4,
 			"mass": 4,
 			"x": -10,
@@ -56,8 +56,21 @@
 						"x": -24,
 						"y": 16
 					},
-					"stiffness": 0.555,
-					"length": 2.5
+					"stiffness": 0.075,
+					"length": 0.001
+				},
+				{
+					"body": "hanger",
+					"pointB": {
+						"x": -0,
+						"y": 0
+					},
+					"pointA": {
+						"x": -0,
+						"y": 16
+					},
+					"stiffness": 0.075,
+					"length": 0.001
 				},
 				{
 					"body": "hanger",
@@ -69,8 +82,8 @@
 						"x": 24,
 						"y": 16
 					},
-					"stiffness": 0.555,
-					"length": 2.5
+					"stiffness": 0.075,
+					"length": 0.001
 				}
 			]
 		},
@@ -87,13 +100,13 @@
 				"body": "hanger",
 				"pointB": {
 					"x": -23,
-					"y": 6
+					"y": 7
 				},
 				"stiffness": 0.98,
 				"length": 0.07
 			},
 			"friction": 0.99,
-			"re11tution": 0.333,
+			"restitution": 0,
 			"x": 0,
 			"y": 0
 		},
@@ -110,13 +123,13 @@
 				"body": "hanger",
 				"pointB": {
 					"x": 28,
-					"y": 6
+					"y": 7
 				},
 				"stiffness": 0.98,
 				"length": 0.07
 			},
 			"friction": 0.99,
-			"restitution": 0.11,
+			"restitution": 0,
 			"x": 37,
 			"y": 0
 		}

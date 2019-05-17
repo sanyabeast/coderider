@@ -12,7 +12,7 @@
     "groundColor": "#ffffff",
     "chunkSize": 100,
     "groundFriction": 0.888,
-    "groundRestirution": 0,
+    "groundRestirution": 0.9,
     "groundFrictionAir": 0,
     "groundHeight": 2000,
     "groundTextureSize": 20,

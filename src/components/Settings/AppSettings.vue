@@ -33,7 +33,54 @@
     		
     	</v-card>
 
-    	
+    	<v-subheader>Настройки транспорта</v-subheader>
+
+    	<v-card flat color="transparent">
+	    	<v-subheader>Мощность двигателя</v-subheader>
+  
+		    <v-card-text class="pt-0">
+		      	<v-slider
+	            	v-model="$store.state.enginePower"
+	            	thumb-label="always"
+	            	min="0"
+	            	step="0.5"
+	            	max="10"
+		        ></v-slider>
+		    </v-card-text>
+    		
+    	</v-card>
+
+    	<v-subheader>Настройки поверхности</v-subheader>
+
+    	<v-card flat color="transparent">
+	    	<v-subheader>Трение поверхности</v-subheader>
+  
+		    <v-card-text class="pt-0">
+		      	<v-slider
+	            	v-model="$store.state.groundFriction"
+	            	thumb-label="always"
+	            	min="0"
+	            	step="0.1"
+	            	max="1"
+		        ></v-slider>
+		    </v-card-text>
+    		
+    	</v-card>
+
+    	<v-card flat color="transparent">
+	    	<v-subheader>Упругость поверхности</v-subheader>
+  
+		    <v-card-text class="pt-0">
+		      	<v-slider
+	            	v-model="$store.state.groundRestirution"
+	            	thumb-label="always"
+	            	min="0"
+	            	step="0.1"
+	            	max="0.9"
+		        ></v-slider>
+		    </v-card-text>
+    		
+    	</v-card>
 
 	  </v-list>
 	

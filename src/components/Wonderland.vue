@@ -14,8 +14,8 @@
             ref="canvas"
         ></canvas>
         <div
-            ref="test"
-            class="test"
+            ref="matterRenderer"
+            class="matter-renderer"
         ></div>
 
         <!-- <div class="daynight">
@@ -97,10 +97,27 @@ export default {
             "bumpmapMultiplier",
             "paused",
             "mainThemePlays",
-            "soundMuted"
+            "soundMuted",
+            "enginePower",
+            "groundFriction",
+            "groundRestirution"
         ])
     },
     watch: {
+        groundFriction ( value ) {
+            forEach( this.modules.chunks, ( chunk )=>{
+                if ( chunk.matterBody ) {
+                    chunk.matterBody.friction = value
+                }
+            } )
+        },
+        groundRestirution ( value ) {
+            forEach( this.modules.chunks, ( chunk )=>{
+                if ( chunk && chunk.matterBody ) {
+                    chunk.matterBody.restitution = value
+                }
+            } )
+        },
         mainThemePlays ( plays ) {
             if ( plays ) {
                 this.modules.soundBlaster.play( "main_theme", 0.333, true )
@@ -255,7 +272,7 @@ export default {
         this.addChunk( 1 )
         this.createCar()
 
-        this.createObject("moto", wonder.$store.state.objects.moto, 541, 440)
+        // this.createObject("moto", wonder.$store.state.objects.moto, 541, 440)
         // this.createObject("truck", wonder.$store.state.objects.truck, 900, 400)
         // this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
         // this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
@@ -394,7 +411,7 @@ export default {
         },
         respawn () {
             let car = this.modules.objects.car
-            Matter.Body.setAngle( car.parts.corpse.matterBody, 0 )
+            Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.3 )
         },  
         setupGestures () {
             // Create an instance of Hammer with the reference.
@@ -549,7 +566,7 @@ export default {
                 let maxx = boundsConfig.x + boundsConfig.width
 
                 let render = Matter.Render.create({
-                    element: this.$refs.test,
+                    element: this.$refs.matterRenderer,
                     engine: engine,
                     bounds: {
                         min: {
@@ -678,8 +695,8 @@ export default {
 
             if ( this.engineActive || this.breakActive ) {
                 // console.log( this.modules.objects.car.parts.wheelA.matterBody.velocity.x.toFixed(2), this.modules.objects.car.parts.wheelA.matterBody.velocity.y.toFixed(2) )
-                Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelA.matterBody, this.acceleration )
-                Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelB.matterBody, this.acceleration )
+                Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelA.matterBody, this.acceleration * this.enginePower )
+                Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelB.matterBody, this.acceleration * this.enginePower )
                 // Matter.Body.applyForce( this.modules.objects.car.parts.wheelA.matterBody, {
                 //     x: this.modules.objects.car.parts.wheelA.matterBody.position.x,
                 //     y: this.modules.objects.car.parts.wheelA.matterBody.position.y
@@ -689,7 +706,7 @@ export default {
                 // } )
             }
 
-            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, this.acceleration )
+            // Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, this.acceleration )
             /****************/
 
             if ( this.physicsEnabled ) {
@@ -804,7 +821,7 @@ export default {
                                 group: group
                             },
                             chamfer: {
-                                radius: bodyConfig.height * 0.2
+                                radius: bodyConfig.height / 2
                             },
                             render: {
                                 fillStyle: bodyConfig.color
@@ -1035,6 +1052,9 @@ export default {
             }
             
         },
+        setMatterRendererBounds () {
+
+        },
         showChunk ( chunkIndex ) {
             if ( this.modules.activeChunks[ chunkIndex ] ) {
                 return
@@ -1095,8 +1115,8 @@ export default {
 
             let matterBody = this.generateCurveMatterBody( points )
 
-            matterBody.friction = this.$store.state.config.groundFriction
-            matterBody.restitution = this.$store.state.config.groundRestirution
+            matterBody.friction = this.groundFriction
+            matterBody.restitution = this.groundRestirution
             matterBody.frictionAir = this.$store.state.config.groundFrictionAir
 
             Matter.World.add(modules.matter.engine.world, [ matterBody ]);
