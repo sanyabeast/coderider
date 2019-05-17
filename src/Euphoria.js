@@ -8,7 +8,14 @@ import StoreCreator from "store/StoreCreator"
 import App from "components/App.vue"
 import packageObj from "../package.json"
 
-Vue.use(Vuetify)
+Vue.use(Vuetify, {
+	theme: {
+	    primary: '#ff8400',
+	    secondary: '#ffffff',
+	    accent: '#ff8400',
+	    error: '#b71c1c'
+	}
+})
 
 window.clog = console.log.bind(console)
 

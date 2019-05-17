@@ -7,6 +7,15 @@
         @keyup.right.stop.prevent="engineActive = false"
         @keydown.left.stop.prevent="breakActive = true"
         @keyup.left.stop.prevent="breakActive = false"
+
+        @keydown.68.stop.prevent="engineActive = true"
+        @keyup.68.stop.prevent="engineActive = false"
+        @keydown.65.stop.prevent="breakActive = true"
+        @keyup.65.stop.prevent="breakActive = false"
+
+        @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
+
+
         tabindex="-1" 
     >
 
@@ -16,6 +25,7 @@
         <div
             ref="matterRenderer"
             class="matter-renderer"
+            v-show="wonderMatterTestRenderer"
         ></div>
 
         <!-- <div class="daynight">
@@ -34,6 +44,8 @@
             @mouseup="engineActive = false"
             @touchstart="engineActive = true"
             @touchend="engineActive = false"
+            v-show="!(pauseMenuShown || settingsMenuShown)"
+            title="Клавиша 'Вверх' или 'D' "
         >
             <p>Engine</p>
         </div>
@@ -44,6 +56,8 @@
             @mouseup="breakActive = false"
             @touchstart="breakActive = true"
             @touchend="breakActive = false"
+            v-show="!(pauseMenuShown || settingsMenuShown)"
+            title="Клавиша 'Вниз' или 'A' "
         >
             <p>Break</p>
         </div>
@@ -78,6 +92,20 @@ export default {
             hour: 0,
             sunOffset: { x: 0, y: 0, z: 0 },
             hoursCount: 0,
+            lastZ: 0,
+            zGrid: 10000,
+            orthographicCamera: {
+                bounds: {
+                    min: {
+                        x: 0,
+                        y: 0
+                    },
+                    max: {
+                        x: 100,
+                        y: 100
+                    }
+                }
+            }
         }
     },
     computed: {
@@ -102,10 +130,37 @@ export default {
             "groundFriction",
             "groundRestirution",
             "groundSkin",
-            "wireframeMode"
+            "wireframeMode",
+            "wonderMatterTestRenderer",
+            "wonderMatterTestRendererBounds",
+            "wonderMatterTestRendererSize",
+            "screenAspect",
+            "pauseMenuShown",
+            "settingsMenuShown",
+            "timeScale"
         ])
     },
     watch: {
+        timeScale ( value ) {
+            this.modules.matter.engine.timing.timeScale = value
+        },
+        wonderMatterTestRendererSize ( value ) {
+            this.renderFrame()
+        },
+        wonderMatterTestRenderer ( enabled ) {
+            if ( enabled ) {
+                // if ( !this.modules.matter.render ) {
+                //     this.createMatterRenderer()                   
+                // }
+
+                // this.updateSize()
+                Matter.Render.run( this.modules.matter.render )
+                this.renderFrame()
+            } else {
+                Matter.Render.stop( this.modules.matter.render )
+                this.renderFrame()
+            }
+        },
         wireframeMode ( enabled ){
             this.renderFrame()
         },
@@ -139,8 +194,10 @@ export default {
         },
         paused ( value ) {
             if ( value ) {
+                this.stopRendering()
                 TweenMax.pauseAll( TweenMax.getAllTweens() )
             } else {
+                this.startRendering()
                 TweenMax.resumeAll( TweenMax.getAllTweens() )
             }
         },
@@ -279,19 +336,35 @@ export default {
 
         
         this.setupDaynight()
-
         this.setGroundSkin( this.$store.state.groundSkin )
 
         this.addChunk( -1 )
         this.addChunk( 0 )
         this.addChunk( 1 )
+        this.createObject("truck", wonder.$store.state.objects.truck, {
+            spawnX: 300,
+            spawnY: 300,
+            collisionGroup: -1
+        })
+
+        this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
+        this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
+
+       
+
         this.createCar()
 
-        // this.createObject("moto", wonder.$store.state.objects.moto, 541, 440)
-        // this.createObject("truck", wonder.$store.state.objects.truck, 900, 400)
-        // this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
-        // this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
-        // this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
+        this.createObject("moto", wonder.$store.state.objects.moto, {
+            spawnX: 745,
+            spawnY: 444,
+            collisionGroup: -1
+        })
+
+        this.createObject("can1", wonder.$store.state.objects.can, {
+            x:  300,
+            y: -250,
+            collisionGroup: -1
+        })
 
         this.startRendering()
 
@@ -300,6 +373,8 @@ export default {
         }
 
         this.modules.soundBlaster.mute( this.$store.state.soundMuted )
+
+        this.$refs.root.focus()
     },
     methods: {
         setGroundSkin( name ) {
@@ -449,7 +524,7 @@ export default {
         },
         respawn () {
             let car = this.modules.objects.car
-            Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.3 )
+            Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.1 )
         },  
         setupGestures () {
             // Create an instance of Hammer with the reference.
@@ -520,10 +595,13 @@ export default {
         },  
         setupRenderer () {
             let canvasElement = this.$refs.canvas
+            let width = window.innerWidth * DPR
+            let height = window.innerHeight * DPR
 
 
             let scene = new THREE.Scene()
             let camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.001, 100000 )
+            // let camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 )
             let renderer = new THREE.WebGLRenderer({ 
                 antialias: false, 
                 canvas: canvasElement,
@@ -584,6 +662,8 @@ export default {
                 enableSleeping: false,
             } );
 
+            engine.timing.timeScale = this.timeScale
+
 
             // add all of the bodies to the world
             // run the engine
@@ -595,36 +675,35 @@ export default {
             
 
             // run the renderer
-            if ( this.$store.state.wonderMatterTestRenderer ) {
-                let boundsConfig = this.$store.state.wonderMatterTestRendererBounds
-
-                let minx = boundsConfig.x
-                let miny = boundsConfig.y
-                let maxy = boundsConfig.y + boundsConfig.height
-                let maxx = boundsConfig.x + boundsConfig.width
-
-                let render = Matter.Render.create({
-                    element: this.$refs.matterRenderer,
-                    engine: engine,
-                    bounds: {
-                        min: {
-                            x: minx,
-                            y: miny
-                        },
-                        max: {
-                            x: maxx,
-                            y: maxy
-                        }
-                    },
-                });
-
-                Matter.Render.run(render)
-
-                modules.matter.render = render
-            }
+            this.createMatterRenderer()
 
 
             // run the renderer
+        },
+        createMatterRenderer () {
+            let boundsConfig = this.wonderMatterTestRendererBounds
+
+            let minx = boundsConfig.x
+            let miny = boundsConfig.y
+            let maxy = boundsConfig.y + boundsConfig.height
+            let maxx = boundsConfig.x + boundsConfig.width
+
+            let render = Matter.Render.create({
+                element: this.$refs.matterRenderer,
+                engine: this.modules.matter.engine,
+                bounds: {
+                    min: {
+                        x: minx,
+                        y: miny
+                    },
+                    max: {
+                        x: maxx,
+                        y: maxy
+                    }
+                },
+            });
+
+            this.modules.matter.render = render
         },
         setupLights () {
             let modules = this.modules
@@ -634,9 +713,6 @@ export default {
             modules.scene.add( sun )
 
             modules.lights.sun = sun
-
-
-
         },
         setupBackground () {
             let self = this
@@ -687,6 +763,10 @@ export default {
         startRendering () {
             this.prevRenderedFrameTime = +new Date()
             this.renderingActive = true
+
+            if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
+                Matter.Render.run( this.modules.matter.render )
+            }
             // modules.matter.runner = Engine.run(modules.matter.engine);
             this.render()
         },
@@ -707,12 +787,34 @@ export default {
            
 
         },
+        updateMatterRendererBounds () {
+            if ( ! this.modules.matter.render ) return
+            let cameraPosition = this.modules.camera.position
+            let render = this.modules.matter.render
+
+                
+            let width = window.innerWidth * DPR * this.wonderMatterTestRendererSize
+            let height = window.innerHeight * DPR * this.wonderMatterTestRendererSize
+            let screenAspect = width / height
+
+            // console.log(width, height)
+
+            render.bounds.min.x = cameraPosition.x - ((width) / 2)
+            render.bounds.min.y = cameraPosition.y - (height / 2)
+            render.bounds.max.x = render.bounds.min.x + width * screenAspect
+            render.bounds.max.y = render.bounds.min.y + height
+
+        },
         updateThings (delta) {
             let modules = this.modules
 
             let cameraOffset = this.$store.state.config.cameraOffset
             modules.camera.position.y =  modules.objects.car.parts.wheelA.mesh.position.y + cameraOffset.y
             modules.camera.position.x =  modules.objects.car.parts.wheelA.mesh.position.x + cameraOffset.x
+
+            if ( this.wonderMatterTestRenderer ) {
+                this.updateMatterRendererBounds()
+            }
 
             modules.lights.sun.position.set( 
                 modules.camera.position.x + this.sunOffset.x,  
@@ -743,7 +845,41 @@ export default {
                 // } )
             }
 
-            // Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, this.acceleration )
+            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.7 )
+            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.7 )
+            Matter.Body.setAngularVelocity( this.modules.objects.truck.parts.wheelA.matterBody, 0.6 )
+            Matter.Body.setAngularVelocity( this.modules.objects.truck.parts.wheelB.matterBody, 0.6 )
+
+           if (  this.modules.objects.moto.parts.corpse.matterBody.position.y > 2000 ) {
+                Matter.Body.setStatic( this.modules.objects.moto.parts.corpse.matterBody, true )
+
+                this.setBodiesPosition( this.modules.objects.moto.composite.bodies, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
+                    y: this.modules.objects.car.parts.corpse.matterBody.position.y- 150,
+                } )                
+
+                setTimeout( ()=>{
+                    Matter.Body.setStatic( this.modules.objects.moto.parts.corpse.matterBody, false )
+                    this.freezeComposite( this.modules.objects.moto.composite )
+                }, 4000 )
+           } 
+
+           if (  this.modules.objects.truck.parts.corpse.matterBody.position.y > 2000 ) {
+                Matter.Body.setStatic( this.modules.objects.truck.parts.corpse.matterBody, true )
+
+                 this.setBodiesPosition( this.modules.objects.truck.composite.bodies, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
+                    y: this.modules.objects.car.parts.corpse.matterBody.position.y- 350,
+                } )       
+
+                setTimeout( ()=>{
+                    Matter.Body.setStatic( this.modules.objects.truck.parts.corpse.matterBody, false )
+                    this.freezeComposite( this.modules.objects.truck.composite )
+                }, 4000 )
+           } 
+
+      
+
             /****************/
 
             if ( this.physicsEnabled ) {
@@ -771,69 +907,93 @@ export default {
                 this.currentChunkIndex = currentChunkIndex
 
             }
-
-
-
-
-
         },
+        setBodiesPosition ( bodies, position ) {
+            forEach( bodies, ( body )=>{
+                Matter.Body.setPosition( body, position )
+            } )
+        },
+        freezeComposite ( composite ) {
+            forEach( composite.bodies, ( body )=>{
+                Matter.Body.setVelocity( body, { x: 0, y: 0 } )
+                Matter.Body.setAngularVelocity( body, 0 )
+            } )
+        },  
         renderFrame ( ) {
             this.modules.renderer.render( this.modules.scene, this.modules.camera )
         },
         stopRendering () {
             this.renderingActive = false
             // Matter.Runner.stop( modules.matter.runner )
+
+            if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
+                Matter.Render.stop( this.modules.matter.render )
+            }
+
             cancelAnimationFrame( this.rafId )
         },
         updateSize () {
             let modules = this.modules
 
             let canvasElement = this.$refs.canvas
-            let canvasParentElement = canvasElement.parentElement
 
-            if ( canvasParentElement ) {
-                let rect = canvasParentElement.getBoundingClientRect()
+            let width = window.innerWidth * window.devicePixelRatio
+            let height = window.innerHeight * window.devicePixelRatio
 
-                let width = rect.width * window.devicePixelRatio
-                let height = rect.height * window.devicePixelRatio
+            modules.camera.aspect = this.$store.state.screenAspect =  width / height
+            // modules.camera.position.x = modules.lightGroup.position.x = width / 2
+            // modules.camera.position.y = 
+            // modules.camera.position.z = modules.lightGroup.position.z = ( ( Math.sqrt( 3 ) / 2 ) * height )
 
-                modules.camera.aspect = width/ height
-                // modules.camera.position.x = modules.lightGroup.position.x = width / 2
-                // modules.camera.position.y = 
-                // modules.camera.position.z = modules.lightGroup.position.z = ( ( Math.sqrt( 3 ) / 2 ) * height )
+            // modules.lightGroup.position.z
 
-                // modules.lightGroup.position.z
+            modules.pointLight.position.y = -height / 2
 
-                modules.pointLight.position.y = -height / 2
+            modules.size.x = width
+            modules.size.y = height
 
-                modules.size.x = width
-                modules.size.y = height
+            modules.camera.updateProjectionMatrix()
+            modules.renderer.setSize( width, height )
 
-                modules.camera.updateProjectionMatrix()
-                modules.renderer.setSize( width, height )
+            if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
+                // console.log(width, height)
+                this.modules.matter.render.options.width = width
+                this.modules.matter.render.options.height = height
+                this.updateMatterRendererBounds()
             }
         },
 
         createCar () {
             this.createObject( "car", this.$store.state.carConfig )
         },
-        createObject ( objectName, config, spawnX, spawnY) {
+        createObject ( objectName, config, params) {
             let modules = this.modules
-
-            if ( typeof spawnX != "number" ) {
-                spawnX = config.spawnPosition.x || 0
-            }
-
-            if ( typeof spawnY != "number" ) {
-                spawnY = config.spawnPosition.y || 0
-            }
-
-            
-            
-
+            let spawnX 
+            let spawnY
             let composite
+            let collisionGroup = -1
 
-            let group = Matter.Body.nextGroup(true)
+            if ( params && typeof params.spawnX == "number" ) {
+                spawnX = params.spawnX || 0
+            } else if ( config.spawnPosition ) {
+                spawnX = config.spawnPosition.x || 0
+            } else {
+                spawnX = 0
+            }
+
+            if ( params && typeof params.spawnY == "number" ) {
+                spawnY = params.spawnY ||  0
+            } else if ( config.spawnPosition ) {
+                spawnY = config.spawnPosition.y ||  0
+            } else {
+                spawnY = 0
+            }            
+
+            if ( params && typeof params.collisionGroup == "number" ) {
+                collisionGroup = params.collisionGroup
+            } else {
+                collisionGroup = config.collisionGroup || 0
+            }
 
             forEach( config.bodies, ( bodyConfig, name )=>{
                 let geometry
@@ -855,7 +1015,7 @@ export default {
                         // geometry.translate( bodyConfig.width/2, 0, 0 )
                         matterBody = Matter.Bodies.rectangle( x, y, bodyConfig.width, bodyConfig.height, {
                             collisionFilter: {
-                                group: group
+                                group: collisionGroup
                             },
                             chamfer: {
                                 radius: bodyConfig.height / 2
@@ -871,7 +1031,7 @@ export default {
                         geometry = new THREE.CircleBufferGeometry( bodyConfig.radius, 32 )
                         matterBody = Matter.Bodies.circle( x, y, bodyConfig.radius, {
                             collisionFilter: {
-                                group: group
+                                group: collisionGroup
                             },
                         }, 32 )
                     break;
@@ -894,6 +1054,8 @@ export default {
                     depthTest: true,
                     side: THREE.DoubleSide,
                 } )
+
+                
 
 
                 _.getter( material, "wireframe", ()=>{
@@ -1067,6 +1229,7 @@ export default {
                     }
                 }
             } )
+
 
         },
         hideChunk ( chunkIndex, remove ) {

@@ -49,6 +49,21 @@
     		
     	</v-card>
 
+    	<v-card flat color="transparent">
+	    	<v-subheader>Масштаб времени</v-subheader>
+  
+		    <v-card-text class="pt-0">
+		      	<v-slider
+	            	v-model="$store.state.timeScale"
+	            	thumb-label="always"
+	            	min="0"
+	            	step="0.01"
+	            	max="1"
+		        ></v-slider>
+		    </v-card-text>
+    		
+    	</v-card>
+
 	  </v-list>
 	
 </template>

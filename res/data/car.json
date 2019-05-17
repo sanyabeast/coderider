@@ -1,13 +1,14 @@
 {
 	"spawnPosition": {
-		"x": 747,
-		"y": 440
+		"x": 748,
+		"y": 438
 	},
 	"accelerationTime": 0.33,
 	"decelerationTime": 0.22,
 	"composite": true,
 	"wheelVelocity": 0.4,
 	"corpseSpeed": 0.1,
+	"collisionGroup": -1,
 	"bodies": {
 		"hanger": {
 			"scale": { 

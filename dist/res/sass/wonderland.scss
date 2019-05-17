@@ -19,7 +19,12 @@
 		height: 100%;
 		left: 0;
 		top: 0;
-		opacity: 0.5;
+
+		canvas {
+			width: 100%!important;
+			height: 100%!important;
+			background: 0% 0% / contain #0000007d!important;
+		}
 	}
 
 	.car-control {
@@ -35,6 +40,11 @@
 	    border-radius: 8px;
 	    transition: transform 0.1s ease-out;
 	    transform-origin: bottom center;
+	    cursor: pointer;
+
+	    &:hover {
+	    	background-color: #ffffff3d;
+	    }
 
 		&.engine {
 			left: 64px;

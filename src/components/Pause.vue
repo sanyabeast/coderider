@@ -22,28 +22,33 @@
                 dark
                 v-if="!$store.state.isHybridApp"
                 href="app.apk"
-                color="indigo"
+                color="secondary"
+                outline
+                flat
             >
                 Скачать APK
             </v-btn>
         </v-list-tile>
-        <v-list-tile avatar>
-          <v-btn
-            dark
-                color="red"
-                @click="reload()"
-            >
-                Перезапустить
-            </v-btn>
-        </v-list-tile>
+        
 
         <v-list-tile>
             <v-btn
                 dark
+                outline
+                flat
                 @click="$store.dispatch(`loadDefaults`)"
-                color="normal"
+                color="secondary"
             >
                 Сбросить настройки
+            </v-btn>
+        </v-list-tile>
+
+        <v-list-tile avatar>
+          <v-btn
+                flat color="#000000"
+                @click="reload()"
+            >
+                Перезапустить
             </v-btn>
         </v-list-tile>
 
@@ -55,9 +60,9 @@
         <v-spacer></v-spacer>
 
         
-        <v-btn dark color="primary" @click="onResumeClick">Продолжить</v-btn>
+        <v-btn dark depressed color="primary" @click="onResumeClick">Продолжить</v-btn>
         
-        <v-btn  dark color="secondary" @click="onSettingsClick">Настройки</v-btn>
+        <v-btn dark flat outline color="secondary" @click="onSettingsClick">Настройки</v-btn>
       </v-card-actions>
     </v-card>
     <!-- <div

@@ -31,7 +31,10 @@ var state = {
 		"enginePower",
 		"groundFriction",
 		"groundSkin",
-		"wireframeMode"
+		"wireframeMode",
+		"wonderMatterTestRenderer",
+		"wonderMatterTestRendererSize",
+		"timeScale"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -48,7 +51,10 @@ var state = {
 		groundFriction: config.groundFriction,
 		groundRestirution: config.groundRestirution,
 		groundSkin: config.groundSkin,
-		wireframeMode: false
+		wireframeMode: false,
+		wonderMatterTestRenderer: false,
+		wonderMatterTestRendererSize: 1,
+		timeScale: 1
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -69,7 +75,7 @@ var state = {
 	soundMuted: false,
 	pauseMenuShown: false,
 	settingsMenuShown: false,
-	wonderMatterTestRenderer: !device.desktop ? false : true,
+	wonderMatterTestRenderer: false,
 	isAndroid: device.android,
 	saveChunks: false,
 	wonderMatterTestRendererBounds: {
@@ -90,7 +96,10 @@ var state = {
 	groundFriction: config.groundFriction,
 	groundRestirution: config.groundRestirution,
 	groundSkin: config.groundSkin,
-	wireframeMode: false
+	wireframeMode: false,
+	wonderMatterTestRendererSize: 1,
+	screenAspect: 1,
+	timeScale: 1
 };
 
 export default state;

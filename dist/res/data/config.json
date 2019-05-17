@@ -1,9 +1,6 @@
 {
     "cameraPosition": -120,
     "cameraSpeedPosition": -180,
-    "groundTexture" : "dirt_a.png",
-    "groundBumpMap" : "bumps/dirt_a.png",
-    "groundBumpMapScale": 40,
     "sunColor": "#ff9800",
     "cameraOffset": {
         "x": 60,
@@ -17,8 +14,23 @@
     "groundHeight": 2000,
     "groundTextureSize": 20,
     "groundTextureUVYScale": 7,
-    "gravityY": 0.7777,
+    "gravityY": 0.8888,
     "daynightHourDuration": 30,
+    "groundSkin": "grass",
+    "groundSkins": {
+        "grass": {
+            "name": "grass",
+            "texture": "dirt_a.png",
+            "bumpMap": "bumps/dirt_a.png",
+            "bumpScale": 2
+        },
+        "sand": {
+            "name": "sand",
+            "texture": "ground_sand.png",
+            "bumpMap": "ground_sand.png",
+            "bumpScale": 1
+        }
+    },
     "curve": {
         "pointsStep": 10,
         "sinMap": [

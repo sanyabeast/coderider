@@ -11,6 +11,10 @@
             ref="wonderland"
         ></Wonderland>
 
+        <Tokens
+            v-show="!(pauseMenuShown || settingsMenuShown)"
+        />
+
         <div class="overlay"
             v-if="pauseMenuShown || settingsMenuShown"
         ></div>
@@ -19,6 +23,7 @@
             class="pause-button topbar-button"
             @click="onPauseClick"
             v-if="!$store.state.pauseMenuShown && !$store.state.settingsMenuShown"
+            v-show="!(pauseMenuShown || settingsMenuShown)"
         >
             <div>
                 <i class="material-icons">pause</i>
@@ -28,6 +33,7 @@
         <div 
             class="respawn-button topbar-button"
             @click="$refs.wonderland.respawn()"
+            v-show="!(pauseMenuShown || settingsMenuShown)"
         >
             <div><i class="material-icons">replay</i></div>
         </div>
@@ -35,6 +41,7 @@
         <div 
             class="mute-button topbar-button"
             @click="$store.state.soundMuted = !$store.state.soundMuted; $store.dispatch( `checkFullscreen` )"
+            v-show="!(pauseMenuShown || settingsMenuShown)"
         >
             <div><i 
                 class="material-icons"
@@ -79,14 +86,21 @@ export default {
     },
     computed: mapState( [
         "pauseMenuShown",
-        "settingsMenuShown"
+        "settingsMenuShown",
+        "paused"
     ] ),
+    watch: {
+        paused ( key ) {
+            if ( key ) {
+                this.$store.state.pauseMenuShown = true
+            } else {
+                this.$store.state.settingsMenuShown = false 
+                this.$store.state.pauseMenuShown = false
+            }
+        }
+    },
 	mounted () {
         this.$store.dispatch( "load" )
-        // document.body.addEventListener( "touchstart", ( evt )=>{
-        //     evt.stopPropagation()
-        //     evt.preventDefault()
-        // } )
 
         if ( !this.$store.state.isHybridApp && this.$store.state.mobileDevice && this.$store.state.browserName != "safari" ) {
             document.body.addEventListener( "click", ()=>{
@@ -121,13 +135,10 @@ export default {
 	},
     methods: {
         onPauseClick () {
-            console.log(1)
-            this.$refs.wonderland.stopRendering()
-            this.$store.state.pauseMenuShown = true
+            this.$store.state.paused = true
         },
         onResumeClick () {
-            this.$store.state.pauseMenuShown = false
-            this.$refs.wonderland.startRendering()
+            this.$store.state.paused = false
         },  
         onShowSettings () {
             this.$store.state.pauseMenuShown = false;
@@ -135,9 +146,7 @@ export default {
         },
         onSettingsExit () {
             this.$store.dispatch( "save" )
-            this.$store.state.settingsMenuShown = false
-            this.$store.state.pauseMenuShown = false
-            this.$refs.wonderland.startRendering()
+            this.$store.state.paused = false
         },
         onSettingsEnter ( el, done ) {
             this.$refs.settingsMenu.reset()
@@ -158,4 +167,5 @@ export default {
 <style lang="sass">
     import "sass/app.scss"
     import "sass/fonts.scss"
+    import "sass/material-overrides.scss"
 </style>

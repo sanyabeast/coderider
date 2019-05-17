@@ -1,31 +1,11 @@
 <template>
     <div class="tokens">
         <i 
-            v-if="bumpmappingEnabled"
+            v-if="this.$store.state.saveChunks"
             class="material-icons"
-        >blur_linear</i>
+            title="Хранить чанки в памяти"
+        >save</i>
 
-        <i 
-            class="material-icons"
-            :style="`color: ${ $store.state.lightAColor }`"
-        >wb_sunny</i>
-
-        <i 
-            class="material-icons"
-            :style="`color: ${ $store.state.lightBColor }`"
-        >wb_sunny</i>
-
-        <div class="separator"></div>
-
-        <i 
-            v-if="physicEnabled"
-            class="material-icons"
-        >check</i>
-
-        <i 
-            v-if="gyroGravityEnabled"
-            class="material-icons"
-        >crop_rotate</i>
     </div>
 </template>
 

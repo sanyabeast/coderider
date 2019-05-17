@@ -5,7 +5,7 @@
       <v-list>
          <v-list-tile avatar>
             <v-list-tile-content>
-               <v-list-tile-title>ДЕМО 101</v-list-tile-title>
+               <v-list-tile-title>ДЕМО 102</v-list-tile-title>
                <v-list-tile-sub-title>Настройки</v-list-tile-sub-title>
             </v-list-tile-content>
          </v-list-tile>
@@ -15,9 +15,9 @@
             <v-tabs
                v-model="tab"
                dark
-               color="teal"
+               color="rgba(0, 0, 0, 0.3)"
             >
-               <v-tabs-slider color="yellow"></v-tabs-slider>
+               <v-tabs-slider color="#f1a5b9"></v-tabs-slider>
 
                <v-tab key="1">
                   Общие
