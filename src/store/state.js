@@ -29,7 +29,9 @@ var state = {
 		"physicsEnabled",
 		"saveChunks",
 		"enginePower",
-		"groundFriction"
+		"groundFriction",
+		"groundSkin",
+		"wireframeMode"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -44,7 +46,9 @@ var state = {
 		saveChunks: true,
 		enginePower: 1,
 		groundFriction: config.groundFriction,
-		groundRestirution: config.groundRestirution
+		groundRestirution: config.groundRestirution,
+		groundSkin: config.groundSkin,
+		wireframeMode: false
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -84,7 +88,9 @@ var state = {
 	bumpmapMultiplier: 0.5,
 	enginePower: 1,
 	groundFriction: config.groundFriction,
-	groundRestirution: config.groundRestirution
+	groundRestirution: config.groundRestirution,
+	groundSkin: config.groundSkin,
+	wireframeMode: false
 };
 
 export default state;

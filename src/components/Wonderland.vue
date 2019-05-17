@@ -77,7 +77,7 @@ export default {
             lightsZ: 1,
             hour: 0,
             sunOffset: { x: 0, y: 0, z: 0 },
-            hoursCount: 0
+            hoursCount: 0,
         }
     },
     computed: {
@@ -100,21 +100,29 @@ export default {
             "soundMuted",
             "enginePower",
             "groundFriction",
-            "groundRestirution"
+            "groundRestirution",
+            "groundSkin",
+            "wireframeMode"
         ])
     },
     watch: {
-        groundFriction ( value ) {
+        wireframeMode ( enabled ){
+            this.renderFrame()
+        },
+        groundSkin ( name ) {
+            this.setGroundSkin( name )
+        },
+        groundFriction ( friction ) {
             forEach( this.modules.chunks, ( chunk )=>{
                 if ( chunk.matterBody ) {
-                    chunk.matterBody.friction = value
+                    chunk.matterBody.friction = friction
                 }
             } )
         },
-        groundRestirution ( value ) {
+        groundRestirution ( restitution ) {
             forEach( this.modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.matterBody ) {
-                    chunk.matterBody.restitution = value
+                    chunk.matterBody.restitution = restitution
                 }
             } )
         },
@@ -228,6 +236,11 @@ export default {
         this.$bumpmappingEnabled = true
 
         this.modules = {
+            ground: {
+                currentGroundTexture: undefined,
+                currentGroundBumpMap: undefined,
+                currentGroundBumpScale: 1
+            },
             soundBlaster: new SoundBlaster(),
             objects: {
 
@@ -267,6 +280,8 @@ export default {
         
         this.setupDaynight()
 
+        this.setGroundSkin( this.$store.state.groundSkin )
+
         this.addChunk( -1 )
         this.addChunk( 0 )
         this.addChunk( 1 )
@@ -287,6 +302,29 @@ export default {
         this.modules.soundBlaster.mute( this.$store.state.soundMuted )
     },
     methods: {
+        setGroundSkin( name ) {
+            let data = this.$store.state.config.groundSkins[ name ]
+            let texture = this.laodTexture( data.texture )
+            let bumpMap = this.laodTexture( data.bumpMap )
+            let bumpScale = data.bumpScale
+
+            texture.flipY = false
+            bumpMap.flipY = false
+
+            this.modules.ground.currentGroundTexture = texture
+            this.modules.ground.currentGroundBumpMap = bumpMap
+            this.modules.ground.currentGroundBumpScale = bumpScale
+
+            forEach( this.modules.chunks, ( chunk )=>{
+                if ( chunk && chunk.mesh ) {
+                    chunk.mesh.material.map = texture
+                    chunk.mesh.material.bumpMap = bumpMap
+                    chunk.mesh.material.bumpScale = bumpScale
+                }
+            } )
+
+            this.renderFrame()
+        },
         onRootClick () {
             if ( !this.mainThemePlays && !this.$store.state.isHybridApp ) {
                 this.$store.state.mainThemePlays = true
@@ -578,7 +616,6 @@ export default {
                             y: maxy
                         }
                     },
-                    // wireframes: true
                 });
 
                 Matter.Render.run(render)
@@ -855,7 +892,12 @@ export default {
                     map: texture,
                     transparent: true,
                     depthTest: true,
-                    side: THREE.DoubleSide
+                    side: THREE.DoubleSide,
+                } )
+
+
+                _.getter( material, "wireframe", ()=>{
+                    return this.wireframeMode
                 } )
 
                 if ( texture && typeof bodyConfig.textureFlip == "boolean" ) {
@@ -868,14 +910,14 @@ export default {
                     material.bumpMap = bumpMap
 
                     _.getter( material, "bumpScale", ()=>{
-                        if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier)
+                        if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier * DPR)
                     }, ( value )=>{
                         material._bumpScale = value
                     } )
 
 
                     if ( typeof bodyConfig.bumpScale == "number" ) {
-                        material.bumpScale = bodyConfig.bumpScale * DPR
+                        material.bumpScale = bodyConfig.bumpScale
                     }
 
                     if ( typeof bodyConfig.textureFlip == "boolean" ) {
@@ -1078,34 +1120,27 @@ export default {
             let material = this.modules.data.groundMaterial || new THREE.MeshPhongMaterial( {
                 side: THREE.DoubleSide,
                 color: _.cssHex2Hex( this.$store.state.config.groundColor ),
-                map: this.laodTexture( this.$store.state.config.groundTexture ),
+                map: this.modules.ground.currentGroundTexture,
                 transparent: true
+            } )
+
+            _.getter( material, "wireframe", ()=>{
+                return this.wireframeMode
             } )
 
             this.modules.data.groundMaterial = material
 
-            if ( this.$store.state.config.groundBumpMap ) {
-                let bumpMap = this.laodTexture( this.$store.state.config.groundBumpMap )
+            let bumpMap = this.modules.ground.currentGroundBumpMap
 
-                _.getter( material, "bumpScale", ()=>{
-                    if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier)
-                }, ( value )=>{
-                    material._bumpScale = value
-                } )
+            _.getter( material, "bumpScale", ()=>{
+                if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier * DPR)
+            }, ( value )=>{
+                material._bumpScale = value
+            } )
 
 
-                material.bumpMap = bumpMap
-                bumpMap.flipY = false
-                bumpMap.needsUpdate = true
-
-                if ( typeof this.$store.state.config.groundBumpMapScale == "number" ) {
-                    material.bumpScale = this.$store.state.config.groundBumpMapScale * DPR
-                }
-
-            }
-
-            material.map.flipY = false
-            material.map.needsUpdate = true
+            material.bumpMap = bumpMap
+            material.bumpScale = this.modules.ground.currentGroundBumpScale
 
             
 
