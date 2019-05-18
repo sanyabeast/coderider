@@ -1,18 +1,18 @@
 {
-    "cameraPosition": -120,
-    "cameraSpeedPosition": -180,
+    "cameraPosition": -140,
+    "cameraSpeedPosition": -220,
     "sunColor": "#ff9800",
     "cameraOffset": {
         "x": 60,
         "y": 0
     },
     "groundColor": "#ffffff",
-    "chunkSize": 60,
+    "chunkSize": 50,
     "groundFriction": 0.888,
     "groundRestirution": 0.1,
     "groundFrictionAir": 0,
     "groundHeight": 2000,
-    "groundTextureSize": 20,
+    "groundTextureSize": 10,
     "groundTextureUVYScale": 7,
     "gravityY": 0.6666,
     "daynightHourDuration": 30,
@@ -32,16 +32,15 @@
         }
     },
     "curve": {
-        "pointsStep": 10,
+        "pointsStep": 20,
         "sinMap": [
-            [ 3, 7 ],
-            [ 5, 16 ],
-            [ 9, 44 ],
-            [ 17, 32 ],
-            [ 33, 64 ],
-            [ 65, 128],
-            [ 127, 256 ],
-            [ 257, 512 ]
+            [ 2.12345     , 7.5      , 3, 1 ],
+            [ 5.23456     , 50       , 1, 1 ],
+            [ 7.34567     , 48       , 1, 1 ],
+            [ 21.4567     , 23       , 1, 1 ],
+            [ 72.5678     , 150      , 1, 1 ],
+            [ 160.5678    , 130      , 1, 1 ],
+            [ 400.5678    , 300      , 1, 1 ]
         ]
     }
 }

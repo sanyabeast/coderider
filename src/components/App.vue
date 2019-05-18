@@ -5,6 +5,8 @@
         v-bind:class="{ overlayActive: (pauseMenuShown || settingsMenuShown) }"
         :data-browser-name="$store.state.browserName"
         :data-mobile-device="$store.state.mobileDevice ? 1 : 0"
+        tabindex="-1"
+        
     >
         <Wonderland
             @pauseClick="onPauseClick"
@@ -24,6 +26,7 @@
             @click="onPauseClick"
             v-if="!$store.state.pauseMenuShown && !$store.state.settingsMenuShown"
             v-show="!(pauseMenuShown || settingsMenuShown)"
+            title="Клавиша 'Пробел'"
         >
             <div>
                 <i class="material-icons">pause</i>
@@ -34,6 +37,8 @@
             class="revoke-button topbar-button"
             @click="$refs.wonderland.revoke()"
             v-show="!(pauseMenuShown || settingsMenuShown)"
+            title="Клавиша 'Q'"
+            
         >
             <div><i class="material-icons">replay</i></div>
         </div>
@@ -42,6 +47,8 @@
             class="respawn-button topbar-button"
             @click="$refs.wonderland.respawn()"
             v-show="!(pauseMenuShown || settingsMenuShown)"
+            title="Клавиша 'R'"
+            
         >
             <div><i class="material-icons">undo</i></div>
         </div>

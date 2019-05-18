@@ -9,7 +9,7 @@
 
 
 
-THREE.BokehShader = {
+export default {
 
 	defines: {
 		"DEPTH_PACKING": 1,

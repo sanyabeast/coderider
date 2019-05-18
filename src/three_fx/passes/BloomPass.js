@@ -96,7 +96,9 @@ class BloomPass extends Pass {
 		this.convolutionUniforms[ "tDiffuse" ].value = readBuffer.texture;
 		this.convolutionUniforms[ "uImageIncrement" ].value = BloomPass.blurX;
 
-		renderer.render( this.scene, this.camera, this.renderTargetX, true );
+		renderer.setRenderTarget( this.renderTargetX )
+		renderer.clear( true )
+		renderer.render( this.scene, this.camera );
 
 
 		// Render quad with blured scene into texture (convolution pass 2)
@@ -104,7 +106,9 @@ class BloomPass extends Pass {
 		this.convolutionUniforms[ "tDiffuse" ].value = this.renderTargetX.texture;
 		this.convolutionUniforms[ "uImageIncrement" ].value = BloomPass.blurY;
 
-		renderer.render( this.scene, this.camera, this.renderTargetY, true );
+		renderer.setRenderTarget( this.renderTargetY )
+		renderer.clear( true )
+		renderer.render( this.scene, this.camera );
 
 		// Render original scene with superimposed blur to texture
 
@@ -114,7 +118,9 @@ class BloomPass extends Pass {
 
 		if ( maskActive ) renderer.context.enable( renderer.context.STENCIL_TEST );
 
-		renderer.render( this.scene, this.camera, readBuffer, this.clear );
+		renderer.setRenderTarget( readBuffer )
+		renderer.clear( this.clear )
+		renderer.render( this.scene, this.camera );
 
 	}
 }

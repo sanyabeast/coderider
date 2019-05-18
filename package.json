@@ -1,6 +1,6 @@
 {
     "name": "euphoria",
-    "version": "1.0.111",
+    "version": "1.0.112",
     "main": "index.js",
     "author": "sanyabeast <a.gvrnsk@gmail.com>",
     "license": "MIT",
@@ -38,7 +38,7 @@
         "js-beautify": "next",
         "jsdoc-webpack4-plugin": "^0.0.2",
         "jsonfile": "^5.0.0",
-        "lodash": "latest",
+        "lodash-es": "latest",
         "matter-js": "latest",
         "node-gyp": "^4.0.0",
         "node-sass": "latest",

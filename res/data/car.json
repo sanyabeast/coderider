@@ -1,12 +1,12 @@
 {
 	"spawnPosition": {
-		"x": 748,
+		"x": 490,
 		"y": 438
 	},
-	"accelerationTime": 0.33,
-	"decelerationTime": 0.22,
+	"accelerationTime": 0.44,
+	"decelerationTime": 0.33,
 	"composite": true,
-	"wheelVelocity": 0.4,
+	"wheelVelocity": 0.7,
 	"corpseSpeed": 0.1,
 	"collisionGroup": -1,
 	"bodies": {
@@ -59,7 +59,7 @@
 						"y": 16
 					},
 					"stiffness": 0.075,
-					"length": 0.001
+					"length": 0.003
 				},
 				{
 					"body": "hanger",
@@ -72,7 +72,7 @@
 						"y": 16
 					},
 					"stiffness": 0.075,
-					"length": 0.001
+					"length": 0.003
 				},
 				{
 					"body": "hanger",
@@ -85,7 +85,7 @@
 						"y": 16
 					},
 					"stiffness": 0.075,
-					"length": 0.001
+					"length": 0.003
 				}
 			],
 			"chamfer": 16
@@ -103,7 +103,7 @@
 				"body": "hanger",
 				"pointB": {
 					"x": -23,
-					"y": 7
+					"y": 5
 				},
 				"stiffness": 0.98,
 				"length": 0.07
@@ -125,8 +125,8 @@
 			"constraint": {
 				"body": "hanger",
 				"pointB": {
-					"x": 28,
-					"y": 7
+					"x": 27,
+					"y": 5
 				},
 				"stiffness": 0.98,
 				"length": 0.07

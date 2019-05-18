@@ -9,7 +9,7 @@
 
 
 
-THREE.FocusShader = {
+export default {
 
 	uniforms : {
 

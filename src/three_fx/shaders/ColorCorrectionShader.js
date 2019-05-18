@@ -3,11 +3,7 @@
  *
  * Color correction
  */
-
-
-
-
-THREE.ColorCorrectionShader = {
+export default {
 
 	uniforms: {
 

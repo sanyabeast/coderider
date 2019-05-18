@@ -14,6 +14,8 @@
         @keyup.65.stop.prevent="breakActive = false"
 
         @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
+        @keydown.82.stop.prevent="respawn()"
+        @keydown.81.stop.prevent="revoke()"
 
 
         tabindex="-1" 
@@ -73,6 +75,7 @@ import GlitchPass from "three_fx/passes/GlitchPass"
 import CopyShader from "three_fx/shaders/CopyShader"
 import ShaderPass from "three_fx/passes/ShaderPass"
 import DotScreenPass from "three_fx/passes/DotScreenPass"
+import BokehPass from "three_fx/passes/BokehPass"
 import BleachBypassShader from "three_fx/shaders/BleachBypassShader"
 import FreiChenShader from "three_fx/shaders/FreiChenShader"
 import BrightnessContrastShader from "three_fx/shaders/BrightnessContrastShader"
@@ -85,6 +88,7 @@ import VolumeShader from "three_fx/shaders/VolumeShader"
 import ColorifyShader from "three_fx/shaders/ColorifyShader"
 import ColorCorrectionShader from "three_fx/shaders/ColorCorrectionShader"
 import GammaCorrectionShader from "three_fx/shaders/GammaCorrectionShader"
+import FocusShader from "three_fx/shaders/FocusShader"
 import BloomPass from "three_fx/passes/BloomPass"
 import HalftonePass from "three_fx/passes/HalftonePass"
 import FilmPass from "three_fx/passes/FilmPass"
@@ -711,10 +715,10 @@ export default {
 
             // }
 
-            TweenMax.fromTo( camera.rotation, 4, {
-                z: Math.PI + (-Math.PI / 257)
+            TweenMax.fromTo( camera.rotation, 10, {
+                z: Math.PI + (-Math.PI / 128)
             }, {
-                z: Math.PI + (Math.PI / 257),
+                z: Math.PI + (Math.PI / 128),
                 repeat: -1,
                 yoyo: true,
                 ease: "Power1.easeInOut"
@@ -734,12 +738,17 @@ export default {
 
 
             let groundChunksGroup = new THREE.Group()
+            let greeneryChunksGroup = new THREE.Group()
             groundChunksGroup.position.z = -3;
+            greeneryChunksGroup.position.z = 10;
+            greeneryChunksGroup.position.y = 20
             let ojectsGroup = new THREE.Group()
 
+            scene.add(greeneryChunksGroup)
             scene.add(groundChunksGroup)
             scene.add(ojectsGroup)
 
+            this.modules.renderGroups.greenery = greeneryChunksGroup
             this.modules.renderGroups.objects = ojectsGroup
             this.modules.renderGroups.groundChunks = groundChunksGroup
 
@@ -760,72 +769,26 @@ export default {
         },
         setupComposer () {
             let renderPass = new RenderPass(this.modules.scene, this.modules.camera)
-
-            // let bloomPass = new BloomPass(0)
-            // let unrealBloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 )
-            let glitchPass = new GlitchPass()
-            // let dotScreenPass = new DotScreenPass()
-            let filmPass = new FilmPass(0.333, 2, 3, false )
+            let filmPass = new FilmPass(0.2777, 1, 10, false )
             let copyPass = new ShaderPass(CopyShader)
-            // let bacPass = new ShaderPass(BrightnessContrastShader)
-            // let hsPass = new ShaderPass(HueSaturationShader)
-            // let pxPass = new ShaderPass(PixelShader)
-            // let techPass = new ShaderPass(TechnicolorShader)
             let bleachPass = new ShaderPass(BleachBypassShader)
-            // let lumiPass = new ShaderPass(LuminosityShader)
             let rgbsPass = new ShaderPass(RGBShiftShader)
-            // let volumePass = new ShaderPass(VolumeShader)
-            // let colorifyPass = new ShaderPass(ColorifyShader)
-            // let gammacorPass = new ShaderPass(GammaCorrectionShader)
-            // let colorCorPass = new ShaderPass(ColorCorrectionShader)
-            // let freiPass = new ShaderPass(FreiChenShader)
+            let colorCorPass = new ShaderPass(ColorCorrectionShader)
             let halftonePass = new HalftonePass()
 
-            // halftonePass.material.uniforms.radius.value = 1;
-            // halftonePass.material.uniforms.blending.value = 0.25;
-            // halftonePass.material.uniforms.blendingMode.value = 6;
-            // halftonePass.material.uniforms.shape.value = 6;
-
             rgbsPass.material.uniforms.amount.value = 0.0025
-            // rgbsPass.material.uniforms.angle.value = Math.PI / 2
-
             this.modules.fx.passes = { 
                 renderPass, 
                 filmPass, 
-                // glitchPass,
-                // dotScreenPass,
                 copyPass,
-                // bloomPass,
-                // unrealBloomPass,
-                // bacPass,
-                bleachPass,
-                // freiPass,
-                halftonePass,
-                // techPass,
-                // hsPass,
-                // pxPass,
-                // lumiPass,
                 rgbsPass,
-                // volumePass,
-                // colorifyPass,
-                // gammacorPass,
-                // colorCorPass
+                colorCorPass
             }
 
-            // this.modules.fx.passes.glitchPass.enabled = false;
-            // this.modules.fx.passes.dotScreenPass.enabled = false;
-            // this.modules.fx.passes.unrealBloomPass.enabled = false;
-            // this.modules.fx.passes.freiPass.enabled = false;
-
             this.modules.composer.addPass(renderPass);
-            // this.modules.composer.addPass(dotScreenPass);
-            // this.modules.composer.addPass(glitchPass);
+            this.modules.composer.addPass(colorCorPass)
             this.modules.composer.addPass(rgbsPass)
             this.modules.composer.addPass(filmPass)
-            // this.modules.composer.addPass(bacPass)
-            // this.modules.composer.addPass(hsPass)
-            // this.modules.composer.addPass(colorCorPass)
-            // this.modules.composer.addPass(halftonePass)
             this.modules.composer.addPass(copyPass)
         },
         setupMatterEngine () {
@@ -837,7 +800,7 @@ export default {
                 positionIterations: 1,
                 velocityIterations: 1,
                 constraintIterations: 1,
-                enableSleeping: true,
+                // enableSleeping: true,
             } );
 
             engine.timing.timeScale = this.timeScale
@@ -953,8 +916,11 @@ export default {
             let now = +new Date()
             let delta = now - this.prevRenderedFrameTime
 
-            if ( delta > 64 ) delta = 64
+            if ( delta > 64 ) {
+                console.log(1)
+                delta = 64
 
+            }
             this.prevRenderedFrameTime = now
 
             this.rafId = requestAnimationFrame( ()=> this.render() )
@@ -1015,55 +981,55 @@ export default {
 
             }
 
-            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.7 )
-            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.7 )
+            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.99 )
+            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.99 )
 
             if (  this.modules.objects.moto.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.moto.composite, {
                     x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 100,
                 } )
             }
 
             if (  this.modules.objects.can1.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.can1, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 350 ) - 100,
                 } )
             }
 
             if (  this.modules.objects.can2.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.can2, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 350 ) - 100,
                 } )
             }
 
             if (  this.modules.objects.can3.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.can3, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 350 ) - 100,
                 } )
             }
 
              if (  this.modules.objects.box1.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.box1, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
                 } )
             }
 
             if (  this.modules.objects.box2.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.box2, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
                 } )
             }
 
             if (  this.modules.objects.box3.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.box3, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
                 } )
             }
 
@@ -1158,7 +1124,7 @@ export default {
             this.createObject( "car", this.$store.state.carConfig )
             this.spawnObject( this.modules.objects.car.composite, {
                 x: this.$store.state.carConfig.spawnPosition.x,
-                y: this.getSpawnPosition( this.$store.state.carConfig.spawnPosition.x ) - 100
+                y: this.getSpawnPosition( this.$store.state.carConfig.spawnPosition.x ) - 10
             } )
         },
         createObject ( objectName, config, params) {
@@ -1408,7 +1374,11 @@ export default {
 
 
                 forEach( this.$store.state.config.curve.sinMap, ( tuple )=>{
-                    points[ index ].y += Math.sin( a / tuple[ 0 ] ) * tuple[ 1 ]
+
+                    if ( (points[ index ].x / step) % tuple[3] === 0 ) {
+                        points[ index ].y += Math.pow( Math.sin( a / tuple[ 0 ] ), tuple[2] ) * tuple[ 1 ]                        
+                    }
+
                 } )
             }
 
@@ -1442,6 +1412,7 @@ export default {
                 delete this.modules.activeChunks[ chunkIndex ]
 
                 this.modules.renderGroups.groundChunks.remove( this.modules.chunks[ chunkIndex ].mesh )
+                this.modules.renderGroups.greenery.remove( this.modules.chunks[ chunkIndex ].greenery )
                 
                 if ( remove || !this.saveChunks ) {
                     this.modules.chunks[ chunkIndex ].mesh.geometry.dispose()
@@ -1469,6 +1440,7 @@ export default {
             } else {
                 this.modules.activeChunks[ chunkIndex ] = true 
                 this.modules.renderGroups.groundChunks.add( this.modules.chunks[ chunkIndex ].mesh )
+                this.modules.renderGroups.greenery.add( this.modules.chunks[ chunkIndex ].greenery )
                 Matter.World.add( this.modules.matter.engine.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
             }
         },
@@ -1482,7 +1454,7 @@ export default {
             let points = this.generatePoints( chunkIndex )
             let modules = this.modules
 
-            let geometry = this.generatePathGeometry( points )
+            let geometry = this.generatePathGeometry( points, false )
             let material = this.modules.data.groundMaterial || new THREE.MeshPhongMaterial( {
                 side: THREE.DoubleSide,
                 color: _.cssHex2Hex( this.$store.state.config.groundColor ),
@@ -1521,10 +1493,27 @@ export default {
 
             Matter.World.add(modules.matter.engine.world, [ matterBody ]);
 
+            let greenery
+            {
+                let geometry = this.generatePathGeometry( points, true )
+                let map = this.laodTexture( "greenery/trees.png" )
+                let material = new THREE.MeshPhongMaterial( {
+                    color:0xdddddd,
+                    map,
+                    bumpMap: map,
+                    transparent: true
+                } )
+
+                greenery = new THREE.Mesh( geometry, material )
+                this.modules.renderGroups.greenery.add( greenery )
+
+            }
+
             this.modules.chunks[ chunkIndex ] = {
                 mesh,
                 matterBody,
                 points,
+                greenery
             }
 
             this.fillChunk( chunkIndex )
@@ -1537,7 +1526,7 @@ export default {
 
 
         },
-        generatePathGeometry ( points ) {
+        generatePathGeometry ( points, top ) {
             let bufferGeometry = new THREE.BufferGeometry()
 
             bufferGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array( points.length * 18 ), 3));
@@ -1545,9 +1534,11 @@ export default {
             bufferGeometry.addAttribute("uv", new THREE.BufferAttribute(new Float32Array( points.length * 12 ), 2));
 
             let position = 0
-            let groundTextureSize = this.$store.state.config.groundTextureSize
+            let textureSize = this.$store.state.config.groundTextureSize
             let pointsStep = this.$store.state.config.curve.pointsStep
             let groundTextureUVYScale = this.$store.state.config.groundTextureUVYScale
+            let groundHeight = top ? -this.$store.state.config.groundHeight : this.$store.state.config.groundHeight
+            let normalZ = top ? -1 : 1;
 
             forEach( points, ( point, index )=>{
                 let nextPoint = points[ index + 1 ]
@@ -1556,11 +1547,11 @@ export default {
 
                 } else {
 
-                    let scaleGroundTextureSize = groundTextureSize * pointsStep
+                    let scaleTextureSize = textureSize * pointsStep
 // 
                     let chunkLength = this.chunkLength
-                    let uvx = ( ( Math.abs(point.x) ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
-                    let uvxNext = ( ( Math.abs(nextPoint.x) ) % ( scaleGroundTextureSize ) ) / (  scaleGroundTextureSize  )
+                    let uvx = ( ( Math.abs(point.x) ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
+                    let uvxNext = ( ( Math.abs(nextPoint.x) ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
                     let uvy = groundTextureUVYScale
 
                     if ( uvxNext < uvx ) {
@@ -1568,30 +1559,30 @@ export default {
                     }
 
                     bufferGeometry.attributes.uv.setXY( position, uvx, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
                     bufferGeometry.attributes.position.setXYZ( position++, point.x, point.y, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvx, uvy )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
+                    bufferGeometry.attributes.position.setXYZ( position++, point.x, groundHeight, 0 )
 
 
 
                     bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
                     bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvxNext, uvy)
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, this.$store.state.config.groundHeight, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
+                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, groundHeight, 0 )
 
                     bufferGeometry.attributes.uv.setXY( position, uvx, uvy)
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, 1 )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, this.$store.state.config.groundHeight, 0 )
+                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
+                    bufferGeometry.attributes.position.setXYZ( position++, point.x, groundHeight, 0 )
 
                 }
 
