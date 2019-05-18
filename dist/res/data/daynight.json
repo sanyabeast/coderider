@@ -9,7 +9,7 @@
 		"sunColor": "#ffe083",
 		"skyColorB": "#cacaca",
 		"skyColor": "#bdf8ff",
-		"intensity": 2,
+		"intensity": 1.5,
 		"grid": 3,
 		"waves": 20,
 		"amplitude": 0.4
@@ -18,12 +18,12 @@
 		"sunOffset": { 
 			"x": 0,
 			"y": -80,
-			"z": 0.1
+			"z": 0.05
 		},
 		"sunColor": "#ff9800",
 		"skyColorB": "#000000",
 		"skyColor": "#111111",
-		"intensity": 0.75,
+		"intensity": 1.5,
 		"grid": 3,
 		"waves": 20,
 		"amplitude": 0.4

@@ -165,7 +165,8 @@ export default {
             "pauseMenuShown",
             "settingsMenuShown",
             "timeScale",
-            "fxEnabled"
+            "fxEnabled",
+            "isAndroid"
         ])
     },
     watch: {
@@ -247,6 +248,10 @@ export default {
             forEach( this.modules.renderGroups.objects.children, ( mesh )=>{
                 mesh.material.needsUpdate = true
             } )
+
+            if ( this.isAndroid && !enabled ) {
+                this.lightsZ = 1
+            }
 
             this.modules.data.groundMaterial.needsUpdate = true
             this.renderFrame()
@@ -401,7 +406,8 @@ export default {
         this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
         this.createObject("box1",  wonder.$store.state.objects.box, 300, -250)
         this.createObject("box2",  wonder.$store.state.objects.box, 300, -250)
-        this.createObject("box3",  wonder.$store.state.objects.box, 300, -250)
+        this.createObject("box3",  wonder.$store.state.objects.box, 0, -800)
+        this.createObject("box4",  wonder.$store.state.objects.box, 0, -800)
 
        
 
@@ -769,14 +775,14 @@ export default {
         },
         setupComposer () {
             let renderPass = new RenderPass(this.modules.scene, this.modules.camera)
-            let filmPass = new FilmPass(0.2777, 1, 10, false )
+            let filmPass = new FilmPass(0.4444 * DPR, 0.7, 10, false )
             let copyPass = new ShaderPass(CopyShader)
             let bleachPass = new ShaderPass(BleachBypassShader)
             let rgbsPass = new ShaderPass(RGBShiftShader)
             let colorCorPass = new ShaderPass(ColorCorrectionShader)
             let halftonePass = new HalftonePass()
 
-            rgbsPass.material.uniforms.amount.value = 0.0025
+            rgbsPass.material.uniforms.amount.value = 0.002 * DPR
             this.modules.fx.passes = { 
                 renderPass, 
                 filmPass, 
@@ -1028,6 +1034,13 @@ export default {
 
             if (  this.modules.objects.box3.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.box3, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
+                } )
+            }
+
+            if (  this.modules.objects.box4.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.box4, {
                     x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
                     y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
                 } )
@@ -1455,32 +1468,39 @@ export default {
             let modules = this.modules
 
             let geometry = this.generatePathGeometry( points, false )
-            let material = this.modules.data.groundMaterial || new THREE.MeshPhongMaterial( {
-                side: THREE.DoubleSide,
-                color: _.cssHex2Hex( this.$store.state.config.groundColor ),
-                map: this.modules.ground.currentGroundTexture,
-                transparent: true
-            } )
+            let material
 
-            _.getter( material, "wireframe", ()=>{
-                return this.wireframeMode
-            } )
+            if ( this.modules.data.groundMaterial ) {
+                material = this.modules.data.groundMaterial
+            } else {
+                material = this.modules.data.groundMaterial = new THREE.MeshPhongMaterial( {
+                    side: THREE.DoubleSide,
+                    color: _.cssHex2Hex( this.$store.state.config.groundColor ),
+                    map: this.modules.ground.currentGroundTexture,
+                    transparent: true
+                } )
 
-            this.modules.data.groundMaterial = material
-            // material.bumpMap = bumpMap
+                _.getter( material, "wireframe", ()=>{
+                    return this.wireframeMode
+                } )
 
-            if ( this.bumpmappingEnabled ) {
-                material.bumpMap = this.modules.ground.currentGroundBumpMap
+                 _.getter( material, "bumpScale", ()=>{
+                    return ( material._bumpScale * this.bumpmapMultiplier * DPR )
+                }, ( value )=>{
+                    material._bumpScale = value
+                } )
+
+                if ( this.bumpmappingEnabled ) {
+                    material.bumpMap = this.modules.ground.currentGroundBumpMap
+                }
+
+                material.bumpScale = this.modules.ground.currentGroundBumpScale
+
             }
 
-            _.getter( material, "bumpScale", ()=>{
-                return ( material._bumpScale * this.bumpmapMultiplier * DPR )
-            }, ( value )=>{
-                material._bumpScale = value
-            } )
-
-            material.bumpScale = this.modules.ground.currentGroundBumpScale
-
+            
+            this.modules.data.groundMaterial = material
+            // material.bumpMap = bumpMap
             let mesh = new THREE.Mesh( geometry, material )
             mesh.position.z = 1
             this.modules.renderGroups.groundChunks.add( mesh )
@@ -1539,6 +1559,10 @@ export default {
             let groundTextureUVYScale = this.$store.state.config.groundTextureUVYScale
             let groundHeight = top ? -this.$store.state.config.groundHeight : this.$store.state.config.groundHeight
             let normalZ = top ? -1 : 1;
+
+            if ( this.isAndroid && top ) {
+                normalZ = 1
+            } 
 
             forEach( points, ( point, index )=>{
                 let nextPoint = points[ index + 1 ]

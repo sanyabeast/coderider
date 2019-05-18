@@ -1,9 +1,14 @@
 <template>
     <div class="tokens">
         <i 
+            v-if="bumpmappingEnabled"
+            class="material-icons"
+            title="Бампмаппинг активен"
+        >blur_linear</i>
+        <i 
             v-if="this.$store.state.saveChunks"
             class="material-icons"
-            title="Хранить чанки в памяти"
+            title="Чанки не удаляются"
         >save</i>
 
     </div>

@@ -56,7 +56,7 @@ var state = {
 		wonderMatterTestRenderer: false,
 		wonderMatterTestRendererSize: 1,
 		timeScale: 1,
-		fxEnabled: device.ios || device.desktop
+		fxEnabled: true || (device.ios || device.desktop)
 
 	},
 	isHybridApp: typeof window.native == "object",
