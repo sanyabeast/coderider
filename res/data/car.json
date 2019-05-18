@@ -25,7 +25,8 @@
 			"zIndex": 1,
 			"friction": 0,
 			"frictionAir": 0.0,
-			"opacity": 0
+			"opacity": 0,
+			"chamfer": 2
 		},
 		"corpse": {
 			"texture": "caer_body_a.png",
@@ -86,7 +87,8 @@
 					"stiffness": 0.075,
 					"length": 0.001
 				}
-			]
+			],
+			"chamfer": 16
 		},
 		"wheelA": {
 			"texture": "wheel.png",

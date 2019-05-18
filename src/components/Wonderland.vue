@@ -365,6 +365,9 @@ export default {
         this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
         this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
         this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
+        this.createObject("box1",  wonder.$store.state.objects.box, 300, -250)
+        this.createObject("box2",  wonder.$store.state.objects.box, 300, -250)
+        this.createObject("box3",  wonder.$store.state.objects.box, 300, -250)
 
        
 
@@ -556,10 +559,11 @@ export default {
             let pointIndex = (_.nearestMult( x, step, false, false )) / step
             let pointIndexOffset = chunkIndex * count
 
-            console.log(pointIndex, pointIndexOffset)
             let point = chunk.points[ pointIndex - pointIndexOffset ]
 
-            return point.y
+            // console.log(pointIndex - pointIndexOffset)
+
+            return point ? point.y : -500
 
         },
         spawnObject ( object, position ) {
@@ -578,7 +582,6 @@ export default {
             // let car = this.modules.objects.car
             // Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.1 )
 
-            // console.log(this.$store.state.config.spawnPosition.x)
             this.spawnObject( this.modules.objects.car.composite, {
                 x: this.$store.state.carConfig.spawnPosition.x,
                 y: this.getSpawnPosition( this.$store.state.carConfig.spawnPosition.x ) - 100
@@ -699,6 +702,7 @@ export default {
 
 
             let groundChunksGroup = new THREE.Group()
+            groundChunksGroup.position.z = -3;
             let ojectsGroup = new THREE.Group()
 
             scene.add(groundChunksGroup)
@@ -866,7 +870,6 @@ export default {
             let height = window.innerHeight * DPR * this.wonderMatterTestRendererSize
             let screenAspect = width / height
 
-            // console.log(width, height)
 
             render.bounds.min.x = cameraPosition.x - ((width) / 2)
             render.bounds.min.y = cameraPosition.y - (height / 2)
@@ -933,6 +936,27 @@ export default {
 
             if (  this.modules.objects.can3.parts.corpse.matterBody.position.y > 2000 ) {
                 this.spawnObject( this.modules.objects.can3, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
+
+             if (  this.modules.objects.box1.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.box1, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
+
+            if (  this.modules.objects.box2.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.box2, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
+
+            if (  this.modules.objects.box3.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.box3, {
                     x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
                     y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
                 } )
@@ -1014,7 +1038,6 @@ export default {
             modules.renderer.setSize( width, height )
 
             if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
-                // console.log(width, height)
                 this.modules.matter.render.options.width = width
                 this.modules.matter.render.options.height = height
                 this.updateMatterRendererBounds()
@@ -1081,7 +1104,7 @@ export default {
                                 group: collisionGroup
                             },
                             chamfer: {
-                                radius: bodyConfig.height / 2
+                                radius: bodyConfig.chamfer || 0
                             },
                             render: {
                                 fillStyle: bodyConfig.color
@@ -1402,7 +1425,6 @@ export default {
         fillChunk ( chunkIndex ) {
             let chunk = this.modules.chunks[ chunkIndex ]
 
-            // console.log( chunk )
 
         },
         generatePathGeometry ( points ) {
