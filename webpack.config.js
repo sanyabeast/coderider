@@ -9,6 +9,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const ip = require("ip")
 const CopyPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
 const packageJSON = jsonfile.readFileSync("package.json")
 
@@ -101,6 +102,9 @@ let webpackConfig = {
             template: path.join(__dirname, 'static', 'index.html'),
             inject: true,
         }),
+        new webpack.ProvidePlugin({
+           "THREE": "three"
+        })
     ],
 };
 

@@ -67,12 +67,36 @@
 <script>
 
 import * as THREE from "three"
+window.THREE = THREE
+import EffectComposer  from "three_fx/EffectComposer"
+import RenderPass from "three_fx/passes/RenderPass"
+import GlitchPass from "three_fx/passes/GlitchPass"
+import CopyShader from "three_fx/shaders/CopyShader"
+import ShaderPass from "three_fx/passes/ShaderPass"
+import DotScreenPass from "three_fx/passes/DotScreenPass"
+import BleachBypassShader from "three_fx/shaders/BleachBypassShader"
+import FreiChenShader from "three_fx/shaders/FreiChenShader"
+import BrightnessContrastShader from "three_fx/shaders/BrightnessContrastShader"
+import HueSaturationShader from "three_fx/shaders/HueSaturationShader"
+import PixelShader from "three_fx/shaders/PixelShader"
+import TechnicolorShader from "three_fx/shaders/TechnicolorShader"
+import LuminosityShader from "three_fx/shaders/LuminosityShader"
+import RGBShiftShader from "three_fx/shaders/RGBShiftShader"
+import VolumeShader from "three_fx/shaders/VolumeShader"
+import ColorifyShader from "three_fx/shaders/ColorifyShader"
+import ColorCorrectionShader from "three_fx/shaders/ColorCorrectionShader"
+import GammaCorrectionShader from "three_fx/shaders/GammaCorrectionShader"
+import BloomPass from "three_fx/passes/BloomPass"
+import HalftonePass from "three_fx/passes/HalftonePass"
+import FilmPass from "three_fx/passes/FilmPass"
+import UnrealBloomPass from "three_fx/passes/UnrealBloomPass"    
+
 import { forEach, forEachRight } from "lodash"
 import _ from "Helpers"
 import Hamer from "hammerjs"
 import { TweenMax } from "gsap/TweenMax"
 import SoundBlaster from "components/Wonderland/SoundBlaster"
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
 
 import decomp from 'poly-decomp'
 window.decomp = decomp
@@ -305,6 +329,9 @@ export default {
         this.$bumpmappingEnabled = true
 
         this.modules = {
+            fx: {
+                passes: {}
+            },
             renderGroups: {
 
             },
@@ -668,6 +695,8 @@ export default {
                 canvas: canvasElement,
             })
 
+            let composer = new EffectComposer( renderer )
+
             camera.position.z = this.$store.state.freeCameraZ
             camera.rotation.z = Math.PI
             camera.rotation.y = Math.PI
@@ -717,11 +746,82 @@ export default {
             this.modules.renderer = renderer
             this.modules.lightGroup = lightGroup
             this.modules.pointLight = pointLight
+            this.modules.composer = composer
+
+            this.setupComposer()
 
             setInterval( ()=>{
                 this.modules.time.x += 0.01
                 this.modules.time.x = this.modules.time.x % 10
             }, 1000 / 30 )
+        },
+        setupComposer () {
+            let renderPass = new RenderPass(this.modules.scene, this.modules.camera)
+
+            // let bloomPass = new BloomPass(0)
+            // let unrealBloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 )
+            // let glitchPass = new GlitchPass()
+            // let dotScreenPass = new DotScreenPass()
+            // let filmPass = new FilmPass(0.001, 0.5, 50, false )
+            let copyPass = new ShaderPass(CopyShader)
+            // let bacPass = new ShaderPass(BrightnessContrastShader)
+            // let hsPass = new ShaderPass(HueSaturationShader)
+            // let pxPass = new ShaderPass(PixelShader)
+            // let techPass = new ShaderPass(TechnicolorShader)
+            // let bleachPass = new ShaderPass(BleachBypassShader)
+            // let lumiPass = new ShaderPass(LuminosityShader)
+            // let rgbsPass = new ShaderPass(RGBShiftShader)
+            // let volumePass = new ShaderPass(VolumeShader)
+            // let colorifyPass = new ShaderPass(ColorifyShader)
+            // let gammacorPass = new ShaderPass(GammaCorrectionShader)
+            // let colorCorPass = new ShaderPass(ColorCorrectionShader)
+            // let freiPass = new ShaderPass(FreiChenShader)
+            // let halftonePass = new HalftonePass()
+
+            // halftonePass.material.uniforms.radius.value = 1;
+            // halftonePass.material.uniforms.blending.value = 0.25;
+            // halftonePass.material.uniforms.blendingMode.value = 6;
+            // halftonePass.material.uniforms.shape.value = 6;
+
+            // rgbsPass.material.uniforms.amount.value = 0.001
+            // rgbsPass.material.uniforms.angle.value = Math.PI / 2
+
+            this.modules.fx.passes = { 
+                renderPass, 
+                // filmPass, 
+                // glitchPass,
+                // dotScreenPass,
+                copyPass,
+                // bloomPass,
+                // unrealBloomPass,
+                // bacPass,
+                // bleachPass,
+                // freiPass,
+                // halftonePass,
+                // techPass,
+                // hsPass,
+                // pxPass,
+                // lumiPass,
+                // rgbsPass,
+                // volumePass,
+                // colorifyPass,
+                // gammacorPass,
+                // colorCorPass
+            }
+
+            // this.modules.fx.passes.glitchPass.enabled = false;
+            // this.modules.fx.passes.dotScreenPass.enabled = false;
+            // this.modules.fx.passes.unrealBloomPass.enabled = false;
+            // this.modules.fx.passes.freiPass.enabled = false;
+
+            this.modules.composer.addPass(renderPass);
+            // this.modules.composer.addPass(rgbsPass)
+            // this.modules.composer.addPass(bacPass)
+            // this.modules.composer.addPass(hsPass)
+            // this.modules.composer.addPass(colorCorPass)
+            // this.modules.composer.addPass(bleachPass)
+            // this.modules.composer.addPass(halftonePass)
+            this.modules.composer.addPass(copyPass)
         },
         setupMatterEngine () {
             let modules = this.modules
@@ -1002,7 +1102,8 @@ export default {
             } )
         },  
         renderFrame ( ) {
-            this.modules.renderer.render( this.modules.scene, this.modules.camera )
+            // this.modules.renderer.render( this.modules.scene, this.modules.camera )
+            this.modules.composer.render()
         },
         stopRendering () {
             this.renderingActive = false
@@ -1036,6 +1137,7 @@ export default {
 
             modules.camera.updateProjectionMatrix()
             modules.renderer.setSize( width, height )
+            modules.composer.setSize(window.innerWidth, window.innerHeight)
 
             if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
                 this.modules.matter.render.options.width = width
