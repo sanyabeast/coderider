@@ -775,7 +775,7 @@ export default {
         },
         setupComposer () {
             let renderPass = new RenderPass(this.modules.scene, this.modules.camera)
-            let filmPass = new FilmPass(0.4444 * DPR, 0.7, 10, false )
+            let filmPass = new FilmPass(0.3333, 0.7, 10, false )
             let copyPass = new ShaderPass(CopyShader)
             let bleachPass = new ShaderPass(BleachBypassShader)
             let rgbsPass = new ShaderPass(RGBShiftShader)
