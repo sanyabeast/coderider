@@ -102,7 +102,7 @@ var state = {
 	wonderMatterTestRendererSize: 1,
 	screenAspect: 1,
 	timeScale: 1,
-	fxEnabled: false
+	fxEnabled: true
 };
 
 export default state;
