@@ -1,5 +1,5 @@
  
-import * as THREE from "three"
+
 import Pass from "three_fx/Pass"
 
 

@@ -4,7 +4,7 @@
  * Blend two textures
  */
 
-import * as THREE from "three"
+
 
 
 THREE.BlendShader = {

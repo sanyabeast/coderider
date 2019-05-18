@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-import * as THREE from "three"
+
 import CopyShader from "three_fx/shaders/CopyShader"
 import ShaderPass from "three_fx/passes/ShaderPass"
 import ClearMaskPass from "three_fx/passes/ClearMaskPass"
@@ -17,15 +17,16 @@ class EffectComposer {
 
 		if ( renderTarget === undefined ) {
 
-			var parameters = {
+			var parameters = this.parameters = {
 				minFilter: THREE.LinearFilter,
 				magFilter: THREE.LinearFilter,
 				format: THREE.RGBAFormat,
 				stencilBuffer: false,
+				size: new THREE.Vector2( 0, 0 )
 				// antialias: true
 			};
 
-			var size = renderer.getDrawingBufferSize();
+			var size = this.parameters.size = renderer.getDrawingBufferSize( this.parameters.size );
 			renderTarget = new THREE.WebGLRenderTarget( size.width, size.height, parameters );
 			renderTarget.texture.name = 'EffectComposer.rt1';
 
@@ -76,7 +77,7 @@ class EffectComposer {
 
 		this.passes.push( pass );
 
-		var size = this.renderer.getDrawingBufferSize();
+		var size = this.parameters.size = this.renderer.getDrawingBufferSize( this.parameters.size );
 		pass.setSize( size.width, size.height );
 
 		forEach(this.passes, (pass, index)=>{

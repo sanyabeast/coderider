@@ -10,7 +10,7 @@
  * angle: shift angle in radians
  */
 
-import * as THREE from "three"
+
 
 
 export default{

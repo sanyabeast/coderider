@@ -1,5 +1,5 @@
 import Pass from "three_fx/Pass"
-import * as THREE from "three"
+
 import LuminosityHighPassShader from "three_fx/shaders/LuminosityHighPassShader"
 import CopyShader from "three_fx/shaders/CopyShader"
 

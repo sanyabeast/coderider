@@ -7,7 +7,7 @@
  * Demo here: http://charliehoey.com/technicolor_shader/shader_test.html
  */
 
-import * as THREE from "three"
+
 
 
 THREE.TechnicolorShader = {

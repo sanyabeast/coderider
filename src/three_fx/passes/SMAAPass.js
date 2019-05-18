@@ -2,7 +2,7 @@
  * @author mpk / http://polko.me/
  */
 
-import * as THREE from "three"
+
 import { Texture } from "three"
 import Pass from "three_fx/Pass"
 import SMAAShader from "three_fx/shaders/SMAAShader"

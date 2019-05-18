@@ -34,7 +34,8 @@ var state = {
 		"wireframeMode",
 		"wonderMatterTestRenderer",
 		"wonderMatterTestRendererSize",
-		"timeScale"
+		"timeScale",
+		"fxEnabled"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -54,7 +55,8 @@ var state = {
 		wireframeMode: false,
 		wonderMatterTestRenderer: false,
 		wonderMatterTestRendererSize: 1,
-		timeScale: 1
+		timeScale: 1,
+		fxEnabled: false
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -99,7 +101,8 @@ var state = {
 	wireframeMode: false,
 	wonderMatterTestRendererSize: 1,
 	screenAspect: 1,
-	timeScale: 1
+	timeScale: 1,
+	fxEnabled: false
 };
 
 export default state;

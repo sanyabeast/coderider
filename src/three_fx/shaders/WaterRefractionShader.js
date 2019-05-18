@@ -3,7 +3,7 @@
  *
  */
 
-import * as THREE from "three"
+
 
 
 THREE.WaterRefractionShader = {

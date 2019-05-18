@@ -6,7 +6,7 @@
  * https://github.com/evanw/glfx.js
  */
 
-import * as THREE from "three"
+
 
 
 export default {

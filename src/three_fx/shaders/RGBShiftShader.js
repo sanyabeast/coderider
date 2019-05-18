@@ -9,11 +9,11 @@
  * amount: shift distance (1 is width of input)
  * angle: shift angle in radians
  */
-import * as THREE from "three"
 
 
 
-THREE.RGBShiftShader = {
+
+export default {
 
 	uniforms: {
 

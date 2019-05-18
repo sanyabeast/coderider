@@ -4,7 +4,7 @@
  * Based on Nvidia Cg tutorial
  */
 
-import * as THREE from "three"
+
 
 
 THREE.FresnelShader = {

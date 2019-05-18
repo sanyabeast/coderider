@@ -7,7 +7,7 @@
  * https://github.com/McNopper/OpenGL/blob/master/Example28/shader/ssao.frag.glsl
  */
 
-import * as THREE from "three"
+
 
 
 THREE.SSAOShader = {

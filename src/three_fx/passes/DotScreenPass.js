@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-import * as THREE from "three"
+
 import Pass from "three_fx/Pass"
 import DotScreenShader from "three_fx/shaders/DotScreenShader"
 
@@ -46,12 +46,14 @@ class DotScreenPass extends Pass {
 		this.quad.material = this.material;
 
 		if ( this.renderToScreen ) {
-
+			renderer.clear( null )
+			renderer.setRenderTarget( null )
 			renderer.render( this.scene, this.camera );
 
 		} else {
-
-			renderer.render( this.scene, this.camera, writeBuffer, this.clear );
+			renderer.clear( this.clear )
+			renderer.setRenderTarget( writeBuffer )
+			renderer.render( this.scene, this.camera );
 
 		}
 

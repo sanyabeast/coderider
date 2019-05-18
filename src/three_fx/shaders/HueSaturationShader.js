@@ -7,7 +7,7 @@
  * saturation: -1 to 1 (-1 is solid gray, 0 is no change, and 1 is maximum contrast)
  */
 
-import * as THREE from "three"
+
 
 
 THREE.HueSaturationShader = {

@@ -6,7 +6,7 @@
  * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
  */
 
-import * as THREE from "three"
+
 
 
 THREE.BokehShader = {

@@ -5,7 +5,7 @@
  * http://en.wikipedia.org/wiki/gamma_correction
  */
 
-import * as THREE from "three"
+
 
 
 THREE.GammaCorrectionShader = {

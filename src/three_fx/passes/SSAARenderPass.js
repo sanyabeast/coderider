@@ -10,7 +10,7 @@
 *
 */
 
-import * as THREE from "three"
+
 import Pass from "three_fx/Pass"
 import CopyShader from "three_fx/shaders/CopyShader"
 

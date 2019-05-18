@@ -4,7 +4,7 @@
  * Colorify shader
  */
 
-import * as THREE from "three"
+
 
 
 THREE.ColorifyShader = {

@@ -7,7 +7,7 @@
  * aspect: vec2 of (1/width, 1/height)
  */
 
-import * as THREE from "three"
+
 
 export default {
 

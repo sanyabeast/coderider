@@ -8,7 +8,7 @@
  * http://www.glge.org/demos/fxaa/
  */
 
-import * as THREE from "three"
+
 
 
 import { Vector2 } from "three"

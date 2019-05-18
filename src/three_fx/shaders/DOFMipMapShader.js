@@ -6,7 +6,7 @@
  * - requires power-of-2 sized render target with enabled mipmaps
  */
 
-import * as THREE from "three"
+
 
 
 THREE.DOFMipMapShader = {

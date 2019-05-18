@@ -19,8 +19,6 @@
 
 	    <v-subheader>Настройки камеры</v-subheader>
 
-	    
-
 	    <v-list-tile>
 	      <v-list-tile-action>
 	        <v-checkbox v-model="$store.state.freeCamera"></v-checkbox>
@@ -47,6 +45,20 @@
 		    </v-card-text>
     		
     	</v-card>
+
+    	<v-subheader>Настройки постобработки</v-subheader>
+
+	    <v-list-tile>
+	      <v-list-tile-action>
+	        <v-checkbox v-model="$store.state.fxEnabled"></v-checkbox>
+	      </v-list-tile-action>
+
+	      <v-list-tile-content @click="$store.state.fxEnabled = !$store.state.fxEnabled;">
+	        <v-list-tile-title>Активно</v-list-tile-title>
+	        <v-list-tile-sub-title>Включить или отключить постобработку</v-list-tile-sub-title>
+	      </v-list-tile-content>
+	    </v-list-tile>
+
 
     	<v-subheader>Настройки транспорта</v-subheader>
 

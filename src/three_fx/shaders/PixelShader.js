@@ -4,7 +4,7 @@
  * Pixelation shader
  */
 
-import * as THREE from "three"
+
 
 
 THREE.PixelShader = {

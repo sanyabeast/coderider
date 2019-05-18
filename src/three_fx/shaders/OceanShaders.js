@@ -21,7 +21,7 @@
 // -- Rendering Shader
 // [7] ocean_main               -> Vertex and Fragment shader used to create the final render
 
-import * as THREE from "three"
+
 
 
 

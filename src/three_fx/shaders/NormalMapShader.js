@@ -5,7 +5,7 @@
  * - compute normals from heightmap
  */
 
-import * as THREE from "three"
+
 
 
 THREE.NormalMapShader = {

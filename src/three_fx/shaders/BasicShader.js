@@ -4,7 +4,7 @@
  * Simple test shader
  */
 
-import * as THREE from "three"
+
 
 
 THREE.BasicShader = {

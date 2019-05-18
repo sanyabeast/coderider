@@ -10,7 +10,7 @@
  * perpendicular triangle filters.
  */
 
-import * as THREE from "three"
+
 
 
 THREE.TriangleBlurShader = {

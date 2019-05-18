@@ -6,7 +6,7 @@
  * https://codepen.io/brunoimbrizi/pen/MoRJaN?page=1&
  */
 
-import * as THREE from "three"
+
 
 THREE.AfterimageShader = {
 

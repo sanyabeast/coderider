@@ -5,7 +5,7 @@
  * - show RGBA encoded depth as monochrome color
  */
 
-import * as THREE from "three"
+
 
 
 THREE.UnpackDepthRGBAShader = {

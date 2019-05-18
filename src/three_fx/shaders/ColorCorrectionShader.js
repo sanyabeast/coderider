@@ -4,7 +4,7 @@
  * Color correction
  */
 
-import * as THREE from "three"
+
 
 
 THREE.ColorCorrectionShader = {

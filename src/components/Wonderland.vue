@@ -66,8 +66,7 @@
 
 <script>
 
-import * as THREE from "three"
-window.THREE = THREE
+
 import EffectComposer  from "three_fx/EffectComposer"
 import RenderPass from "three_fx/passes/RenderPass"
 import GlitchPass from "three_fx/passes/GlitchPass"
@@ -161,10 +160,14 @@ export default {
             "screenAspect",
             "pauseMenuShown",
             "settingsMenuShown",
-            "timeScale"
+            "timeScale",
+            "fxEnabled"
         ])
     },
     watch: {
+        fxEnabled () {
+            this.renderFrame()
+        },
         timeScale ( value ) {
             this.modules.matter.engine.timing.timeScale = value
         },
@@ -760,49 +763,49 @@ export default {
 
             // let bloomPass = new BloomPass(0)
             // let unrealBloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 )
-            // let glitchPass = new GlitchPass()
+            let glitchPass = new GlitchPass()
             // let dotScreenPass = new DotScreenPass()
-            // let filmPass = new FilmPass(0.001, 0.5, 50, false )
+            let filmPass = new FilmPass(0.333, 2, 3, false )
             let copyPass = new ShaderPass(CopyShader)
             // let bacPass = new ShaderPass(BrightnessContrastShader)
             // let hsPass = new ShaderPass(HueSaturationShader)
             // let pxPass = new ShaderPass(PixelShader)
             // let techPass = new ShaderPass(TechnicolorShader)
-            // let bleachPass = new ShaderPass(BleachBypassShader)
+            let bleachPass = new ShaderPass(BleachBypassShader)
             // let lumiPass = new ShaderPass(LuminosityShader)
-            // let rgbsPass = new ShaderPass(RGBShiftShader)
+            let rgbsPass = new ShaderPass(RGBShiftShader)
             // let volumePass = new ShaderPass(VolumeShader)
             // let colorifyPass = new ShaderPass(ColorifyShader)
             // let gammacorPass = new ShaderPass(GammaCorrectionShader)
             // let colorCorPass = new ShaderPass(ColorCorrectionShader)
             // let freiPass = new ShaderPass(FreiChenShader)
-            // let halftonePass = new HalftonePass()
+            let halftonePass = new HalftonePass()
 
             // halftonePass.material.uniforms.radius.value = 1;
             // halftonePass.material.uniforms.blending.value = 0.25;
             // halftonePass.material.uniforms.blendingMode.value = 6;
             // halftonePass.material.uniforms.shape.value = 6;
 
-            // rgbsPass.material.uniforms.amount.value = 0.001
+            rgbsPass.material.uniforms.amount.value = 0.0025
             // rgbsPass.material.uniforms.angle.value = Math.PI / 2
 
             this.modules.fx.passes = { 
                 renderPass, 
-                // filmPass, 
+                filmPass, 
                 // glitchPass,
                 // dotScreenPass,
                 copyPass,
                 // bloomPass,
                 // unrealBloomPass,
                 // bacPass,
-                // bleachPass,
+                bleachPass,
                 // freiPass,
-                // halftonePass,
+                halftonePass,
                 // techPass,
                 // hsPass,
                 // pxPass,
                 // lumiPass,
-                // rgbsPass,
+                rgbsPass,
                 // volumePass,
                 // colorifyPass,
                 // gammacorPass,
@@ -815,11 +818,13 @@ export default {
             // this.modules.fx.passes.freiPass.enabled = false;
 
             this.modules.composer.addPass(renderPass);
-            // this.modules.composer.addPass(rgbsPass)
+            // this.modules.composer.addPass(dotScreenPass);
+            // this.modules.composer.addPass(glitchPass);
+            this.modules.composer.addPass(rgbsPass)
+            this.modules.composer.addPass(filmPass)
             // this.modules.composer.addPass(bacPass)
             // this.modules.composer.addPass(hsPass)
             // this.modules.composer.addPass(colorCorPass)
-            // this.modules.composer.addPass(bleachPass)
             // this.modules.composer.addPass(halftonePass)
             this.modules.composer.addPass(copyPass)
         },
@@ -1102,8 +1107,11 @@ export default {
             } )
         },  
         renderFrame ( ) {
-            // this.modules.renderer.render( this.modules.scene, this.modules.camera )
-            this.modules.composer.render()
+            if ( this.fxEnabled ) {
+                this.modules.composer.render()
+            } else {
+                this.modules.renderer.render( this.modules.scene, this.modules.camera )            
+            }
         },
         stopRendering () {
             this.renderingActive = false

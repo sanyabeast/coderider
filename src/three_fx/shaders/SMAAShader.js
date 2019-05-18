@@ -6,7 +6,7 @@
  * https://github.com/iryoku/smaa/releases/tag/v2.8
  */
 
-import * as THREE from "three"
+
 
 
 import { Vector2 } from "three"

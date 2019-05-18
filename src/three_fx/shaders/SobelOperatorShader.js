@@ -7,7 +7,7 @@
  *
  */
 
-import * as THREE from "three"
+
 
 
 THREE.SobelOperatorShader = {

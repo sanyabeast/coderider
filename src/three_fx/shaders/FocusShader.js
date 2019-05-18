@@ -6,7 +6,7 @@
  * http://code.google.com/p/3-dreams-of-black/source/browse/deploy/js/effects/PaintEffect.js
  */
 
-import * as THREE from "three"
+
 
 
 THREE.FocusShader = {

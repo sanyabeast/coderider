@@ -9,7 +9,7 @@
  * sides: number of reflections
  * angle: initial angle in radians
  */
-import * as THREE from "three"
+
 
 
 

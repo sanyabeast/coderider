@@ -9,7 +9,7 @@
  * - "r" parameter control where "focused" horizontal line lies
  */
 
-import * as THREE from "three"
+
 
 
 THREE.HorizontalTiltShiftShader = {

@@ -3,7 +3,7 @@
 // No tangent-space transforms logic based on
 //   http://mmikkelsen3d.blogspot.sk/2012/02/parallaxpoc-mapping-and-no-tangent.html
 
-import * as THREE from "three"
+
 
 
 THREE.ParallaxShader = {
