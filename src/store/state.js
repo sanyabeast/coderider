@@ -46,7 +46,7 @@ var state = {
 		freeCameraZ: 400,
 		bumpmappingEnabled: true,
 		bumpmapMultiplier: 0.5,
-		saveChunks: true,
+		saveChunks: false,
 		enginePower: 1,
 		groundFriction: config.groundFriction,
 		groundRestirution: config.groundRestirution,

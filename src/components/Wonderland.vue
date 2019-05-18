@@ -206,6 +206,18 @@ export default {
         },
         bumpmappingEnabled ( value ) {
             this.$bumpmappingEnabled = value
+
+            if ( value ) {
+                this.modules.data.groundMaterial.bumpMap = this.modules.ground.currentGroundBumpMap
+            } else {
+                this.modules.data.groundMaterial.bumpMap = undefined
+            }
+
+            forEach( this.modules.renderGroups.objects.children, ( mesh )=>{
+                mesh.material.needsUpdate = true
+            } )
+
+            this.modules.data.groundMaterial.needsUpdate = true
             this.renderFrame()
         },
         freeCameraZ ( value ) {
@@ -293,6 +305,9 @@ export default {
         this.$bumpmappingEnabled = true
 
         this.modules = {
+            renderGroups: {
+
+            },
             ground: {
                 currentGroundTexture: undefined,
                 currentGroundBumpMap: undefined,
@@ -341,12 +356,13 @@ export default {
         this.addChunk( -1 )
         this.addChunk( 0 )
         this.addChunk( 1 )
-        this.createObject("truck", wonder.$store.state.objects.truck, {
-            spawnX: 300,
-            spawnY: 300,
-            collisionGroup: -1
-        })
+        // this.createObject("truck", wonder.$store.state.objects.truck, {
+        //     spawnX: 300,
+        //     spawnY: 300,
+        //     collisionGroup: -1
+        // })
 
+        this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
         this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
         this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
 
@@ -360,11 +376,11 @@ export default {
             collisionGroup: -1
         })
 
-        this.createObject("can1", wonder.$store.state.objects.can, {
-            x:  300,
-            y: -250,
-            collisionGroup: -1
-        })
+        // this.createObject("can1", wonder.$store.state.objects.can, {
+        //     x:  300,
+        //     y: -250,
+        //     collisionGroup: -1
+        // })
 
         this.startRendering()
 
@@ -392,9 +408,7 @@ export default {
 
             forEach( this.modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.mesh ) {
-                    chunk.mesh.material.map = texture
-                    chunk.mesh.material.bumpMap = bumpMap
-                    chunk.mesh.material.bumpScale = bumpScale
+                    chunk.mesh.material.needsUpdate = true
                 }
             } )
 
@@ -520,11 +534,55 @@ export default {
                     ease: "linear"
                 } )
             }
+        },
+        getSpawnPosition ( x ) {
+
+            let chunkLength = this.chunkLength
+            let chunkIndex = _.nearestMult( 
+                x, 
+                ( chunkLength ),
+                false,
+                true
+            ) / ( chunkLength )
+
+            let chunk = this.modules.chunks[ chunkIndex ]
+
+            if ( !chunk ) {
+                this.addChunk( chunkIndex )
+            }
+
+            let count = this.$store.state.config.chunkSize
+            let step = this.$store.state.config.curve.pointsStep
+            let pointIndex = (_.nearestMult( x, step, false, false )) / step
+            let pointIndexOffset = chunkIndex * count
+
+            console.log(pointIndex, pointIndexOffset)
+            let point = chunk.points[ pointIndex - pointIndexOffset ]
+
+            return point.y
 
         },
-        respawn () {
+        spawnObject ( object, position ) {
+            Matter.Body.setStatic( object.bodies[0], true )
+
+            this.setBodiesPosition( object.bodies, position )                
+
+            Matter.Body.setStatic(  object.bodies[0], false )
+            this.freezeComposite( object )
+        },
+        revoke () {
             let car = this.modules.objects.car
-            Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.1 )
+            Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.13 )
+        },
+        respawn () {
+            // let car = this.modules.objects.car
+            // Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.1 )
+
+            // console.log(this.$store.state.config.spawnPosition.x)
+            this.spawnObject( this.modules.objects.car.composite, {
+                x: this.$store.state.carConfig.spawnPosition.x,
+                y: this.getSpawnPosition( this.$store.state.carConfig.spawnPosition.x ) - 100
+            } )
         },  
         setupGestures () {
             // Create an instance of Hammer with the reference.
@@ -637,7 +695,18 @@ export default {
 
             // scene.add(lightGroup)
 
-            renderer.setClearColor(0xfff17f)            
+            renderer.setClearColor(0xfff17f)    
+
+
+            let groundChunksGroup = new THREE.Group()
+            let ojectsGroup = new THREE.Group()
+
+            scene.add(groundChunksGroup)
+            scene.add(ojectsGroup)
+
+            this.modules.renderGroups.objects = ojectsGroup
+            this.modules.renderGroups.groundChunks = groundChunksGroup
+
 
             this.modules.scene = scene
             this.modules.camera = camera
@@ -659,7 +728,7 @@ export default {
                 positionIterations: 1,
                 velocityIterations: 1,
                 constraintIterations: 1,
-                enableSleeping: false,
+                enableSleeping: true,
             } );
 
             engine.timing.timeScale = this.timeScale
@@ -833,52 +902,41 @@ export default {
             /* engine/break */
 
             if ( this.engineActive || this.breakActive ) {
-                // console.log( this.modules.objects.car.parts.wheelA.matterBody.velocity.x.toFixed(2), this.modules.objects.car.parts.wheelA.matterBody.velocity.y.toFixed(2) )
                 Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelA.matterBody, this.acceleration * this.enginePower )
                 Matter.Body.setAngularVelocity( this.modules.objects.car.parts.wheelB.matterBody, this.acceleration * this.enginePower )
-                // Matter.Body.applyForce( this.modules.objects.car.parts.wheelA.matterBody, {
-                //     x: this.modules.objects.car.parts.wheelA.matterBody.position.x,
-                //     y: this.modules.objects.car.parts.wheelA.matterBody.position.y
-                // }, {
-                //     x: this.acceleration / 10000,
-                //     y: 0
-                // } )
+
             }
 
             Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.7 )
             Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.7 )
-            Matter.Body.setAngularVelocity( this.modules.objects.truck.parts.wheelA.matterBody, 0.6 )
-            Matter.Body.setAngularVelocity( this.modules.objects.truck.parts.wheelB.matterBody, 0.6 )
 
-           if (  this.modules.objects.moto.parts.corpse.matterBody.position.y > 2000 ) {
-                Matter.Body.setStatic( this.modules.objects.moto.parts.corpse.matterBody, true )
+            if (  this.modules.objects.moto.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.moto.composite, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
 
-                this.setBodiesPosition( this.modules.objects.moto.composite.bodies, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
-                    y: this.modules.objects.car.parts.corpse.matterBody.position.y- 150,
-                } )                
+            if (  this.modules.objects.can1.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.can1, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
 
-                setTimeout( ()=>{
-                    Matter.Body.setStatic( this.modules.objects.moto.parts.corpse.matterBody, false )
-                    this.freezeComposite( this.modules.objects.moto.composite )
-                }, 4000 )
-           } 
+            if (  this.modules.objects.can2.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.can2, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
 
-           if (  this.modules.objects.truck.parts.corpse.matterBody.position.y > 2000 ) {
-                Matter.Body.setStatic( this.modules.objects.truck.parts.corpse.matterBody, true )
-
-                 this.setBodiesPosition( this.modules.objects.truck.composite.bodies, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
-                    y: this.modules.objects.car.parts.corpse.matterBody.position.y- 350,
-                } )       
-
-                setTimeout( ()=>{
-                    Matter.Body.setStatic( this.modules.objects.truck.parts.corpse.matterBody, false )
-                    this.freezeComposite( this.modules.objects.truck.composite )
-                }, 4000 )
-           } 
-
-      
+            if (  this.modules.objects.can3.parts.corpse.matterBody.position.y > 2000 ) {
+                this.spawnObject( this.modules.objects.can3, {
+                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
+                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 230,
+                } )
+            }
 
             /****************/
 
@@ -902,7 +960,7 @@ export default {
                     ( chunkLength ),
                     false,
                     true
-                ) / ( chunkLength )
+                ) / ( chunkLength );
 
                 this.currentChunkIndex = currentChunkIndex
 
@@ -965,6 +1023,10 @@ export default {
 
         createCar () {
             this.createObject( "car", this.$store.state.carConfig )
+            this.spawnObject( this.modules.objects.car.composite, {
+                x: this.$store.state.carConfig.spawnPosition.x,
+                y: this.getSpawnPosition( this.$store.state.carConfig.spawnPosition.x ) - 100
+            } )
         },
         createObject ( objectName, config, params) {
             let modules = this.modules
@@ -1006,7 +1068,8 @@ export default {
                 let zIndex = bodyConfig.zIndex  == "number" ? bodyConfig.zIndex : 0;
 
                 modules.objects[ objectName ] = modules.objects[ objectName ]  || {
-                    parts: {}
+                    parts: {},
+                    bodies: []
                 }
 
                 switch ( bodyConfig.geometry ) {
@@ -1069,10 +1132,15 @@ export default {
 
                 if ( bodyConfig.bumpMap ) {
                     let bumpMap = this.laodTexture( bodyConfig.bumpMap )
-                    material.bumpMap = bumpMap
+
+                    _.getter( material, "bumpMap", ()=>{
+                        if ( this.$bumpmappingEnabled ) {
+                            return bumpMap
+                        }
+                    } )
 
                     _.getter( material, "bumpScale", ()=>{
-                        if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier * DPR)
+                        return (material._bumpScale * this.bumpmapMultiplier * DPR)
                     }, ( value )=>{
                         material._bumpScale = value
                     } )
@@ -1128,7 +1196,9 @@ export default {
                     matterBody
                 }
 
-                modules.scene.add( mesh )
+                modules.objects[ objectName ].bodies.push( matterBody )
+
+                modules.renderGroups.objects.add( mesh )
 
                 if ( !config.composite ) {
                     Matter.World.add(modules.matter.engine.world, [ matterBody ]);
@@ -1238,7 +1308,7 @@ export default {
             } else {
                 delete this.modules.activeChunks[ chunkIndex ]
 
-                this.modules.scene.remove( this.modules.chunks[ chunkIndex ].mesh )
+                this.modules.renderGroups.groundChunks.remove( this.modules.chunks[ chunkIndex ].mesh )
                 
                 if ( remove || !this.saveChunks ) {
                     this.modules.chunks[ chunkIndex ].mesh.geometry.dispose()
@@ -1265,7 +1335,7 @@ export default {
                 return
             } else {
                 this.modules.activeChunks[ chunkIndex ] = true 
-                this.modules.scene.add( this.modules.chunks[ chunkIndex ].mesh )
+                this.modules.renderGroups.groundChunks.add( this.modules.chunks[ chunkIndex ].mesh )
                 Matter.World.add( this.modules.matter.engine.world, [ this.modules.chunks[ chunkIndex ].matterBody ] )
             }
         },
@@ -1292,24 +1362,23 @@ export default {
             } )
 
             this.modules.data.groundMaterial = material
+            // material.bumpMap = bumpMap
 
-            let bumpMap = this.modules.ground.currentGroundBumpMap
+            if ( this.bumpmappingEnabled ) {
+                material.bumpMap = this.modules.ground.currentGroundBumpMap
+            }
 
             _.getter( material, "bumpScale", ()=>{
-                if ( this.$bumpmappingEnabled ) return (material._bumpScale * this.bumpmapMultiplier * DPR)
+                return ( material._bumpScale * this.bumpmapMultiplier * DPR )
             }, ( value )=>{
                 material._bumpScale = value
             } )
 
-
-            material.bumpMap = bumpMap
             material.bumpScale = this.modules.ground.currentGroundBumpScale
-
-            
 
             let mesh = new THREE.Mesh( geometry, material )
             mesh.position.z = 1
-            this.modules.scene.add( mesh )
+            this.modules.renderGroups.groundChunks.add( mesh )
 
             let matterBody = this.generateCurveMatterBody( points )
 
@@ -1417,10 +1486,10 @@ export default {
             } )
 
 
-            points.push( {
-                x: firstPoint.x,
-                y: firstPoint.y
-            } )
+            // matterPoints.push( {
+            //     x: firstPoint.x,
+            //     y: firstPoint.y
+            // } )
 
 
             let body = Matter.Bodies.fromVertices( 0, 0, matterPoints, {

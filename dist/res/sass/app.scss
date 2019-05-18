@@ -46,8 +46,7 @@ h1, h2 {
 		color: #ffffff;
 	    font-size: 24px;
 	    font-weight: 800;
-	    width: 132px;
-	    height: 100px;
+	    padding: 8px;
 	    text-align: center;
 	    position: absolute;
 	    top: 8px;
@@ -59,7 +58,7 @@ h1, h2 {
 
 	    &:hover {
 	    	div {
-				background-color: #ffffff3d;	    		
+				background-color: #00000033;	    		
 	    	}
 		}
 
@@ -77,20 +76,20 @@ h1, h2 {
 	    	width: 56px;
 	    	height: 56px;
 	    	border-radius: 50%;
-	    	border: 4px solid white;
-    		background: #ffffff1f;
+	    	border: 2px solid white;
+    		background: #0000001f;
 	    }
 
 		&.mute-button {
-			left: 26px;
+			left: 56px;
 		}
 
 		&.pause-button {
-		    right: 26px;
+		    right: 56px;
 		}
 
-		&.respawn-button {
-		    right: 98px;
+		&.revoke-button {
+		    right: 128px;
 		}
 
 

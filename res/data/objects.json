@@ -43,6 +43,7 @@
 			},
 			"wheelA": {
 				"texture": "moto_wheel.png",
+				"bumpMap": "moto_wheel.png",
 				"bumpScale": 1,
 				"color": "#ffffff",
 				"geometry": "circle",
@@ -65,11 +66,12 @@
 			},
 			"corpse": {
 				"texture": "moto.png",
+				"bumpMap": "moto.png",
 				"scale": { 
 					"x": 1.1,
 					"y": 1.1
 				},
-				"bumpScale": 3,
+				"bumpScale": 1,
 				"textureFlip": true,
 				"geometry": "rectangle",
 				"width": 60,
@@ -111,6 +113,7 @@
 			},
 			"wheelB": {
 				"texture": "moto_wheel.png",
+				"bumpMap": "moto_wheel.png",
 				"bumpScale": 1,
 				"color": "#ff9800",
 				"geometry": "circle",
@@ -159,7 +162,7 @@
 					"x": 1.1,
 					"y": 1.1
 				},
-				"bumpScale": 3,
+				"bumpScale": 1,
 				"textureFlip": true,
 				"geometry": "rectangle",
 				"color" : "#f44336",

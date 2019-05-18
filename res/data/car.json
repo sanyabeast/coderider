@@ -34,7 +34,7 @@
 				"x": 1.1,
 				"y": 1.1
 			},
-			"bumpScale": 3,
+			"bumpScale": 1,
 			"textureFlip": true,
 			"geometry": "rectangle",
 			"color" : "#f44336",

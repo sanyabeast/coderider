@@ -7,14 +7,14 @@
         "y": 0
     },
     "groundColor": "#ffffff",
-    "chunkSize": 100,
+    "chunkSize": 60,
     "groundFriction": 0.888,
-    "groundRestirution": 0.9,
+    "groundRestirution": 0.1,
     "groundFrictionAir": 0,
     "groundHeight": 2000,
     "groundTextureSize": 20,
     "groundTextureUVYScale": 7,
-    "gravityY": 0.8888,
+    "gravityY": 0.6666,
     "daynightHourDuration": 30,
     "groundSkin": "grass",
     "groundSkins": {

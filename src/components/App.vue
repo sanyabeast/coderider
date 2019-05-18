@@ -31,12 +31,22 @@
         </div>
 
         <div 
-            class="respawn-button topbar-button"
-            @click="$refs.wonderland.respawn()"
+            class="revoke-button topbar-button"
+            @click="$refs.wonderland.revoke()"
             v-show="!(pauseMenuShown || settingsMenuShown)"
         >
             <div><i class="material-icons">replay</i></div>
         </div>
+
+        <div 
+            class="respawn-button topbar-button"
+            @click="$refs.wonderland.respawn()"
+            v-show="!(pauseMenuShown || settingsMenuShown)"
+        >
+            <div><i class="material-icons">undo</i></div>
+        </div>
+
+        
 
         <div 
             class="mute-button topbar-button"
