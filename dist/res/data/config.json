@@ -27,33 +27,33 @@
             "name": "Лес",
             "texture": "dirt_a.png",
             "bumpMap": "bumps/dirt_a.png",
-            "bumpScale": 1,
+            "bumpScale": 40,
             "greenery": {
                 "texture": "greenery/trees.png",
                 "bumpMap": "greenery/trees.png",
-                "bumpScale": 0.1
+                "bumpScale": 3
             }
         },
         "stones": {
             "name": "Камни",
             "texture": "grounds/stones.png",
             "bumpMap": "bumps/ground_stones.png",
-            "bumpScale": 0.1,
+            "bumpScale": 1,
             "greenery": {
                 "texture": "greenery/stones.png",
                 "bumpMap": "greenery/stones.png",
-                "bumpScale": 0.1
+                "bumpScale": 10
             }
         },
         "desert": {
             "name": "Пустыня",
             "texture": "ground_sand.png",
             "bumpMap": "ground_sand.png",
-            "bumpScale": 0.1,
+            "bumpScale": 0.666,
             "greenery": {
-                "texture": "greenery/trees.png",
-                "bumpMap": "greenery/trees.png",
-                "bumpScale": 0.1
+                "texture": "greenery/desert.png",
+                "bumpMap": "greenery/desert.png",
+                "bumpScale": 1   
             }
         }
     },

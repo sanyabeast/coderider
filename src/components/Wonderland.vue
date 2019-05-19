@@ -446,17 +446,13 @@ export default {
             bumpMap.flipY = false
 
             modules.ground.currentGroundTexture = texture
-            
-            if ( this.bumpmappingEnabled ) {
-                modules.ground.currentGroundBumpMap = bumpMap
-            }
-
+            modules.ground.currentGroundBumpMap = bumpMap
             modules.ground.currentGroundBumpScale = bumpScale
 
             forEach( modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.mesh ) {
                     chunk.mesh.material.map = texture
-                    chunk.mesh.material.bumpMap = bumpMap
+                    if ( this.bumpmappingEnabled ) chunk.mesh.material.bumpMap = bumpMap
                     chunk.mesh.material.bumpScale = bumpScale
                     chunk.mesh.material.needsUpdate = true
                 }
@@ -474,7 +470,7 @@ export default {
             forEach( modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.greenery ) {
                     chunk.greenery.material.map = greeneryTexture
-                    chunk.greenery.material.bumpMap = greeneryBumpMap
+                    if ( this.bumpmappingEnabled ) chunk.greenery.material.bumpMap = greeneryBumpMap
                     chunk.greenery.material.bumpScale = greeneryBumpScale
                     chunk.greenery.material.needsUpdate = true
                 }

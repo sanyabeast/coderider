@@ -23,6 +23,7 @@ class ChunkBufferGeometry extends THREE.BufferGeometry {
 
 	update ( { points, textureSize, pointsStep, textureUVYScale, groundHeight, normalZ } ) {
 		let position = 0
+		let lastPointIndex = points.length - 1
 
 		forEach( points, ( point, index )=>{
             let nextPoint = points[ index + 1 ]
@@ -30,9 +31,13 @@ class ChunkBufferGeometry extends THREE.BufferGeometry {
             if ( nextPoint ) {
             	let scaleTextureSize = textureSize * pointsStep
                 let chunkLength = this.chunkLength
-                let uvx = ( ( Math.abs(point.x) ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
-                let uvxNext = ( ( Math.abs(nextPoint.x) ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
+
+
+                let uvx = ( ( point.x ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
+                let uvxNext = ( ( nextPoint.x ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
                 let uvy = textureUVYScale
+
+                // console.log( point.x, index * pointsStep )
 
                 if ( uvxNext < uvx ) {
                     uvxNext = 1

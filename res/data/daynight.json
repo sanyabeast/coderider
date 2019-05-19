@@ -17,13 +17,13 @@
 	{
 		"sunOffset": { 
 			"x": 0,
-			"y": -80,
-			"z": 0.05
+			"y": 0,
+			"z": 0.15
 		},
-		"sunColor": "#ff9800",
+		"sunColor": "#dd9800",
 		"skyColorB": "#000000",
 		"skyColor": "#111111",
-		"intensity": 1.5,
+		"intensity": 1,
 		"grid": 3,
 		"waves": 20,
 		"amplitude": 0.4

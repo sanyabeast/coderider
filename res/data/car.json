@@ -1,6 +1,6 @@
 {
 	"spawnPosition": {
-		"x": 490,
+		"x": 1400,
 		"y": 438
 	},
 	"accelerationTime": 0.44,
@@ -38,7 +38,7 @@
 			"bumpScale": 1,
 			"textureFlip": true,
 			"geometry": "rectangle",
-			"color" : "#f44336",
+			"color" : "#ffffff",
 			"width": 80,
 			"height": 32,
 			"mass": 1,
