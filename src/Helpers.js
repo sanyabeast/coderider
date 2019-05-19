@@ -23,6 +23,14 @@ class Helpers {
     }
 
     static getter( object, name, getter, setter ) {
+    	if ( typeof object.length == "number" ) {
+    		forEach( object, ( object )=>{
+    			this.getter( object, name, getter, setter )
+    		} )
+
+    		return
+    	}
+
     	Object.defineProperty( object, name, {
     		get: getter,
     		set: setter

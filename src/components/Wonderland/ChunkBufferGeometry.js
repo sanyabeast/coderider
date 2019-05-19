@@ -1,16 +1,16 @@
 import { forEach, forEachRight } from "lodash"
 
-const pool = []
+let pool = []
 
 class ChunkBufferGeometry extends THREE.BufferGeometry {
 	constructor ( params ) {
-		// let fromPool = pool.pop()
+		let fromPool = pool.pop()
 
-		// if ( fromPool ) {
-		// 	fromPool.update( params )
-		// 	console.log(fromPool)
-		// 	return fromPool	
-		// }
+		if ( fromPool ) {
+			fromPool.update( params )
+			// console.log(fromPool)
+			return fromPool	
+		}
 
 		super()
 
@@ -77,14 +77,17 @@ class ChunkBufferGeometry extends THREE.BufferGeometry {
         this.attributes.position.needsUpdate = true
         this.attributes.uv.needsUpdate = true
 
+        // this.computeBoundingBox()
+        this.computeBoundingSphere()
+
         this.geometryNeedsUpdate = true
 
         return this
 	}
 
-	dispose () {
-		// pool.push( this )
-		super.dispose()
+	kill () {
+		pool.push( this )
+		// super.dispose()
 	}
 }
 

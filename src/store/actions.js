@@ -38,12 +38,18 @@ var actions = {
 	load ( store, data ) {
 		let saveData = {}
 
-
 		if ( data ) {
 			saveData = data
 		} else {
 			try {
 				saveData = JSON.parse( localStorage.getItem( "demo_101_save" ) )
+
+				if ( store.state.version !== saveData.version ) {
+					console.log(1)
+					store.dispatch( "loadDefaults" )
+					return;
+				}
+
 			} catch ( err ) {
 				console.log( err )
 			}

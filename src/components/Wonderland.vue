@@ -242,7 +242,7 @@ export default {
             } )
 
             if ( this.isAndroid && enabled ) {
-                this.lightsZ = 1
+                this.lightsZ = -1
             } else if ( this.isAndroid && !enabled ) {
                 this.lightsZ = 1
             }
@@ -688,6 +688,11 @@ export default {
                 canvas: canvasElement,
             })
 
+            renderer.autoClear = false
+            renderer.autoClearColor = false
+            renderer.autoClearDepth = false
+            renderer.autoClearStencil = false
+
             let composer = new EffectComposer( renderer )
 
             camera.position.z = this.$store.state.freeCameraZ
@@ -766,6 +771,7 @@ export default {
             let colorCorPass = new ShaderPass(ColorCorrectionShader)
 
             rgbsPass.material.uniforms.amount.value = 0.0022
+
             this.modules.fx.passes = { 
                 renderPass, 
                 filmPass, 
@@ -773,6 +779,9 @@ export default {
                 rgbsPass,
                 colorCorPass
             }
+
+            _.getter( renderPass, "renderToScreen", ()=> !this.fxEnabled, ()=>{} )
+            _.getter( [ filmPass, copyPass, rgbsPass, colorCorPass ], "enabled", ()=> this.fxEnabled )
 
             this.modules.composer.addPass(renderPass);
             this.modules.composer.addPass(colorCorPass)
@@ -1068,11 +1077,7 @@ export default {
             } )
         },  
         renderFrame ( ) {
-            if ( this.fxEnabled ) {
-                this.modules.composer.render()
-            } else {
-                this.modules.renderer.render( this.modules.scene, this.modules.camera )            
-            }
+            this.modules.composer.render()
         },
         stopRendering () {
             this.renderingActive = false
@@ -1089,8 +1094,8 @@ export default {
 
             let canvasElement = this.$refs.canvas
 
-            let width = window.innerWidth * window.devicePixelRatio
-            let height = window.innerHeight * window.devicePixelRatio
+            let width = window.innerWidth * DPR
+            let height = window.innerHeight * DPR
 
             modules.camera.aspect = this.$store.state.screenAspect =  width / height
             // modules.camera.position.x = modules.lightGroup.position.x = width / 2
@@ -1106,7 +1111,7 @@ export default {
 
             modules.camera.updateProjectionMatrix()
             modules.renderer.setSize( width, height )
-            modules.composer.setSize(window.innerWidth, window.innerHeight)
+            modules.composer.setSize( width / DPR, height / DPR )
 
             if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
                 this.modules.matter.render.options.width = width
@@ -1410,7 +1415,8 @@ export default {
                 this.modules.renderGroups.greenery.remove( this.modules.chunks[ chunkIndex ].greenery )
                 
                 if ( remove || !this.saveChunks ) {
-                    this.modules.chunks[ chunkIndex ].mesh.geometry.dispose()
+                    this.modules.chunks[ chunkIndex ].mesh.geometry.kill()
+                    this.modules.chunks[ chunkIndex ].greenery.geometry.kill()
                 }
 
                 if ( this.modules.chunks[ chunkIndex ].matterBody ) {

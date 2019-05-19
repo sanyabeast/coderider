@@ -6,11 +6,11 @@ import config from "data/config.json"
 import daynight from "data/daynight.json"
 import objects from "data/objects.json"
 import carConfig from "data/car.json"
+import packageData from "../../package.json"
 
 const browser = Bowser.getParser(window.navigator.userAgent);
 const device = new Device()
 
-console.log(device)
 
 var state = {
 	carConfig,
@@ -35,7 +35,8 @@ var state = {
 		"wonderMatterTestRenderer",
 		"wonderMatterTestRendererSize",
 		"timeScale",
-		"fxEnabled"
+		"fxEnabled",
+		"version"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -56,7 +57,8 @@ var state = {
 		wonderMatterTestRenderer: false,
 		wonderMatterTestRendererSize: 1,
 		timeScale: 1,
-		fxEnabled: true || (device.ios || device.desktop)
+		fxEnabled: true || (device.ios || device.desktop),
+		version: packageData.version
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -102,7 +104,8 @@ var state = {
 	wonderMatterTestRendererSize: 1,
 	screenAspect: 1,
 	timeScale: 1,
-	fxEnabled: true
+	fxEnabled: true,
+	version: packageData.version
 };
 
 export default state;
