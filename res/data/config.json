@@ -14,21 +14,47 @@
     "groundHeight": 2000,
     "groundTextureSize": 10,
     "groundTextureUVYScale": 7,
+
+    "greeneryHeight": 2000,
+    "greeneryTextureSize": 27,
+    "greeneryTextureUVYScale": 3.2,
+
     "gravityY": 0.6666,
     "daynightHourDuration": 30,
-    "groundSkin": "grass",
+    "groundSkin": "forest",
     "groundSkins": {
-        "grass": {
-            "name": "grass",
+        "forest": {
+            "name": "Лес",
             "texture": "dirt_a.png",
             "bumpMap": "bumps/dirt_a.png",
-            "bumpScale": 2
+            "bumpScale": 1,
+            "greenery": {
+                "texture": "greenery/trees.png",
+                "bumpMap": "greenery/trees.png",
+                "bumpScale": 0.1
+            }
         },
-        "sand": {
-            "name": "sand",
+        "stones": {
+            "name": "Камни",
+            "texture": "grounds/stones.png",
+            "bumpMap": "bumps/ground_stones.png",
+            "bumpScale": 0.1,
+            "greenery": {
+                "texture": "greenery/stones.png",
+                "bumpMap": "greenery/stones.png",
+                "bumpScale": 0.1
+            }
+        },
+        "desert": {
+            "name": "Пустыня",
             "texture": "ground_sand.png",
             "bumpMap": "ground_sand.png",
-            "bumpScale": 1
+            "bumpScale": 0.1,
+            "greenery": {
+                "texture": "greenery/trees.png",
+                "bumpMap": "greenery/trees.png",
+                "bumpScale": 0.1
+            }
         }
     },
     "curve": {

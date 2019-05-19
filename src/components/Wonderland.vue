@@ -14,7 +14,7 @@
         @keyup.65.stop.prevent="breakActive = false"
 
         @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
-        @keydown.82.stop.prevent="respawn()"
+        @keydown.69.stop.prevent="respawn()"
         @keydown.81.stop.prevent="revoke()"
 
 
@@ -71,26 +71,10 @@
 
 import EffectComposer  from "three_fx/EffectComposer"
 import RenderPass from "three_fx/passes/RenderPass"
-import GlitchPass from "three_fx/passes/GlitchPass"
 import CopyShader from "three_fx/shaders/CopyShader"
 import ShaderPass from "three_fx/passes/ShaderPass"
-import DotScreenPass from "three_fx/passes/DotScreenPass"
-import BokehPass from "three_fx/passes/BokehPass"
-import BleachBypassShader from "three_fx/shaders/BleachBypassShader"
-import FreiChenShader from "three_fx/shaders/FreiChenShader"
-import BrightnessContrastShader from "three_fx/shaders/BrightnessContrastShader"
-import HueSaturationShader from "three_fx/shaders/HueSaturationShader"
-import PixelShader from "three_fx/shaders/PixelShader"
-import TechnicolorShader from "three_fx/shaders/TechnicolorShader"
-import LuminosityShader from "three_fx/shaders/LuminosityShader"
 import RGBShiftShader from "three_fx/shaders/RGBShiftShader"
-import VolumeShader from "three_fx/shaders/VolumeShader"
-import ColorifyShader from "three_fx/shaders/ColorifyShader"
 import ColorCorrectionShader from "three_fx/shaders/ColorCorrectionShader"
-import GammaCorrectionShader from "three_fx/shaders/GammaCorrectionShader"
-import FocusShader from "three_fx/shaders/FocusShader"
-import BloomPass from "three_fx/passes/BloomPass"
-import HalftonePass from "three_fx/passes/HalftonePass"
 import FilmPass from "three_fx/passes/FilmPass"
 import UnrealBloomPass from "three_fx/passes/UnrealBloomPass"    
 
@@ -100,6 +84,8 @@ import Hamer from "hammerjs"
 import { TweenMax } from "gsap/TweenMax"
 import SoundBlaster from "components/Wonderland/SoundBlaster"
 import { mapState } from 'vuex'
+
+import ChunkBufferGeometry from "components/Wonderland/ChunkBufferGeometry"
 
 import decomp from 'poly-decomp'
 window.decomp = decomp
@@ -236,24 +222,33 @@ export default {
         bumpmapMultiplier ( value ) {
             this.renderFrame()
         },
-        bumpmappingEnabled ( value ) {
-            this.$bumpmappingEnabled = value
+        bumpmappingEnabled ( enabled ) {
 
-            if ( value ) {
+            if ( enabled ) {
                 this.modules.data.groundMaterial.bumpMap = this.modules.ground.currentGroundBumpMap
             } else {
                 this.modules.data.groundMaterial.bumpMap = undefined
             }
 
+            if ( enabled ) {
+                this.modules.data.greeneryMaterial.bumpMap = this.modules.ground.currentGreeneryBumpMap
+            } else {
+                this.modules.data.greeneryMaterial.bumpMap = undefined
+            }
+
+
             forEach( this.modules.renderGroups.objects.children, ( mesh )=>{
                 mesh.material.needsUpdate = true
             } )
 
-            if ( this.isAndroid && !enabled ) {
+            if ( this.isAndroid && enabled ) {
+                this.lightsZ = 1
+            } else if ( this.isAndroid && !enabled ) {
                 this.lightsZ = 1
             }
 
             this.modules.data.groundMaterial.needsUpdate = true
+            this.modules.data.greeneryMaterial.needsUpdate = true
             this.renderFrame()
         },
         freeCameraZ ( value ) {
@@ -338,8 +333,6 @@ export default {
 	mounted () {
         window.wonder = this
 
-        this.$bumpmappingEnabled = true
-
         this.modules = {
             fx: {
                 passes: {}
@@ -350,7 +343,10 @@ export default {
             ground: {
                 currentGroundTexture: undefined,
                 currentGroundBumpMap: undefined,
-                currentGroundBumpScale: 1
+                currentGroundBumpScale: 1,
+                currentGreeneryTexture: undefined,
+                currentGreeneryBumpMap: undefined,
+                currentGreeneryBumpScale: 1,
             },
             soundBlaster: new SoundBlaster(),
             objects: {
@@ -374,7 +370,7 @@ export default {
             }
         }
 
-        if ( this.$store.state.isAndroid ) {
+        if ( this.$store.state.isAndroid && this.bumpmappingEnabled ) {
             this.lightsZ = -1
         }
 
@@ -437,6 +433,10 @@ export default {
     },
     methods: {
         setGroundSkin( name ) {
+            if ( !this.$store.state.config.groundSkins[ name ] ) name = "forest"
+
+            let modules = this.modules
+
             let data = this.$store.state.config.groundSkins[ name ]
             let texture = this.laodTexture( data.texture )
             let bumpMap = this.laodTexture( data.bumpMap )
@@ -445,13 +445,34 @@ export default {
             texture.flipY = false
             bumpMap.flipY = false
 
-            this.modules.ground.currentGroundTexture = texture
-            this.modules.ground.currentGroundBumpMap = bumpMap
-            this.modules.ground.currentGroundBumpScale = bumpScale
+            modules.ground.currentGroundTexture = texture
+            modules.ground.currentGroundBumpMap = bumpMap
+            modules.ground.currentGroundBumpScale = bumpScale
 
-            forEach( this.modules.chunks, ( chunk )=>{
+            forEach( modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.mesh ) {
+                    chunk.mesh.material.map = texture
+                    chunk.mesh.material.bumpMap = bumpMap
+                    chunk.mesh.material.bumpScale = bumpScale
                     chunk.mesh.material.needsUpdate = true
+                }
+            } )
+
+            let greeneryData = data.greenery
+            let greeneryTexture = this.laodTexture( greeneryData.texture )
+            let greeneryBumpMap = this.laodTexture( greeneryData.bumpMap )
+            let greeneryBumpScale = greeneryData.bumpScale
+
+            modules.ground.currentGreeneryTexture = greeneryTexture
+            modules.ground.currentGreeneryBumpMap = greeneryBumpMap
+            modules.ground.currentGreeneryBumpScale = greeneryBumpScale
+
+            forEach( modules.chunks, ( chunk )=>{
+                if ( chunk && chunk.greenery ) {
+                    chunk.greenery.material.map = greeneryTexture
+                    chunk.greenery.material.bumpMap = greeneryBumpMap
+                    chunk.greenery.material.bumpScale = greeneryBumpScale
+                    chunk.greenery.material.needsUpdate = true
                 }
             } )
 
@@ -592,6 +613,7 @@ export default {
 
             if ( !chunk ) {
                 this.addChunk( chunkIndex )
+                chunk = this.modules.chunks[ chunkIndex ]
             }
 
             let count = this.$store.state.config.chunkSize
@@ -600,8 +622,6 @@ export default {
             let pointIndexOffset = chunkIndex * count
 
             let point = chunk.points[ pointIndex - pointIndexOffset ]
-
-            // console.log(pointIndex - pointIndexOffset)
 
             return point ? point.y : -500
 
@@ -654,46 +674,6 @@ export default {
             });
 
         },
-        setupGyro () {
-            window.addEventListener('deviceorientation', ( event )=> {
-               if ( !modules.matter.engine ) return
-
-               if ( this.gyroGravityEnabled ) {
-                   let alpha = Math.floor(event.alpha)
-                   let beta  = Math.floor(event.beta)
-                   let gamma = Math.floor(event.gamma)
-
-                   let newGravityX = gamma * config.gravityMultiplier
-                   let newGravityY = beta * config.gravityMultiplier
-
-
-                   modules.gyro.set( newGravityX, newGravityY  )
-
-                   if (newGravityX == 0 && newGravityY == 0) {
-                       return
-                   }
-
-                   if (newGravityX > 1) newGravityX = 1
-                   if (newGravityY > 1) newGravityY = 1
-
-                   if (newGravityX < -1) newGravityX = -1
-                   if (newGravityY < -1) newGravityY = -1
-
-                   modules.matter.engine.world.gravity.x = (newGravityX)
-                   modules.matter.engine.world.gravity.y = (newGravityY)
-                   // this.$store.state.gravityX = (newGravityX)
-                   // this.$store.state.gravityY = (newGravityY)
-
-
-
-                   this.$refs.gravityX.textContent = newGravityX.toFixed(2)
-                   this.$refs.gravityY.textContent = newGravityY.toFixed(2)
-               }
-
-
-            });
-
-        },  
         setupRenderer () {
             let canvasElement = this.$refs.canvas
             let width = window.innerWidth * DPR
@@ -731,6 +711,7 @@ export default {
             } )
 
             let lightGroup = new THREE.Group()
+            lightGroup.name = "lights"
 
             let pointLight = new THREE.PointLight( 0xffffff, 1, 100000 );
             pointLight.intensity = 1.2;
@@ -745,17 +726,21 @@ export default {
 
             let groundChunksGroup = new THREE.Group()
             let greeneryChunksGroup = new THREE.Group()
+            groundChunksGroup.name = "ground-chunks"
+            greeneryChunksGroup.name = "greenery-chunks"
+
             groundChunksGroup.position.z = -3;
             greeneryChunksGroup.position.z = 10;
             greeneryChunksGroup.position.y = 20
-            let ojectsGroup = new THREE.Group()
+            let objectsGroup = new THREE.Group()
+            objectsGroup.name = "objects"
 
             scene.add(greeneryChunksGroup)
             scene.add(groundChunksGroup)
-            scene.add(ojectsGroup)
+            scene.add(objectsGroup)
 
             this.modules.renderGroups.greenery = greeneryChunksGroup
-            this.modules.renderGroups.objects = ojectsGroup
+            this.modules.renderGroups.objects = objectsGroup
             this.modules.renderGroups.groundChunks = groundChunksGroup
 
 
@@ -777,12 +762,10 @@ export default {
             let renderPass = new RenderPass(this.modules.scene, this.modules.camera)
             let filmPass = new FilmPass(0.3333, 0.7, 10, false )
             let copyPass = new ShaderPass(CopyShader)
-            let bleachPass = new ShaderPass(BleachBypassShader)
             let rgbsPass = new ShaderPass(RGBShiftShader)
             let colorCorPass = new ShaderPass(ColorCorrectionShader)
-            let halftonePass = new HalftonePass()
 
-            rgbsPass.material.uniforms.amount.value = 0.002 * DPR
+            rgbsPass.material.uniforms.amount.value = 0.0022
             this.modules.fx.passes = { 
                 renderPass, 
                 filmPass, 
@@ -923,7 +906,6 @@ export default {
             let delta = now - this.prevRenderedFrameTime
 
             if ( delta > 64 ) {
-                console.log(1)
                 delta = 64
 
             }
@@ -1246,7 +1228,7 @@ export default {
                     let bumpMap = this.laodTexture( bodyConfig.bumpMap )
 
                     _.getter( material, "bumpMap", ()=>{
-                        if ( this.$bumpmappingEnabled ) {
+                        if ( this.bumpmappingEnabled ) {
                             return bumpMap
                         }
                     } )
@@ -1467,43 +1449,52 @@ export default {
             let points = this.generatePoints( chunkIndex )
             let modules = this.modules
 
-            let geometry = this.generatePathGeometry( points, false )
-            let material
+            let groundGeometry = new ChunkBufferGeometry( {
+                points,
+                textureSize: this.$store.state.config.groundTextureSize,
+                pointsStep: this.$store.state.config.curve.pointsStep,
+                textureUVYScale: this.$store.state.config.groundTextureUVYScale,
+                groundHeight: this.$store.state.config.groundHeight,
+                normalZ: 1
+            } )
 
-            if ( this.modules.data.groundMaterial ) {
-                material = this.modules.data.groundMaterial
+            let groundMaterial
+
+            if ( modules.data.groundMaterial ) {
+                groundMaterial = this.modules.data.groundMaterial
             } else {
-                material = this.modules.data.groundMaterial = new THREE.MeshPhongMaterial( {
-                    side: THREE.DoubleSide,
-                    color: _.cssHex2Hex( this.$store.state.config.groundColor ),
-                    map: this.modules.ground.currentGroundTexture,
-                    transparent: true
-                } )
+                let groundMaterial
 
-                _.getter( material, "wireframe", ()=>{
-                    return this.wireframeMode
-                } )
+                if ( modules.data.groundMaterial ) {
+                    groundMaterial = modules.data.groundMaterial
+                } else {
+                    groundMaterial = modules.data.groundMaterial = new THREE.MeshPhongMaterial( {
+                        side: THREE.DoubleSide,
+                        color: _.cssHex2Hex( this.$store.state.config.groundColor ),
+                        map: modules.ground.currentGroundTexture,
+                        transparent: true
+                    } ) 
 
-                 _.getter( material, "bumpScale", ()=>{
-                    return ( material._bumpScale * this.bumpmapMultiplier * DPR )
-                }, ( value )=>{
-                    material._bumpScale = value
-                } )
+                    _.getter( groundMaterial, "wireframe", ()=>{
+                        return this.wireframeMode
+                    } )
 
-                if ( this.bumpmappingEnabled ) {
-                    material.bumpMap = this.modules.ground.currentGroundBumpMap
+                     _.getter( groundMaterial, "bumpScale", ()=>{
+                        return ( groundMaterial._bumpScale * this.bumpmapMultiplier * DPR )
+                    }, ( value )=>{
+                        groundMaterial._bumpScale = value
+                    } )
+
+                    if ( this.bumpmappingEnabled ) {
+                        groundMaterial.bumpMap = modules.ground.currentGroundBumpMap
+                    }
+
+                    groundMaterial.bumpScale = modules.ground.currentGroundBumpScale
                 }
-
-                material.bumpScale = this.modules.ground.currentGroundBumpScale
-
             }
-
-            
-            this.modules.data.groundMaterial = material
-            // material.bumpMap = bumpMap
-            let mesh = new THREE.Mesh( geometry, material )
-            mesh.position.z = 1
-            this.modules.renderGroups.groundChunks.add( mesh )
+            // groundMaterial.bumpmapMultiplier = bumpMap
+            let groundMesh = new THREE.Mesh( groundGeometry, groundMaterial )
+            modules.renderGroups.groundChunks.add( groundMesh )
 
             let matterBody = this.generateCurveMatterBody( points )
 
@@ -1513,110 +1504,63 @@ export default {
 
             Matter.World.add(modules.matter.engine.world, [ matterBody ]);
 
-            let greenery
-            {
-                let geometry = this.generatePathGeometry( points, true )
-                let map = this.laodTexture( "greenery/trees.png" )
-                let material = new THREE.MeshPhongMaterial( {
-                    color:0xdddddd,
-                    map,
-                    bumpMap: map,
-                    transparent: true
+            /*greenery*/
+            let greeneryGeometry = new ChunkBufferGeometry( {
+                points,
+                textureSize: this.$store.state.config.greeneryTextureSize,
+                pointsStep: this.$store.state.config.curve.pointsStep,
+                textureUVYScale: this.$store.state.config.greeneryTextureUVYScale,
+                groundHeight: -this.$store.state.config.greeneryHeight,
+                normalZ: -1
+            } )
+            
+            let greeneryMaterial
+
+            if ( modules.data.greeneryMaterial ) {
+                greeneryMaterial =  modules.data.greeneryMaterial
+            } else {
+                greeneryMaterial = modules.data.greeneryMaterial = new THREE.MeshPhongMaterial( {
+                    map: modules.ground.currentGreeneryTexture,
+                    bumpMap: modules.ground.currentGreeneryBumpMap,
+                    transparent: true,
+                    side: THREE.DoubleSide,
                 } )
 
-                greenery = new THREE.Mesh( geometry, material )
-                this.modules.renderGroups.greenery.add( greenery )
+                _.getter( greeneryMaterial, "wireframe", ()=>{
+                    return this.wireframeMode
+                } )
+
+                 _.getter( greeneryMaterial, "bumpScale", ()=>{
+                    return ( greeneryMaterial._bumpScale * this.bumpmapMultiplier * DPR )
+                }, ( value )=>{
+                    greeneryMaterial._bumpScale = value
+                } )
+
+                if ( this.bumpmappingEnabled ) {
+                    greeneryMaterial.bumpMap = modules.ground.currentGreeneryBumpMap
+                }
+
+                greeneryMaterial.bumpScale = modules.ground.currentGreeneryBumpScale
 
             }
 
-            this.modules.chunks[ chunkIndex ] = {
-                mesh,
+            let greeneryMesh = new THREE.Mesh( greeneryGeometry, greeneryMaterial )
+            modules.renderGroups.greenery.add( greeneryMesh )
+
+            modules.chunks[ chunkIndex ] = {
+                mesh: groundMesh,
                 matterBody,
                 points,
-                greenery
+                greenery: greeneryMesh
             }
 
-            this.fillChunk( chunkIndex )
-
-            this.modules.activeChunks[ chunkIndex ] = true
+            modules.activeChunks[ chunkIndex ] = true
 
         },
         fillChunk ( chunkIndex ) {
             let chunk = this.modules.chunks[ chunkIndex ]
 
 
-        },
-        generatePathGeometry ( points, top ) {
-            let bufferGeometry = new THREE.BufferGeometry()
-
-            bufferGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array( points.length * 18 ), 3));
-            bufferGeometry.addAttribute("normal", new THREE.BufferAttribute(new Float32Array( points.length * 18 ), 3));
-            bufferGeometry.addAttribute("uv", new THREE.BufferAttribute(new Float32Array( points.length * 12 ), 2));
-
-            let position = 0
-            let textureSize = this.$store.state.config.groundTextureSize
-            let pointsStep = this.$store.state.config.curve.pointsStep
-            let groundTextureUVYScale = this.$store.state.config.groundTextureUVYScale
-            let groundHeight = top ? -this.$store.state.config.groundHeight : this.$store.state.config.groundHeight
-            let normalZ = top ? -1 : 1;
-
-            if ( this.isAndroid && top ) {
-                normalZ = 1
-            } 
-
-            forEach( points, ( point, index )=>{
-                let nextPoint = points[ index + 1 ]
-
-                if ( !nextPoint ) {
-
-                } else {
-
-                    let scaleTextureSize = textureSize * pointsStep
-// 
-                    let chunkLength = this.chunkLength
-                    let uvx = ( ( Math.abs(point.x) ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
-                    let uvxNext = ( ( Math.abs(nextPoint.x) ) % ( scaleTextureSize ) ) / (  scaleTextureSize  )
-                    let uvy = groundTextureUVYScale
-
-                    if ( uvxNext < uvx ) {
-                        uvxNext = 1
-                    }
-
-                    bufferGeometry.attributes.uv.setXY( position, uvx, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, point.y, 0 )
-
-                    bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
-
-                    bufferGeometry.attributes.uv.setXY( position, uvx, uvy )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, groundHeight, 0 )
-
-
-
-                    bufferGeometry.attributes.uv.setXY( position, uvxNext, 0 )
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y, 0 )
-
-                    bufferGeometry.attributes.uv.setXY( position, uvxNext, uvy)
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                    bufferGeometry.attributes.position.setXYZ( position++, nextPoint.x, groundHeight, 0 )
-
-                    bufferGeometry.attributes.uv.setXY( position, uvx, uvy)
-                    bufferGeometry.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                    bufferGeometry.attributes.position.setXYZ( position++, point.x, groundHeight, 0 )
-
-                }
-
-            } )
-
-            bufferGeometry.needsUpdate = true
-            bufferGeometry.attributes.position.needsUpdate = true
-            bufferGeometry.attributes.uv.needsUpdate = true
-
-            return bufferGeometry
         },
         generateCurveMatterBody ( points ) {
 

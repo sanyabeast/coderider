@@ -5,6 +5,18 @@
 	    two-line
 	  >
 
+	  	<v-subheader>Текстура поверхности</v-subheader>
+
+	    <v-list-tile>
+	      <v-list-tile-action>
+	        <v-select
+		        v-model="$store.state.groundSkin"
+	            :items="groundSkins"
+	            :label="skinSelectLabel"
+	        ></v-select>
+	      </v-list-tile-action>
+	    </v-list-tile>
+
 	  	<v-list-tile>
 	      <v-list-tile-action>
 	        <v-checkbox v-model="$store.state.wireframeMode"></v-checkbox>
@@ -109,18 +121,6 @@
     		
     	</v-card>
 
-    	<v-subheader>Текстура поверхности</v-subheader>
-
-	    <v-list-tile>
-	      <v-list-tile-action>
-	        <v-select
-		        v-model="$store.state.groundSkin"
-	            :items="groundSkins"
-	            :label="$store.state.groundSkin"
-	        ></v-select>
-	      </v-list-tile-action>
-	    </v-list-tile>
-
 	  </v-list>
 
 	  </v-list>
@@ -138,10 +138,20 @@
 				groundSkins: []
 			}
 		},
+		computed: {
+			skinSelectLabel () {
+				return 
+					(this.$store.state.config.groundSkins[ this.$store.state.groundSkin ] ? 
+					this.$store.state.config.groundSkins[ this.$store.state.groundSkin ].name : 
+					"Unset");
+			}
+		},	
 		mounted () {
-			this.groundSkins = map( this.$store.state.config.groundSkins, ( data )=>{
-				return data.name
+			this.groundSkins = map( this.$store.state.config.groundSkins, ( data, id )=>{
+				return id
 			} )
+
+			console.log(this.groundSkins)
 		}
 	}
 </script>

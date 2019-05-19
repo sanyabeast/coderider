@@ -45,7 +45,7 @@ var state = {
 		speedCamera: true,
 		freeCamera: false,
 		freeCameraZ: 400,
-		bumpmappingEnabled: true,
+		bumpmappingEnabled: !device.android,
 		bumpmapMultiplier: 0.5,
 		saveChunks: false,
 		enginePower: 1,
