@@ -446,7 +446,11 @@ export default {
             bumpMap.flipY = false
 
             modules.ground.currentGroundTexture = texture
-            modules.ground.currentGroundBumpMap = bumpMap
+            
+            if ( this.bumpmappingEnabled ) {
+                modules.ground.currentGroundBumpMap = bumpMap
+            }
+
             modules.ground.currentGroundBumpScale = bumpScale
 
             forEach( modules.chunks, ( chunk )=>{
