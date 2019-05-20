@@ -1040,7 +1040,7 @@ export default {
             /****************/
 
             if ( this.physicsEnabled ) {
-                Matter.Engine.update(modules.matter.engine, delta);
+                Matter.Engine.update(modules.matter.engine, 1000 / 60 );
             }
 
             forEach( modules.objects, ( object, name )=>{
