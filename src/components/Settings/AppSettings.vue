@@ -71,6 +71,22 @@
 	      </v-list-tile-content>
 	    </v-list-tile>
 
+	    <v-subheader>Настройки отрисовки</v-subheader>
+
+	    <v-card flat color="transparent">
+	    	<v-subheader>Разрешение рендеринга</v-subheader>
+  
+		    <v-card-text class="pt-0">
+		      	<v-slider
+	            	v-model="$store.state.renderingResolution"
+	            	thumb-label="always"
+	            	:min="minResolution"
+	            	:step="resolutionStep"
+	            	:max="$store.state.DPR"
+		        ></v-slider>
+		    </v-card-text>
+    		
+    	</v-card>
 
     	<v-subheader>Настройки транспорта</v-subheader>
 
@@ -144,6 +160,12 @@
 					(this.$store.state.config.groundSkins[ this.$store.state.groundSkin ] ? 
 					this.$store.state.config.groundSkins[ this.$store.state.groundSkin ].name : 
 					"Unset");
+			},
+			minResolution () {
+				return 0.5
+			},
+			resolutionStep () {
+				return 0.25
 			}
 		},	
 		mounted () {

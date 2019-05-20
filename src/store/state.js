@@ -36,7 +36,8 @@ var state = {
 		"wonderMatterTestRendererSize",
 		"timeScale",
 		"fxEnabled",
-		"version"
+		"version",
+		"renderingResolution"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -58,7 +59,8 @@ var state = {
 		wonderMatterTestRendererSize: 1,
 		timeScale: 1,
 		fxEnabled: true || (device.ios || device.desktop),
-		version: packageData.version
+		version: packageData.version,
+		renderingResolution: ( device.android ? 1 : window.devicePixelRatio )
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -105,7 +107,9 @@ var state = {
 	screenAspect: 1,
 	timeScale: 1,
 	fxEnabled: true,
-	version: packageData.version
+	version: packageData.version,
+	renderingResolution: ( device.android ? 1 : window.devicePixelRatio ),
+	DPR: window.devicePixelRatio
 };
 
 export default state;
