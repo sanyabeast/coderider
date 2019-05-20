@@ -1111,7 +1111,7 @@ export default {
 
             modules.camera.updateProjectionMatrix()
             modules.renderer.setSize( width, height )
-            modules.composer.setSize( width / DPR, height / DPR )
+            modules.composer.setSize( width / ( this.isAndroid ? DPR : 1 ), height / ( this.isAndroid ? DPR : 1 ) )
 
             if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
                 this.modules.matter.render.options.width = width
