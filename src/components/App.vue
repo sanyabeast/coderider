@@ -120,6 +120,12 @@ export default {
 	mounted () {
         this.$store.dispatch( "load" )
 
+        if ( this.$store.state.performanceIndex < 0 ) {
+            this.$store.dispatch( "loadDefaults" )
+        } 
+
+        this.$store.dispatch( "loadDefaults" )
+
         if ( !this.$store.state.isHybridApp && this.$store.state.mobileDevice && this.$store.state.browserName != "safari" ) {
             document.body.addEventListener( "click", ()=>{
                 this.$store.dispatch( "checkFullscreen" )

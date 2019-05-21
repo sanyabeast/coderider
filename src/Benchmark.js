@@ -43,7 +43,7 @@ class Benchmark {
 			context.moveTo( Math.random() * ( width * DPR ), Math.random() * ( height * DPR ) )
 			context.lineTo( Math.random() * ( width * DPR ), Math.random() * ( height * DPR ) )
 			context.stroke()
-		}, 6500 )
+		}, 8000 )
 
 		document.body.removeChild( canvas )
 
@@ -55,18 +55,18 @@ class Benchmark {
 				Math.sqrt(Math.pow(Math.random(), 3) + Math.pow(Math.random(), 3)),
 				Math.sqrt(Math.pow(Math.random(), 3) + Math.pow(Math.random(), 3)),
 			)
-		}, 140000 )
+		}, 160000 )
 
 
 		let json_data = '{ "glossary": { "title": "example glossary", "GlossDiv": { "title": "S", "GlossList": { "GlossEntry": { "ID": "SGML", "SortAs": "SGML", "GlossTerm": "Standard Generalized Markup Language", "Acronym": "SGML", "Abbrev": "ISO 8879:1986", "GlossDef": { "para": "A meta-markup language, used to create markup languages such as DocBook.", "GlossSeeAlso": ["GML", "XML"] }, "GlossSee": "markup" } } } } }'
 		let json = this.test( ()=>{
 			JSON.parse( json_data )
-		}, 40000 )
+		}, 60000 )
 
-		let resolution = ( Math.pow( ( width * height * DPR ) / ( 1280 * 720 ), 1 ) ) * 100
+		let resolution = ( Math.pow( ( width * height * DPR ) / ( 1280 * 720 ), 1 ) ) * 300
 
 		let result = {
-			index: Number( ( 1 / ( ( stroke2d + math + json + resolution ) / 800 ) ).toFixed( 2 ) ),
+			index: Number( ( 1 / ( ( stroke2d + math + json + resolution ) / 1200 ) ).toFixed( 2 ) ),
 			tests: {
 				stroke2d,
 				math,

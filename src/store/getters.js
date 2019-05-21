@@ -37,7 +37,25 @@ var getters = {
 		state.performanceIndex = -1
 
 		let performanceIndex = getters.performanceIndex
-		
+		let bumpmappingEnabled = false
+		let renderingResolution = 1
+		let fxEnabled = false
+
+		if ( performanceIndex >= 0.39 ) {
+			fxEnabled = true
+		}
+
+		if ( performanceIndex >= 0.69 ) {
+			bumpmappingEnabled = true
+			fxEnabled = true
+		}
+
+		if ( device.ios || performanceIndex >= 0.95 ) {
+			bumpmappingEnabled = true
+			renderingResolution = state.DPR
+			fxEnabled = true
+		}
+
 		return {
 			soundMuted: false,
 			physicsEnabled: true,
@@ -46,8 +64,8 @@ var getters = {
 			speedCamera: true,
 			freeCamera: false,
 			freeCameraZ: 400,
-			bumpmappingEnabled: !device.android,
-			bumpmapMultiplier: 0.5,
+			bumpmappingEnabled: bumpmappingEnabled,
+			bumpmapMultiplier: 1,
 			saveChunks: false,
 			enginePower: 1,
 			groundFriction: config.groundFriction,
@@ -57,9 +75,9 @@ var getters = {
 			wonderMatterTestRenderer: false,
 			wonderMatterTestRendererSize: 1,
 			timeScale: 1,
-			fxEnabled: true || (device.ios || device.desktop),
+			fxEnabled: fxEnabled,
 			version: packageData.version,
-			renderingResolution: ( device.android ? 1 : window.devicePixelRatio ),
+			renderingResolution: renderingResolution,
 			performanceIndex: performanceIndex
 
 		}
