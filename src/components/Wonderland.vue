@@ -14,6 +14,7 @@
         @keyup.65.stop.prevent="breakActive = false"
 
         @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
+        @keydown.27.stop.prevent="$store.state.paused = false; "
         @keydown.69.stop.prevent="respawn()"
         @keydown.81.stop.prevent="revoke()"
 
@@ -337,6 +338,12 @@ export default {
     },
 	mounted () {
         window.wonder = this
+
+        window.addEventListener("gamepadconnected", function(e) {
+          console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+            e.gamepad.index, e.gamepad.id,
+            e.gamepad.buttons.length, e.gamepad.axes.length);
+        });
 
         this.modules = {
             fx: {

@@ -23,7 +23,7 @@ env == "production" && increaseVersionBuildNumber();
 
 let webpackConfig = {
     devServer: {
-        host: host,
+        host: "192.168.1.182",
         port: 8000,
         // https: true
     },

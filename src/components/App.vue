@@ -92,7 +92,8 @@ import Pause from "components/Pause.vue"
 import Settings from "components/Settings.vue"
 import Wonderland from "components/Wonderland.vue"
 import Tokens from "components/Tokens.vue"
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
+
 
 export default {
 	components: { Button, Wonderland, Tokens, Pause, Settings },

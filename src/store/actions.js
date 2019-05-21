@@ -61,7 +61,7 @@ var actions = {
 		} )
 	},
 	loadDefaults ( store ) {
-		store.dispatch( "load", store.state.defaultSettings )
+		store.dispatch( "load", store.getters.defaultSettings )
 		store.dispatch( "save" )
 	},
 	checkFullscreen ( store ) {

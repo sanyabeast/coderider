@@ -13,6 +13,7 @@ const device = new Device()
 
 
 var state = {
+
 	carConfig,
 	config,
 	daynight,
@@ -37,7 +38,8 @@ var state = {
 		"timeScale",
 		"fxEnabled",
 		"version",
-		"renderingResolution"
+		"renderingResolution",
+		"performanceIndex"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -60,7 +62,8 @@ var state = {
 		timeScale: 1,
 		fxEnabled: true || (device.ios || device.desktop),
 		version: packageData.version,
-		renderingResolution: ( device.android ? 1 : window.devicePixelRatio )
+		renderingResolution: ( device.android ? 1 : window.devicePixelRatio ),
+		performanceIndex: -1
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -109,7 +112,8 @@ var state = {
 	fxEnabled: true,
 	version: packageData.version,
 	renderingResolution: ( device.android ? 1 : window.devicePixelRatio ),
-	DPR: window.devicePixelRatio
+	DPR: window.devicePixelRatio,
+	performanceIndex: -1
 };
 
 export default state;
