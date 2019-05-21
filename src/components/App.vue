@@ -124,7 +124,7 @@ export default {
             this.$store.dispatch( "loadDefaults" )
         } 
 
-        this.$store.dispatch( "loadDefaults" )
+        // this.$store.dispatch( "loadDefaults" )
 
         if ( !this.$store.state.isHybridApp && this.$store.state.mobileDevice && this.$store.state.browserName != "safari" ) {
             document.body.addEventListener( "click", ()=>{
