@@ -6,7 +6,7 @@
         <v-list-tile avatar>
           <v-list-tile-content>
             <v-list-tile-title>ДЕМО 102</v-list-tile-title>
-            <v-list-tile-sub-title>Меню паузы</v-list-tile-sub-title>
+            <v-list-tile-sub-title>{{`Индекс производительности: ${ $store.state.performanceIndex }` }}</v-list-tile-sub-title>
           </v-list-tile-content>
         </v-list-tile>
       </v-list>
@@ -51,6 +51,7 @@
                 Перезапустить
             </v-btn>
         </v-list-tile>
+
 
       </v-list>
 

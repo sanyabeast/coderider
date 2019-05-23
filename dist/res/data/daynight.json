@@ -11,7 +11,7 @@
 		"skyColor": "#bdf8ff",
 		"intensity": 1.5,
 		"grid": 3,
-		"waves": 20,
+		"waves": 14,
 		"amplitude": 0.4
 	},
 	{
@@ -25,7 +25,7 @@
 		"skyColor": "#111111",
 		"intensity": 1,
 		"grid": 3,
-		"waves": 20,
+		"waves": 14,
 		"amplitude": 0.4
 	}
 ]

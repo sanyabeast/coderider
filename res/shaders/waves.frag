@@ -16,11 +16,11 @@ varying float cameraX;
 
 void main( void ) {
 	float gridS = grid;
-	float layer = floor( (vUv.y+0.5) * gridS ) / gridS;
-	float parallax = 30.;
-	float speed = 0.000001;
-	float cameraOffset = ( camera.x / ( 1. / (speed) ) ) * ( gridS / (( pow(layer, 6.))) * parallax );
-	float offset = (sin((vUv.x+cameraOffset) * (waves + layer)) / ( waves )) * ( amplitude * layer );
+	float layer = ceil( (vUv.y + 0.5) * gridS ) / gridS;
+	float parallax = 500.;
+	float speed = 0.0000025;
+	float cameraOffset = camera.x * speed * ( 1./pow(layer, 2.) * parallax );
+	float offset = (sin((vUv.x + cameraOffset) * ((waves * layer) + layer)) / ( waves * layer )) * ( amplitude * layer ) + 0.2;
 	float y = mod( ( mod( vUv.y + offset, 1. ) ), ( 1. / (gridS) ) ) * (gridS);
 
 

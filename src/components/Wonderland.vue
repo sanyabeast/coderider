@@ -14,6 +14,7 @@
         @keyup.65.stop.prevent="breakActive = false"
 
         @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
+        @keydown.27.stop.prevent="$store.state.paused = false; "
         @keydown.69.stop.prevent="respawn()"
         @keydown.81.stop.prevent="revoke()"
 
@@ -151,10 +152,15 @@ export default {
             "settingsMenuShown",
             "timeScale",
             "fxEnabled",
-            "isAndroid"
+            "isAndroid",
+            "renderingResolution"
         ])
     },
     watch: {
+        renderingResolution () {clog(1)
+            this.updateSize()
+            this.renderFrame()
+        },
         fxEnabled () {
             this.renderFrame()
         },
@@ -325,6 +331,12 @@ export default {
     },
 	mounted () {
         window.wonder = this
+
+        window.addEventListener("gamepadconnected", function(e) {
+          console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+            e.gamepad.index, e.gamepad.id,
+            e.gamepad.buttons.length, e.gamepad.axes.length);
+        });
 
         this.modules = {
             fx: {
@@ -1111,8 +1123,8 @@ export default {
 
             let canvasElement = this.$refs.canvas
 
-            let width = window.innerWidth * DPR
-            let height = window.innerHeight * DPR
+            let width = window.innerWidth * this.renderingResolution
+            let height = window.innerHeight * this.renderingResolution
 
             modules.camera.aspect = this.$store.state.screenAspect =  width / height
             // modules.camera.position.x = modules.lightGroup.position.x = width / 2
@@ -1128,7 +1140,7 @@ export default {
 
             modules.camera.updateProjectionMatrix()
             modules.renderer.setSize( width, height )
-            modules.composer.setSize( width / ( this.isAndroid ? DPR : 1 ), height / ( this.isAndroid ? DPR : 1 ) )
+            modules.composer.setSize( width, height )
 
             if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
                 this.modules.matter.render.options.width = width

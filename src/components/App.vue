@@ -92,7 +92,8 @@ import Pause from "components/Pause.vue"
 import Settings from "components/Settings.vue"
 import Wonderland from "components/Wonderland.vue"
 import Tokens from "components/Tokens.vue"
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
+
 
 export default {
 	components: { Button, Wonderland, Tokens, Pause, Settings },
@@ -118,6 +119,12 @@ export default {
     },
 	mounted () {
         this.$store.dispatch( "load" )
+
+        if ( this.$store.state.performanceIndex < 0 ) {
+            this.$store.dispatch( "loadDefaults" )
+        } 
+
+        // this.$store.dispatch( "loadDefaults" )
 
         if ( !this.$store.state.isHybridApp && this.$store.state.mobileDevice && this.$store.state.browserName != "safari" ) {
             document.body.addEventListener( "click", ()=>{
