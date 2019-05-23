@@ -19,28 +19,28 @@ class SoundBlaster {
 			  	src: [ `res/sounds/${name}.ogg`, `res/sounds/${name}.mp3` ],
 			  	autoplay: false,
 			    // loop: true,
-			    html5: false
+			    html5: true
 			});
 
 			this.sounds[ name ] = sound
 		} )
 
-		let firstPlay = false
-		window.addEventListener( "click", ()=>{
-			// alert("kek")
-			if ( !firstPlay ) {
-				firstPlay = true
+		// let firstPlay = false
+		// window.addEventListener( "click", ()=>{
+		// 	// alert("kek")
+		// 	if ( !firstPlay ) {
+		// 		firstPlay = true
 				
-				forEach( this.sounds, ( sound )=>{
-					sound.play()
-					setTimeout( ()=>{
-						sound.stop()
-					}, 5000 )
-				} )
+		// 		forEach( this.sounds, ( sound )=>{
+		// 			sound.play()
+		// 			setTimeout( ()=>{
+		// 				sound.stop()
+		// 			}, 5000 )
+		// 		} )
 
 
-			}
-		} )
+		// 	}
+		// } )
 		
 	}
 
