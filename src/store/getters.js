@@ -65,7 +65,7 @@ var getters = {
 			freeCamera: false,
 			freeCameraZ: 400,
 			bumpmappingEnabled: bumpmappingEnabled,
-			bumpmapMultiplier: 1,
+			bumpmapMultiplier: 0.5,
 			saveChunks: false,
 			enginePower: 1,
 			groundFriction: config.groundFriction,
