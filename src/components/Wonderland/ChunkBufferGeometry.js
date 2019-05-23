@@ -53,7 +53,7 @@ class ChunkBufferGeometry extends THREE.BufferGeometry {
 
                 this.attributes.uv.setXY( position, uvx, uvy )
                 this.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                this.attributes.position.setXYZ( position++, point.x, groundHeight, 0 )
+                this.attributes.position.setXYZ( position++, point.x, point.y + groundHeight, 0 )
 
 
 
@@ -63,11 +63,11 @@ class ChunkBufferGeometry extends THREE.BufferGeometry {
 
                 this.attributes.uv.setXY( position, uvxNext, uvy)
                 this.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                this.attributes.position.setXYZ( position++, nextPoint.x, groundHeight, 0 )
+                this.attributes.position.setXYZ( position++, nextPoint.x, nextPoint.y + groundHeight, 0 )
 
                 this.attributes.uv.setXY( position, uvx, uvy)
                 this.attributes.normal.setXYZ( position, 0, 0, normalZ )
-                this.attributes.position.setXYZ( position++, point.x, groundHeight, 0 )
+                this.attributes.position.setXYZ( position++, point.x,  point.y + groundHeight, 0 )
             }
 
         } )
