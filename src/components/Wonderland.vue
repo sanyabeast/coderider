@@ -101,7 +101,6 @@ export default {
             breakActive: false,
             acceleration: 0,
             currentChunkIndex: 0,
-            lightsZ: 1,
             hour: 0,
             sunOffset: { x: 0, y: 0, z: 0 },
             hoursCount: 0,
@@ -241,12 +240,6 @@ export default {
                 mesh.material.needsUpdate = true
             } )
 
-            if ( this.isAndroid && enabled ) {
-                this.lightsZ = -1
-            } else if ( this.isAndroid && !enabled ) {
-                this.lightsZ = 1
-            }
-
             this.modules.data.groundMaterial.needsUpdate = true
             this.modules.data.greeneryMaterial.needsUpdate = true
             this.renderFrame()
@@ -370,9 +363,6 @@ export default {
             }
         }
 
-        if ( this.$store.state.isAndroid && this.bumpmappingEnabled ) {
-            this.lightsZ = -1
-        }
 
         this.setupRenderer()
         this.setupBackground()
@@ -510,7 +500,8 @@ export default {
         setDaytime ( hour, immediately ) {
             let modules = this.modules
             let hourData = this.$store.state.daynight[ hour ]
-            let sun = this.modules.lights.sun
+            let sun0 = this.modules.lights.sun0
+            let sun1 = this.modules.lights.sun1
             let duration = this.$store.state.config.daynightHourDuration / 2
             let bg_uniforms = modules.bg.material.uniforms
 
@@ -524,7 +515,8 @@ export default {
 
 
             if ( immediately ) {
-                sun.intensity = hourData.intensity
+                sun0.intensity = hourData.intensity
+                sun1.intensity = hourData.intensity
                 bg_uniforms.amplitude.value = hourData.amplitude
                 bg_uniforms.waves.value = hourData.waves
                 bg_uniforms.grid.value = hourData.grid
@@ -533,9 +525,13 @@ export default {
                 this.sunOffset.y = hourData.sunOffset.y
                 this.sunOffset.z = hourData.sunOffset.z
 
-                sun.color.r = sunColor.r
-                sun.color.g = sunColor.g
-                sun.color.b = sunColor.b
+                sun0.color.r = sunColor.r
+                sun0.color.g = sunColor.g
+                sun0.color.b = sunColor.b
+
+                sun1.color.r = sunColor.r
+                sun1.color.g = sunColor.g
+                sun1.color.b = sunColor.b
 
                 bg_uniforms.diffuse.value.r = skyColor.r
                 bg_uniforms.diffuse.value.g = skyColor.g
@@ -547,7 +543,12 @@ export default {
 
 
             } else {
-                TweenMax.to( sun, duration, {
+                TweenMax.to( sun0, duration, {
+                    intensity: hourData.intensity,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( sun1, duration, {
                     intensity: hourData.intensity,
                     ease: "linear"
                 } )
@@ -576,7 +577,14 @@ export default {
                     ease: "linear"
                 } )
 
-                TweenMax.to( sun.color, duration, {
+                TweenMax.to( sun1.color, duration, {
+                    r: sunColor.r,
+                    g: sunColor.g,
+                    b: sunColor.b,
+                    ease: "linear"
+                } )
+
+                TweenMax.to( sun1.color, duration, {
                     r: sunColor.r,
                     g: sunColor.g,
                     b: sunColor.b,
@@ -847,11 +855,14 @@ export default {
         setupLights () {
             let modules = this.modules
 
-            let sun = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
+            let sun0 = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
+            let sun1 = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
 
-            modules.scene.add( sun )
+            modules.scene.add( sun0 )
+            modules.scene.add( sun1 )
 
-            modules.lights.sun = sun
+            modules.lights.sun0 = sun0
+            modules.lights.sun1 = sun1
         },
         setupBackground () {
             let self = this
@@ -956,10 +967,16 @@ export default {
                 this.updateMatterRendererBounds()
             }
 
-            modules.lights.sun.position.set( 
+            modules.lights.sun0.position.set( 
                 modules.camera.position.x + this.sunOffset.x,  
                 modules.camera.position.y + this.sunOffset.y, 
-                (this.lightsZ * modules.camera.position.z * 4 ) * this.sunOffset.z
+                (modules.camera.position.z * 4 ) * this.sunOffset.z
+            )
+
+            modules.lights.sun1.position.set( 
+                modules.camera.position.x + this.sunOffset.x,  
+                modules.camera.position.y + this.sunOffset.y, 
+                (-1 * modules.camera.position.z * 4 ) * this.sunOffset.z
             )
 
             if ( this.speedCamera && !this.freeCamera ) {

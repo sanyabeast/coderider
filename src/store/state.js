@@ -11,6 +11,8 @@ import packageData from "../../package.json"
 const browser = Bowser.getParser(window.navigator.userAgent);
 const device = new Device()
 
+window.device = device
+
 
 var state = {
 	carConfig,
