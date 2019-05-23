@@ -414,24 +414,34 @@ export default {
         //     collisionGroup: -1
         // })
 
-        this.createObject("can1", wonder.$store.state.objects.can, 300, -250)
-        this.createObject("can2", wonder.$store.state.objects.can, 300, -250)
-        this.createObject("can3", wonder.$store.state.objects.can, 300, -250)
-        this.createObject("box1",  wonder.$store.state.objects.box, 300, -250)
-        this.createObject("box2",  wonder.$store.state.objects.box, 300, -250)
-        this.createObject("box3",  wonder.$store.state.objects.box, 0, -800)
-        this.createObject("box4",  wonder.$store.state.objects.box, 0, -800)
+        this.modules.objects.stuff = {}
+        this.modules.objects.motos = {}
 
-       
+        let count = 100
+
+        for ( let a = 0; a < count; a++ ) {
+            this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, wonder.$store.state.objects.can, 300, -250)
+        }
+
+        for ( let b = 0; b < count; b++ ) {
+            this.modules.objects.stuff[`box${b}`] = this.createObject(`box${b}`, wonder.$store.state.objects.box, 300, -250)
+        }
+
+        let moto_count = 1
+
+        for ( let c = 0; c < moto_count; c++ ) {
+            this.modules.objects.motos[`moto${c}`] = this.createObject(`moto${c}`, wonder.$store.state.objects.moto, {
+                spawnX: 300,
+                spawnY: -225,
+                collisionGroup: -1
+            })
+        }
+
+
 
         this.createCar()
 
-        this.createObject("moto", wonder.$store.state.objects.moto, {
-            spawnX: 745,
-            spawnY: 444,
-            collisionGroup: -1
-        })
-
+        
         // this.createObject("can1", wonder.$store.state.objects.can, {
         //     x:  300,
         //     y: -250,
@@ -1022,64 +1032,30 @@ export default {
 
             }
 
-            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelA.matterBody, 0.99 )
-            Matter.Body.setAngularVelocity( this.modules.objects.moto.parts.wheelB.matterBody, 0.99 )
+            forEach( this.modules.objects.motos, ( moto, name )=>{
+                Matter.Body.setAngularVelocity( moto.parts.wheelA.matterBody, 0.811 )
+                Matter.Body.setAngularVelocity( moto.parts.wheelB.matterBody, 0.811 )
 
-            if (  this.modules.objects.moto.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.moto.composite, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 500,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 500 ) - 100,
-                } )
-            }
+                if (  moto.parts.corpse.matterBody.position.y > 1500 ) {
+                    this.spawnObject( moto.composite, {
+                        x: this.modules.objects.car.parts.corpse.matterBody.position.x- 659,
+                        y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 659 ) - 100,
+                    } )
+                }
 
-            if (  this.modules.objects.can1.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.can1, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 350 ) - 100,
-                } )
-            }
+            } )
 
-            if (  this.modules.objects.can2.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.can2, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 350 ) - 100,
-                } )
-            }
+            
+            forEach( this.modules.objects.stuff, ( object, name )=>{
+                let offset = (Math.random() > 0.5 ? 2000 : -2000) * (0.5 + Math.random() * 0.5)
 
-            if (  this.modules.objects.can3.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.can3, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x- 350,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x - 350 ) - 100,
-                } )
-            }
-
-             if (  this.modules.objects.box1.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.box1, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
-                } )
-            }
-
-            if (  this.modules.objects.box2.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.box2, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
-                } )
-            }
-
-            if (  this.modules.objects.box3.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.box3, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
-                } )
-            }
-
-            if (  this.modules.objects.box4.parts.corpse.matterBody.position.y > 2000 ) {
-                this.spawnObject( this.modules.objects.box4, {
-                    x: this.modules.objects.car.parts.corpse.matterBody.position.x + 600,
-                    y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + 600 ) - 100,
-                } )
-            }
+                if (  object.parts.corpse.matterBody.position.y > 1500 ) {
+                    this.spawnObject( object, {
+                        x: this.modules.objects.car.parts.corpse.matterBody.position.x + offset,
+                        y: this.getSpawnPosition( this.modules.objects.car.parts.corpse.matterBody.position.x + offset ) - 50,
+                    } )
+                }
+            } )
 
             /****************/
 
@@ -1400,6 +1376,8 @@ export default {
                 modules.objects[ objectName ].composite = composite
                 Matter.World.add(modules.matter.engine.world, [ composite ]);
             }
+
+            return modules.objects[ objectName ]
         },
         generatePoints ( chunkIndex ) {
 
