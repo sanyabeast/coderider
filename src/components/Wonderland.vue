@@ -31,6 +31,18 @@
             v-show="wonderMatterTestRenderer"
         ></div>
 
+        <!-- <svg
+            class="svg-layer"
+            width="100"
+            height=100
+            ref="svgLayer"
+
+        >
+            <Speedometer
+                ref="speedometer"
+            />
+        </svg> -->
+
         <!-- <div class="daynight">
             <div 
                 class="token material-icons"
@@ -64,11 +76,13 @@
         >
             <p>Break</p>
         </div>
+        
     </div>
 </template>
 
 <script>
 
+import Speedometer from "components/Speedometer.vue"
 
 import EffectComposer  from "three_fx/EffectComposer"
 import RenderPass from "three_fx/passes/RenderPass"
@@ -95,6 +109,7 @@ const Matter = window.Matter = require("matter-js")
 const DPR = window.devicePixelRatio
 
 export default {
+    components: { Speedometer },
     data () {
         return {
             prevRenderedFrameTime: +new Date(),
@@ -1141,6 +1156,8 @@ export default {
             modules.camera.updateProjectionMatrix()
             modules.renderer.setSize( width, height )
             modules.composer.setSize( width, height )
+            // this.$refs.svgLayer.setAttribute( "width", width )
+            // this.$refs.svgLayer.setAttribute( "height", height )
 
             if ( this.wonderMatterTestRenderer && this.modules.matter.render ) {
                 this.modules.matter.render.options.width = width

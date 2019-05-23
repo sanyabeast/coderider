@@ -7,6 +7,11 @@
 	perspective: 1000px;
 	-webkit-perspective: 1000px;
 
+	.svg-layer {
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
 
 	canvas {
 		width: 100%!important;

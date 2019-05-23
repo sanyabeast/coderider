@@ -1,9 +1,8 @@
 #ifdef GL_ES
-precision highp float;
+precision mediump float;
 #endif
 
 uniform vec3 camera;
-
 
 uniform vec3 diffuse;
 uniform vec3 diffuseB;

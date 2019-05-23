@@ -21,6 +21,10 @@ class Helpers {
     static smoothstep ( from, to, transition ) {
     	return to + ( ( from - to ) * ( 1 - transition ) )
     }
+    
+    static getStep ( from, to, position ) {
+        return 1 - ( ( to - position ) / ( to - from ) )
+    }
 
     static getter( object, name, getter, setter ) {
     	if ( typeof object.length == "number" ) {
