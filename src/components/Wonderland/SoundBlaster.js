@@ -19,7 +19,7 @@ class SoundBlaster {
 			  	src: [ `res/sounds/${name}.ogg`, `res/sounds/${name}.mp3` ],
 			  	autoplay: false,
 			    // loop: true,
-			    html5: true
+			    html5: false
 			});
 
 			this.sounds[ name ] = sound
