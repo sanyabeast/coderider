@@ -45,12 +45,12 @@ var getters = {
 			fxEnabled = true
 		}
 
-		if ( performanceIndex >= 0.69 ) {
+		if ( performanceIndex >= 0.65 ) {
 			bumpmappingEnabled = true
 			fxEnabled = true
 		}
 
-		if ( device.ios || performanceIndex >= 0.95 ) {
+		if ( device.ios || performanceIndex >= 0.85 ) {
 			bumpmappingEnabled = true
 			renderingResolution = state.DPR
 			fxEnabled = true
