@@ -4,9 +4,9 @@
 	    subheader
 	    two-line
 	  >
-	    <v-subheader>Настройки эффектов освещения</v-subheader>
+	    <v-subheader>Lighting Effects Settings</v-subheader>
 
-	    <v-subheader>Настройки бамаппинга</v-subheader>
+	    <v-subheader>Bump Mapping Settings</v-subheader>
 
 	    <v-list-tile>
 	      <v-list-tile-action>
@@ -14,13 +14,13 @@
 	      </v-list-tile-action>
 
 	      <v-list-tile-content @click="$store.state.bumpmappingEnabled = !$store.state.bumpmappingEnabled">
-	        <v-list-tile-title>Бампмаппинг</v-list-tile-title>
-	        <v-list-tile-sub-title>Включает или отключает бампмаппинг</v-list-tile-sub-title>
+	        <v-list-tile-title>Bump Mapping</v-list-tile-title>
+	        <v-list-tile-sub-title>Enable or disable bump mapping</v-list-tile-sub-title>
 	      </v-list-tile-content>
 	    </v-list-tile>
 
 	    <v-card flat color="transparent">
-	    	<v-subheader>Уровень бампмаппинга</v-subheader>
+	    	<v-subheader>Bump Mapping Level</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      	<v-slider
@@ -34,7 +34,7 @@
     		
     	</v-card>
 
-    	<!-- <v-subheader>Источники света</v-subheader>
+    	<!-- <v-subheader>Light Sources</v-subheader>
 
     	<v-list-tile>
     		<v-list-tile-action>
@@ -49,8 +49,8 @@
 		    </v-list-tile-action>
 
 		    <v-list-tile-content>
-		      	<v-list-tile-title>Цвет источника #1</v-list-tile-title>
-		      	<v-list-tile-sub-title>Цвет источника #1</v-list-tile-sub-title>
+		      	<v-list-tile-title>Light Source Color #1</v-list-tile-title>
+		      	<v-list-tile-sub-title>Light Source Color #1</v-list-tile-sub-title>
 		    </v-list-tile-content>
 
 	      	
@@ -69,15 +69,15 @@
 		    </v-list-tile-action>
 
 		    <v-list-tile-content>
-		      	<v-list-tile-title>Цвет источника #2</v-list-tile-title>
-		      	<v-list-tile-sub-title>Цвет источника #2</v-list-tile-sub-title>
+		      	<v-list-tile-title>Light Source Color #2</v-list-tile-title>
+		      	<v-list-tile-sub-title>Light Source Color #2</v-list-tile-sub-title>
 		    </v-list-tile-content>
 
 	      	
 	    </v-list-tile>
 
 	    <v-card flat color="transparent">
-	    	<v-subheader>Высота источников света</v-subheader>
+	    	<v-subheader>Light Sources Height</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      <v-slider
@@ -91,7 +91,7 @@
     	</v-card>
 
     	<v-card flat color="transparent">
-	    	<v-subheader>Интенсивность источников света</v-subheader>
+	    	<v-subheader>Light Sources Intensity</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      <v-slider

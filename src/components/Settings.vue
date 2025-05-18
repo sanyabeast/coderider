@@ -5,8 +5,8 @@
       <v-list>
          <v-list-tile avatar>
             <v-list-tile-content>
-               <v-list-tile-title>ДЕМО 102</v-list-tile-title>
-               <v-list-tile-sub-title>Настройки</v-list-tile-sub-title>
+               <v-list-tile-title>DEMO 102</v-list-tile-title>
+               <v-list-tile-sub-title>Settings</v-list-tile-sub-title>
             </v-list-tile-content>
          </v-list-tile>
       </v-list>
@@ -20,16 +20,16 @@
                <v-tabs-slider color="#f1a5b9"></v-tabs-slider>
 
                <v-tab key="1">
-                  Общие
+                  General
                </v-tab>
                <v-tab key="2">
-                  Освещение
+                  Lighting
                </v-tab>
                <v-tab key="3">
-                  Симуляция
+                  Simulation
                </v-tab>
                <v-tab key="4">
-                  Дополнительно
+                  Advanced
                </v-tab>
             </v-tabs>
 
@@ -69,7 +69,7 @@
       </v-layout>
       <v-card-actions class="settings-actions">
          <v-spacer></v-spacer>
-         <v-btn flat @click="onExit">Выход</v-btn>
+         <v-btn flat @click="onExit">Exit</v-btn>
       </v-card-actions>
    </v-card>
    <!-- <div

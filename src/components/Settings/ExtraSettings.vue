@@ -4,7 +4,7 @@
 	    subheader
 	    two-line
 	  >
-	    <v-subheader>Производительность</v-subheader>
+	    <v-subheader>Performance</v-subheader>
 
 	    <v-list-tile>
 	      <v-list-tile-action>
@@ -12,13 +12,13 @@
 	      </v-list-tile-action>
 
 	      <v-list-tile-content @click="$store.state.saveChunks = !$store.state.saveChunks">
-	        <v-list-tile-title>Хранить чанки в памяти</v-list-tile-title>
-	        <v-list-tile-sub-title>Прятать или удалять</v-list-tile-sub-title>
+	        <v-list-tile-title>Store chunks in memory</v-list-tile-title>
+	        <v-list-tile-sub-title>Hide or delete</v-list-tile-sub-title>
 	      </v-list-tile-content>
 	    </v-list-tile>
 
 
-	    <v-subheader>Встроенный рендерер движка</v-subheader>
+	    <v-subheader>Built-in engine renderer</v-subheader>
 
 	    <v-list-tile>
 	      <v-list-tile-action>
@@ -26,13 +26,13 @@
 	      </v-list-tile-action>
 
 	      <v-list-tile-content @click="$store.state.wonderMatterTestRenderer = !$store.state.wonderMatterTestRenderer">
-	        <v-list-tile-title>Активно</v-list-tile-title>
-	        <v-list-tile-sub-title>Включает и отключает отображение встроенного ренедерера matter.js</v-list-tile-sub-title>
+	        <v-list-tile-title>Active</v-list-tile-title>
+	        <v-list-tile-sub-title>Enables and disables built-in matter.js renderer</v-list-tile-sub-title>
 	      </v-list-tile-content>
 	    </v-list-tile>
 
 	    <v-card flat color="transparent">
-	    	<v-subheader>Масштаб</v-subheader>
+	    	<v-subheader>Scale</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      	<v-slider

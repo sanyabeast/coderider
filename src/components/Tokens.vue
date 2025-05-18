@@ -3,12 +3,12 @@
         <i 
             v-if="bumpmappingEnabled"
             class="material-icons"
-            title="Бампмаппинг активен"
+            title="Bump mapping is active"
         >blur_linear</i>
         <i 
             v-if="this.$store.state.saveChunks"
             class="material-icons"
-            title="Чанки не удаляются"
+            title="Chunks are not deleted"
         >save</i>
 
     </div>

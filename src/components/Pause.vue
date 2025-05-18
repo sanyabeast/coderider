@@ -5,8 +5,8 @@
       <v-list>
         <v-list-tile avatar>
           <v-list-tile-content>
-            <v-list-tile-title>ДЕМО 102</v-list-tile-title>
-            <v-list-tile-sub-title>{{`Индекс производительности: ${ $store.state.performanceIndex }` }}</v-list-tile-sub-title>
+            <v-list-tile-title>DEMO 102</v-list-tile-title>
+            <v-list-tile-sub-title>{{`Performance Index: ${ $store.state.performanceIndex }` }}</v-list-tile-sub-title>
           </v-list-tile-content>
         </v-list-tile>
       </v-list>
@@ -26,7 +26,7 @@
                 outline
                 flat
             >
-                Скачать APK
+                Download APK
             </v-btn>
         </v-list-tile>
         
@@ -39,7 +39,7 @@
                 @click="$store.dispatch(`loadDefaults`)"
                 color="secondary"
             >
-                Сбросить настройки
+                Reset Settings
             </v-btn>
         </v-list-tile>
 
@@ -48,7 +48,7 @@
                 flat color="#000000"
                 @click="reload()"
             >
-                Перезапустить
+                Restart
             </v-btn>
         </v-list-tile>
 
@@ -61,9 +61,9 @@
         <v-spacer></v-spacer>
 
         
-        <v-btn dark depressed color="primary" @click="onResumeClick">Продолжить</v-btn>
+        <v-btn dark depressed color="primary" @click="onResumeClick">Continue</v-btn>
         
-        <v-btn dark flat outline color="secondary" @click="onSettingsClick">Настройки</v-btn>
+        <v-btn dark flat outline color="secondary" @click="onSettingsClick">Settings</v-btn>
       </v-card-actions>
     </v-card>
     <!-- <div

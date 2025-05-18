@@ -4,7 +4,7 @@
 	    subheader
 	    two-line
 	  >
-	    <v-subheader>Настройки физической симуляции</v-subheader>
+	    <v-subheader>Physics Simulation Settings</v-subheader>
 
 	    <v-list-tile>
 	      <v-list-tile-action>
@@ -12,15 +12,15 @@
 	      </v-list-tile-action>
 
 	      <v-list-tile-content @click="$store.state.physicsEnabled = !$store.state.physicsEnabled">
-	        <v-list-tile-title>Активно</v-list-tile-title>
-	        <v-list-tile-sub-title>Включить отключить физику</v-list-tile-sub-title>
+	        <v-list-tile-title>Active</v-list-tile-title>
+	        <v-list-tile-sub-title>Enable or disable physics</v-list-tile-sub-title>
 	      </v-list-tile-content>
 	    </v-list-tile>
 
-	    <v-subheader>Настройки гравитации</v-subheader>
+	    <v-subheader>Gravity Settings</v-subheader>
 
 	    <v-card flat color="transparent">
-	    	<v-subheader>Сила гравитации по оси X</v-subheader>
+	    	<v-subheader>Gravity force on X axis</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      	<v-slider
@@ -35,7 +35,7 @@
     	</v-card>
 
     	<v-card flat color="transparent">
-	    	<v-subheader>Сила гравитации по оси Y</v-subheader>
+	    	<v-subheader>Gravity force on Y axis</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      	<v-slider
@@ -50,7 +50,7 @@
     	</v-card>
 
     	<v-card flat color="transparent">
-	    	<v-subheader>Масштаб времени</v-subheader>
+	    	<v-subheader>Time scale</v-subheader>
   
 		    <v-card-text class="pt-0">
 		      	<v-slider

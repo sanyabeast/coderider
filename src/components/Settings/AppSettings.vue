@@ -5,7 +5,7 @@
 	    two-line
 	  >
 
-	  	<v-subheader>Текстура поверхности</v-subheader>
+	  	<v-subheader>Surface Texture</v-subheader>
 
 	    <v-list-tile>
 	      <v-list-tile-action>
@@ -23,7 +23,7 @@
 	      </v-list-tile-action>
 
 	      <v-list-tile-content @click="$store.state.wireframeMode = !$store.state.wireframeMode;">
-	        <v-list-tile-title>Режим Wireframe</v-list-tile-title>
+	        <v-list-tile-title>Wireframe Mode</v-list-tile-title>
 	        <v-list-tile-sub-title>Включение и отключение</v-list-tile-sub-title>
 	      </v-list-tile-content>
 	    </v-list-tile>

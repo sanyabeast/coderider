@@ -60,7 +60,7 @@
             @touchstart="engineActive = true"
             @touchend="engineActive = false"
             v-show="!(pauseMenuShown || settingsMenuShown)"
-            title="Клавиша 'Вверх' или 'D' "
+            title="'Up' key or 'D' key "
         >
             <p>Engine</p>
         </div>
@@ -72,7 +72,7 @@
             @touchstart="breakActive = true"
             @touchend="breakActive = false"
             v-show="!(pauseMenuShown || settingsMenuShown)"
-            title="Клавиша 'Вниз' или 'A' "
+            title="'Down' key or 'A' key"
         >
             <p>Break</p>
         </div>

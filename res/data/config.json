@@ -24,7 +24,7 @@
     "groundSkin": "forest",
     "groundSkins": {
         "forest": {
-            "name": "Лес",
+            "name": "Forest",
             "texture": "dirt_a.png",
             "bumpMap": "bumps/dirt_a.png",
             "bumpScale": 40,
@@ -35,7 +35,7 @@
             }
         },
         "stones": {
-            "name": "Камни",
+            "name": "Stones",
             "texture": "grounds/stones.png",
             "bumpMap": "bumps/ground_stones.png",
             "bumpScale": 1,
@@ -46,7 +46,7 @@
             }
         },
         "desert": {
-            "name": "Пустыня",
+            "name": "Desert",
             "texture": "ground_sand.png",
             "bumpMap": "ground_sand.png",
             "bumpScale": 0.666,
