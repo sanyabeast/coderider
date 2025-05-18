@@ -244,25 +244,39 @@ export default {
         },
         bumpmappingEnabled ( enabled ) {
 
-            if ( enabled ) {
-                this.modules.data.groundMaterial.bumpMap = this.modules.ground.currentGroundBumpMap
-            } else {
-                this.modules.data.groundMaterial.bumpMap = undefined
+            if (this.modules.data.groundMaterial) {
+                if ( enabled ) {
+                    this.modules.data.groundMaterial.normalMap = this.modules.ground.currentGroundNormalMap
+                } else {
+                    this.modules.data.groundMaterial.normalMap = undefined
+                }
             }
 
-            if ( enabled ) {
-                this.modules.data.greeneryMaterial.bumpMap = this.modules.ground.currentGreeneryBumpMap
-            } else {
-                this.modules.data.greeneryMaterial.bumpMap = undefined
+            if (this.modules.data.greeneryMaterial) {
+                if ( enabled ) {
+                    this.modules.data.greeneryMaterial.normalMap = this.modules.ground.currentGreeneryNormalMap
+                } else {
+                    this.modules.data.greeneryMaterial.normalMap = undefined
+                }
             }
 
 
+            // Update object materials
             forEach( this.modules.renderGroups.objects.children, ( mesh )=>{
-                mesh.material.needsUpdate = true
+                if (mesh && mesh.material) {
+                    mesh.material.needsUpdate = true
+                }
             } )
 
-            this.modules.data.groundMaterial.needsUpdate = true
-            this.modules.data.greeneryMaterial.needsUpdate = true
+            // Update ground and greenery materials with proper null checks
+            if (this.modules.data.groundMaterial) {
+                this.modules.data.groundMaterial.needsUpdate = true
+            }
+            
+            if (this.modules.data.greeneryMaterial) {
+                this.modules.data.greeneryMaterial.needsUpdate = true
+            }
+            
             this.renderFrame()
         },
         freeCameraZ ( value ) {
@@ -362,11 +376,11 @@ export default {
             },
             ground: {
                 currentGroundTexture: undefined,
-                currentGroundBumpMap: undefined,
-                currentGroundBumpScale: 1,
+                currentGroundNormalMap: undefined,
+                currentGroundNormalScale: 1,
                 currentGreeneryTexture: undefined,
-                currentGreeneryBumpMap: undefined,
-                currentGreeneryBumpScale: 1,
+                currentGreeneryNormalMap: undefined,
+                currentGreeneryNormalScale: 1,
             },
             soundBlaster: new SoundBlaster(),
             objects: {
@@ -403,11 +417,21 @@ export default {
 
         
         this.setupDaynight()
+
+        // Ensure normal maps are loaded and available before creating initial chunks
         this.setGroundSkin( this.$store.state.groundSkin )
 
+        // Force bumpmappingEnabled to true for initial chunk creation
+        let originalBumpmappingEnabled = this.$store.state.bumpmappingEnabled;
+        this.$store.state.bumpmappingEnabled = true;
+        
+        // Create initial chunks
         this.addChunk( -1 )
         this.addChunk( 0 )
         this.addChunk( 1 )
+        
+        // Restore the original bumpmappingEnabled setting
+        this.$store.state.bumpmappingEnabled = originalBumpmappingEnabled;
         // this.createObject("truck", wonder.$store.state.objects.truck, {
         //     spawnX: 300,
         //     spawnY: 300,
@@ -417,7 +441,7 @@ export default {
         this.modules.objects.stuff = {}
         this.modules.objects.motos = {}
 
-        let count = 15  // Reduced from 100 to improve performance
+        let count = 5  // Reduced from 15 to further minimize random props
 
         for ( let a = 0; a < count; a++ ) {
             this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, wonder.$store.state.objects.can, 300, -250)
@@ -465,40 +489,115 @@ export default {
             let modules = this.modules
 
             let data = this.$store.state.config.groundSkins[ name ]
-            let texture = this.laodTexture( data.texture )
-            let bumpMap = this.laodTexture( data.bumpMap )
-            let bumpScale = data.bumpScale
+            let texture = this.laodTexture(data.texture)
+            
+            // Always use the naming convention regardless of what's in the config
+            // This ensures we use dirt_a_n.png instead of bumps/dirt_a.png
+            let normalMap = this.loadNormalMap(data.texture)
+            
+            // Normalize the scale for normal maps - they need much lower values than bump maps
+            // Cap the maximum scale and reduce very high values
+            let rawScale = data.bumpScale || 1.0
+            let normalScale = Math.min(rawScale, 5.0) // Cap at 5.0 maximum
+            
+            // For very high values (like 40), reduce them more aggressively
+            if (rawScale > 10) {
+                normalScale = 2.0 + (rawScale - 10) * 0.1 // Scale down high values
+            }
 
-            texture.flipY = false
-            bumpMap.flipY = false
+            if (texture) texture.flipY = false
+            if (normalMap) normalMap.flipY = false
 
             modules.ground.currentGroundTexture = texture
-            modules.ground.currentGroundBumpMap = bumpMap
-            modules.ground.currentGroundBumpScale = bumpScale
+            modules.ground.currentGroundNormalMap = normalMap
+            modules.ground.currentGroundNormalScale = normalScale
 
             forEach( modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.mesh ) {
-                    chunk.mesh.material.map = texture
-                    if ( this.bumpmappingEnabled ) chunk.mesh.material.bumpMap = bumpMap
-                    chunk.mesh.material.bumpScale = bumpScale
+                    // When changing environments, recreate the material from scratch
+                    // instead of modifying existing material to ensure consistent appearance
+                    let newMaterial = new THREE.MeshStandardMaterial({
+                        map: texture,
+                        normalMap: this.bumpmappingEnabled ? normalMap : null,
+                        metalness: 0,         // Non-metallic (organic material)
+                        roughness: 1.0,       // Completely rough/matte
+                        side: THREE.DoubleSide
+                    });
+                    
+                    // Store the base normal scale value
+                    newMaterial._normalScale = normalScale;
+                    
+                    // Create dynamic getter for normalScale that responds to bumpmapMultiplier changes
+                    _.getter(newMaterial, "normalScale", () => {
+                        return new THREE.Vector2(
+                            newMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR,
+                            newMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR
+                        )
+                    }, (value) => {
+                        // Store base value when set directly
+                        newMaterial._normalScale = typeof value === 'number' ? value : value.x
+                    });
+                    
+                    // Add wireframe getter
+                    _.getter(newMaterial, "wireframe", () => {
+                        return this.wireframeMode
+                    });
+                    
+                    // Replace the material
+                    chunk.mesh.material = newMaterial;
                     chunk.mesh.material.needsUpdate = true
                 }
             } )
 
             let greeneryData = data.greenery
-            let greeneryTexture = this.laodTexture( greeneryData.texture )
-            let greeneryBumpMap = this.laodTexture( greeneryData.bumpMap )
-            let greeneryBumpScale = greeneryData.bumpScale
+            let greeneryTexture = this.laodTexture(greeneryData.texture)
+            
+            // Always use the naming convention for normal maps
+            let greeneryNormalMap = this.loadNormalMap(greeneryData.texture)
+            
+            // Normalize the scale for normal maps - apply consistent scaling
+            let rawGreeneryScale = greeneryData.bumpScale || 1.0
+            let greeneryNormalScale = Math.min(rawGreeneryScale, 3.0) // Cap at 3.0 maximum for greenery
 
             modules.ground.currentGreeneryTexture = greeneryTexture
-            modules.ground.currentGreeneryBumpMap = greeneryBumpMap
-            modules.ground.currentGreeneryBumpScale = greeneryBumpScale
+            modules.ground.currentGreeneryNormalMap = greeneryNormalMap
+            modules.ground.currentGreeneryNormalScale = greeneryNormalScale
 
             forEach( modules.chunks, ( chunk )=>{
                 if ( chunk && chunk.greenery ) {
-                    chunk.greenery.material.map = greeneryTexture
-                    if ( this.bumpmappingEnabled ) chunk.greenery.material.bumpMap = greeneryBumpMap
-                    chunk.greenery.material.bumpScale = greeneryBumpScale
+                    // When changing environments, recreate the greenery material from scratch
+                    // instead of modifying existing material to ensure consistent appearance
+                    let newGreeneryMaterial = new THREE.MeshStandardMaterial({
+                        map: greeneryTexture,
+                        normalMap: this.bumpmappingEnabled ? greeneryNormalMap : null,
+                        metalness: 0,         // Non-metallic (plants)
+                        roughness: 1.0,       // Completely rough/matte 
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        alphaTest: 0.5
+                    });
+                    
+                    // Store the base normal scale value
+                    newGreeneryMaterial._normalScale = greeneryNormalScale;
+                    
+                    // Create dynamic getter for normalScale that responds to bumpmapMultiplier changes
+                    _.getter(newGreeneryMaterial, "normalScale", () => {
+                        return new THREE.Vector2(
+                            newGreeneryMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR,
+                            newGreeneryMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR
+                        )
+                    }, (value) => {
+                        // Store base value when set directly
+                        newGreeneryMaterial._normalScale = typeof value === 'number' ? value : value.x
+                    });
+                    
+                    // Add wireframe getter
+                    _.getter(newGreeneryMaterial, "wireframe", () => {
+                        return this.wireframeMode
+                    });
+                    
+                    // Replace the material
+                    chunk.greenery.material = newGreeneryMaterial;
                     chunk.greenery.material.needsUpdate = true
                 }
             } )
@@ -510,14 +609,40 @@ export default {
                 this.$store.state.mainThemePlays = true
             }
         },
-        laodTexture ( name ) {
-            let texture = this.modules.data.textures[ name ]
+        laodTexture(name, catchErrors = false) {
+            let modules = this.modules
 
-            if ( !texture ) {
-                this.modules.data.textures[ name ] = texture = new THREE.TextureLoader().load( `res/pics/${name}` );
+            if (modules.data.textures[name]) return modules.data.textures[name]
+            
+            try {
+                // Fix path back to original - use res/pics/ instead of /res/img/
+                let texture = new THREE.TextureLoader().load(`res/pics/${name}`)
+                texture.wrapT = THREE.RepeatWrapping
+                texture.wrapS = THREE.RepeatWrapping
+                
+                // Store successful loads in cache
+                modules.data.textures[name] = texture
+                return texture
+            } catch (error) {
+                if (!catchErrors) {
+                    console.warn(`Failed to load texture: ${name}`, error)
+                }
+                return null
             }
-
-            return texture
+        },
+        
+        // Try to load a normal map based on diffuse texture name
+        loadNormalMap(textureName) {
+            if (!textureName) return null
+            
+            // Simply add _n before the extension
+            const dotIndex = textureName.lastIndexOf('.')
+            const normalMapName = dotIndex >= 0 ?
+                textureName.substring(0, dotIndex) + '_n' + textureName.substring(dotIndex) :
+                textureName + '_n'
+            
+            // Try to load the normal map, but catch errors silently
+            return this.laodTexture(normalMapName, true)
         },
         setupDaynight () {
             
@@ -530,9 +655,6 @@ export default {
                 this.hour = this.hour % this.$store.state.daynight.length
                 this.setDaytime( this.hour )
             }, this.$store.state.config.daynightHourDuration * 1000 )
-
-
-
         },
         setDaytime ( hour, immediately ) {
             let modules = this.modules
@@ -809,30 +931,70 @@ export default {
             }, 1000 / 30 )
         },
         setupComposer () {
+            // Initialize all passes
             let renderPass = new RenderPass(this.modules.scene, this.modules.camera)
-            let filmPass = new FilmPass(0.3333, 0.7, 10, false )
-            let copyPass = new ShaderPass(CopyShader)
-            let rgbsPass = new ShaderPass(RGBShiftShader)
+            
+            // Color correction for better contrast and vibrancy
             let colorCorPass = new ShaderPass(ColorCorrectionShader)
-
-            rgbsPass.material.uniforms.amount.value = 0.0022
-
-            this.modules.fx.passes = { 
-                renderPass, 
-                filmPass, 
-                copyPass,
-                rgbsPass,
-                colorCorPass
+            colorCorPass.uniforms.powRGB.value = new THREE.Vector3(1.1, 1.1, 1.15) // Slightly increase blue for sky
+            colorCorPass.uniforms.mulRGB.value = new THREE.Vector3(1.2, 1.15, 1.1) // Better contrast
+            
+            // Subtle RGB shift for a slight chromatic aberration effect
+            let rgbsPass = new ShaderPass(RGBShiftShader)
+            rgbsPass.material.uniforms.amount.value = 0.0015 // Reduced from 0.0022 for more subtlety
+            rgbsPass.material.uniforms.angle.value = 0.5 // Angle of shift
+            
+            // Minimal film grain without strong scanlines
+            // Parameters: (noise intensity, scanline intensity, scanline count, grayscale)
+            let filmPass = new FilmPass(0.15, 0.1, 480, false)  // Reduced scanline intensity from 0.45 to 0.1
+            
+            // Almost imperceptible bloom effect
+            const bloomParams = {
+                strength: 0.05,    // Drastically reduced bloom strength
+                radius: 0.2,       // Very small bloom radius
+                threshold: 0.95    // Very high threshold so it barely affects anything
             }
-
-            _.getter( renderPass, "renderToScreen", ()=> !this.fxEnabled, ()=>{} )
-            _.getter( [ filmPass, copyPass, rgbsPass, colorCorPass ], "enabled", ()=> this.fxEnabled )
-
-            this.modules.composer.addPass(renderPass);
-            this.modules.composer.addPass(colorCorPass)
-            this.modules.composer.addPass(rgbsPass)
-            this.modules.composer.addPass(filmPass)
-            this.modules.composer.addPass(copyPass)
+            let bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                bloomParams.strength,
+                bloomParams.radius,
+                bloomParams.threshold
+            )
+            
+            // Final copy to screen
+            let copyPass = new ShaderPass(CopyShader)
+            copyPass.renderToScreen = true
+            
+            // Store all passes for easy reference
+            this.modules.fx.passes = { 
+                renderPass,
+                colorCorPass,
+                rgbsPass,
+                bloomPass,
+                filmPass,
+                copyPass
+            }
+            
+            // Enable/disable post-processing based on fxEnabled state
+            _.getter(renderPass, "renderToScreen", () => !this.fxEnabled, () => {})
+            _.getter([colorCorPass, rgbsPass, bloomPass, filmPass, copyPass], "enabled", () => this.fxEnabled)
+            
+            // Add passes in the correct order
+            this.modules.composer.addPass(renderPass)     // Render the scene
+            this.modules.composer.addPass(bloomPass)      // Add bloom first
+            this.modules.composer.addPass(colorCorPass)   // Then correct colors
+            this.modules.composer.addPass(rgbsPass)       // Add subtle RGB shift
+            this.modules.composer.addPass(filmPass)       // Add film grain last
+            this.modules.composer.addPass(copyPass)       // Copy to screen
+            
+            // Dynamic day/night effect on bloom strength
+            _.getter(bloomPass, "strength", () => {
+                // Increase bloom at night for better lighting effects
+                if (this.hour >= 18 || this.hour <= 6) {
+                    return bloomParams.strength * 1.5
+                }
+                return bloomParams.strength
+            })
         },
         setupMatterEngine () {
             let modules = this.modules
@@ -892,14 +1054,21 @@ export default {
         setupLights () {
             let modules = this.modules
 
+            // Main directional lights
             let sun0 = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
             let sun1 = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
 
-            modules.scene.add( sun0 )
-            modules.scene.add( sun1 )
+            // Add a subtle blue ambient light to soften shadows
+            let ambientLight = new THREE.AmbientLight(0x3c4a9f, 0.35)  // Dim blue ambient light
+            
+            modules.scene.add(ambientLight)
+            modules.scene.add(sun0)
+            modules.scene.add(sun1)
 
+            // Store references for later use
             modules.lights.sun0 = sun0
             modules.lights.sun1 = sun1
+            modules.lights.ambient = ambientLight
         },
         setupBackground () {
             let self = this
@@ -1245,16 +1414,17 @@ export default {
 
                 if ( bodyConfig.texture ) texture = this.laodTexture( bodyConfig.texture )
 
-                material = new THREE.MeshPhongMaterial( {
+                material = new THREE.MeshStandardMaterial( {
                     color,
                     map: texture,
                     transparent: true,
-                    depthTest: true,
+                    // depthTest: true,
+                    metalness: 1,
+                    roughness: 0.5,
                     side: THREE.DoubleSide,
+                    shininess: 10, // Lower shininess for less glossy look
+                    specular: new THREE.Color(0x222222) // Reduce specular highlights
                 } )
-
-                
-
 
                 _.getter( material, "wireframe", ()=>{
                     return this.wireframeMode
@@ -1265,29 +1435,38 @@ export default {
                     material.map.needsUpdate = true
                 }
 
-                if ( bodyConfig.bumpMap ) {
-                    let bumpMap = this.laodTexture( bodyConfig.bumpMap )
-
-                    _.getter( material, "bumpMap", ()=>{
-                        if ( this.bumpmappingEnabled ) {
-                            return bumpMap
+                // Always use the naming convention for normal maps
+                let normalMap = null
+                
+                if (bodyConfig.texture) {
+                    normalMap = this.loadNormalMap(bodyConfig.texture)
+                }
+                
+                if (normalMap) {
+                    _.getter(material, "normalMap", () => {
+                        if (this.bumpmappingEnabled) {
+                            return normalMap
                         }
-                    } )
-
-                    _.getter( material, "bumpScale", ()=>{
-                        return (material._bumpScale * this.bumpmapMultiplier * DPR)
-                    }, ( value )=>{
-                        material._bumpScale = value
-                    } )
-
-
-                    if ( typeof bodyConfig.bumpScale == "number" ) {
-                        material.bumpScale = bodyConfig.bumpScale
+                    })
+                    
+                    _.getter(material, "normalScale", () => {
+                        // Reduced normal mapping strength by half
+                        return new THREE.Vector2(
+                            material._normalScale * 0.5 * this.bumpmapMultiplier * DPR,
+                            material._normalScale * 0.5 * this.bumpmapMultiplier * DPR
+                        )
+                    }, (value) => {
+                        // For normalScale, we use Vector2 but we'll store a base scalar value
+                        material._normalScale = typeof value === 'number' ? value : value.x
+                    })
+                    
+                    if (typeof bodyConfig.bumpScale == "number") {
+                        material.normalScale = bodyConfig.bumpScale
                     }
-
-                    if ( typeof bodyConfig.textureFlip == "boolean" ) {
-                        bumpMap.flipY = !bodyConfig.textureFlip
-                        bumpMap.needsUpdate = true
+                    
+                    if (typeof bodyConfig.textureFlip == "boolean") {
+                        normalMap.flipY = !bodyConfig.textureFlip
+                        normalMap.needsUpdate = true
                     }
                 }
 
@@ -1548,40 +1727,35 @@ export default {
                 normalZ: 1
             } )
 
-            let groundMaterial
+            // Always create a new material for consistency with environment switching
+            // Don't use cached materials since they may have outdated textures
+            let groundMaterial = new THREE.MeshStandardMaterial({
+                side: THREE.DoubleSide,
+                color: _.cssHex2Hex(this.$store.state.config.groundColor),
+                map: modules.ground.currentGroundTexture,  // Current texture from active environment
+                normalMap: this.bumpmappingEnabled ? modules.ground.currentGroundNormalMap : null,
+                transparent: true,
+                metalness: 0,       // Non-metallic (organic material) 
+                roughness: 1.0      // Completely rough/matte
+            })
 
-            if ( modules.data.groundMaterial ) {
-                groundMaterial = this.modules.data.groundMaterial
-            } else {
-                let groundMaterial
+            // Add wireframe toggle
+            _.getter(groundMaterial, "wireframe", ()=>{
+                return this.wireframeMode
+            })
 
-                if ( modules.data.groundMaterial ) {
-                    groundMaterial = modules.data.groundMaterial
-                } else {
-                    groundMaterial = modules.data.groundMaterial = new THREE.MeshPhongMaterial( {
-                        side: THREE.DoubleSide,
-                        color: _.cssHex2Hex( this.$store.state.config.groundColor ),
-                        map: modules.ground.currentGroundTexture,
-                        transparent: true
-                    } ) 
-
-                    _.getter( groundMaterial, "wireframe", ()=>{
-                        return this.wireframeMode
-                    } )
-
-                     _.getter( groundMaterial, "bumpScale", ()=>{
-                        return ( groundMaterial._bumpScale * this.bumpmapMultiplier * DPR )
-                    }, ( value )=>{
-                        groundMaterial._bumpScale = value
-                    } )
-
-                    if ( this.bumpmappingEnabled ) {
-                        groundMaterial.bumpMap = modules.ground.currentGroundBumpMap
-                    }
-
-                    groundMaterial.bumpScale = modules.ground.currentGroundBumpScale
-                }
-            }
+            // Store the base normal scale value
+            groundMaterial._normalScale = modules.ground.currentGroundNormalScale || 1.0;
+            
+            // Create dynamic getter for normalScale that works with the bumpmapMultiplier setting
+            _.getter(groundMaterial, "normalScale", () => {
+                return new THREE.Vector2(
+                    groundMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR,
+                    groundMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR
+                )
+            }, (value) => {
+                groundMaterial._normalScale = typeof value === 'number' ? value : value.x;
+            })
             // groundMaterial.bumpmapMultiplier = bumpMap
             let groundMesh = new THREE.Mesh( groundGeometry, groundMaterial )
             modules.renderGroups.groundChunks.add( groundMesh )
@@ -1603,36 +1777,33 @@ export default {
                 groundHeight: -this.$store.state.config.greeneryHeight,
                 normalZ: -1
             } )
+
+            // Always create a fresh material for greenery to ensure consistent appearance
+            let greeneryMaterial = new THREE.MeshStandardMaterial({
+                map: modules.ground.currentGreeneryTexture,
+                normalMap: this.bumpmappingEnabled ? modules.ground.currentGreeneryNormalMap : null,
+                side: THREE.DoubleSide,
+                transparent: true,
+                alphaTest: 0.5,     // Needed for proper transparency in plants
+                metalness: 0,        // Non-metallic (plants)
+                roughness: 1.0       // Completely rough/matte
+            })
+
+            // Store the base normal scale value
+            greeneryMaterial._normalScale = modules.ground.currentGreeneryNormalScale || 1.0;
             
-            let greeneryMaterial
-
-            if ( modules.data.greeneryMaterial ) {
-                greeneryMaterial =  modules.data.greeneryMaterial
-            } else {
-                greeneryMaterial = modules.data.greeneryMaterial = new THREE.MeshPhongMaterial( {
-                    map: modules.ground.currentGreeneryTexture,
-                    bumpMap: modules.ground.currentGreeneryBumpMap,
-                    transparent: true,
-                    side: THREE.DoubleSide,
-                } )
-
-                _.getter( greeneryMaterial, "wireframe", ()=>{
-                    return this.wireframeMode
-                } )
-
-                 _.getter( greeneryMaterial, "bumpScale", ()=>{
-                    return ( greeneryMaterial._bumpScale * this.bumpmapMultiplier * DPR )
-                }, ( value )=>{
-                    greeneryMaterial._bumpScale = value
-                } )
-
-                if ( this.bumpmappingEnabled ) {
-                    greeneryMaterial.bumpMap = modules.ground.currentGreeneryBumpMap
-                }
-
-                greeneryMaterial.bumpScale = modules.ground.currentGreeneryBumpScale
-
-            }
+            // Create dynamic getter for normalScale that responds to bumpmapMultiplier changes
+            _.getter(greeneryMaterial, "normalScale", () => {
+                return new THREE.Vector2(
+                    greeneryMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR,
+                    greeneryMaterial._normalScale * 0.5 * this.bumpmapMultiplier * DPR
+                )
+            }, (value) => {
+                greeneryMaterial._normalScale = typeof value === 'number' ? value : value.x;
+            })
+            
+            // Don't store for reuse - we want fresh materials for consistent appearance
+            // modules.data.greeneryMaterial = greeneryMaterial
 
             let greeneryMesh = new THREE.Mesh( greeneryGeometry, greeneryMaterial )
             modules.renderGroups.greenery.add( greeneryMesh )

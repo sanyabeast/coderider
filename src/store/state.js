@@ -101,7 +101,7 @@ var state = {
 	speedCamera: true,
 	freeCamera: false,
 	freeCameraZ: 400,
-	bumpmappingEnabled: true,
+	bumpmappingEnabled: false, // Disabled by default to avoid texture loading issues
 	bumpmapMultiplier: 0.5,
 	enginePower: 1,
 	groundFriction: config.groundFriction,
