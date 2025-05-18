@@ -417,7 +417,7 @@ export default {
         this.modules.objects.stuff = {}
         this.modules.objects.motos = {}
 
-        let count = 100
+        let count = 15  // Reduced from 100 to improve performance
 
         for ( let a = 0; a < count; a++ ) {
             this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, wonder.$store.state.objects.can, 300, -250)
@@ -959,22 +959,36 @@ export default {
         },
         render () {
             let modules = this.modules
+            
+            // Current timestamp in milliseconds
             let now = +new Date()
-            let delta = now - this.prevRenderedFrameTime
-
-            if ( delta > 64 ) {
-                delta = 64
-
-            }
+            
+            // How much time has passed since last frame (in ms)
+            let frameTime = now - this.prevRenderedFrameTime
             this.prevRenderedFrameTime = now
-
-            this.rafId = requestAnimationFrame( ()=> this.render() )
-
-            this.updateThings( delta || 0 )
-            this.renderFrame( delta )
-
-           
-
+            
+            // Cap maximum frameTime to prevent spiral of death on slow devices
+            if (frameTime > 100) {
+                frameTime = 100
+            }
+            
+            // Accumulate time since last frame
+            this.accumulator = (this.accumulator || 0) + frameTime
+            
+            // Fixed physics timestep (16.67ms ≈ 60 updates per second)
+            const fixedTimeStep = 1000 / 60
+            
+            // Update physics in fixed timesteps, independent of frame rate
+            while (this.accumulator >= fixedTimeStep) {
+                this.updateThings(fixedTimeStep)
+                this.accumulator -= fixedTimeStep
+            }
+            
+            // Render the frame
+            this.renderFrame(frameTime)
+            
+            // Schedule next frame
+            this.rafId = requestAnimationFrame(() => this.render())
         },
         updateMatterRendererBounds () {
             if ( ! this.modules.matter.render ) return
