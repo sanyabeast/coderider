@@ -1394,32 +1394,78 @@ export default {
             return modules.objects[ objectName ]
         },
         generatePoints ( chunkIndex ) {
-
+            // Get configuration values
             let count = this.$store.state.config.chunkSize
             let start = chunkIndex * count
-
             let points = []
             let index = 0
             let step = this.$store.state.config.curve.pointsStep
-
-            for( var a = start; a <= start + count; a++ ) {
+            
+            // Global seed to ensure consistent terrain across all chunks
+            // This makes the entire world determined by a single global seed
+            const GLOBAL_SEED = 6289371
+            
+            // Deterministic noise function that depends on position
+            // We use a simple but effective pseudo-random noise function
+            let globalNoise = (x, amplitude = 1, frequency = 1) => {
+                // Use a combination of sine waves with different frequencies
+                // This creates a continuous noise pattern
+                return amplitude * (
+                    Math.sin(x * 0.01 * frequency + GLOBAL_SEED * 0.1) * 0.5 +
+                    Math.sin(x * 0.02 * frequency + GLOBAL_SEED * 0.2) * 0.3 +
+                    Math.sin(x * 0.04 * frequency + GLOBAL_SEED * 0.3) * 0.2
+                )
+            }
+            
+            // Reduced terrain feature magnitudes to avoid distorting trees
+            // Use global position rather than chunk-relative features for seamless transitions
+            const FEATURE_SCALE = 0.5 // Scale down all feature sizes
+            
+            // Generate base points
+            for(let a = start; a <= start + count; a++) {
                 index = points.length
-                points.push( {
+                let globalPos = a // Use global position for seamless features
+                
+                points.push({
                     x: a * step,
                     y: 0
-                    // index: a
-                } )
-
-
-                forEach( this.$store.state.config.curve.sinMap, ( tuple )=>{
-
-                    if ( (points[ index ].x / step) % tuple[3] === 0 ) {
-                        points[ index ].y += Math.pow( Math.sin( a / tuple[ 0 ] ), tuple[2] ) * tuple[ 1 ]                        
+                })
+                
+                // Apply standard sinusoid terrain with reduced magnitude
+                forEach(this.$store.state.config.curve.sinMap, (tuple) => {
+                    if ((points[index].x / step) % tuple[3] === 0) {
+                        // Reduce magnitude by 30% to make terrain less extreme
+                        let magnitude = tuple[1] * 0.7
+                        points[index].y += Math.pow(Math.sin(a / tuple[0]), tuple[2]) * magnitude
                     }
-
-                } )
+                })
+                
+                // Determine terrain features based on global position, not chunk index
+                // This ensures seamless transitions between chunks
+                
+                // Add gentler jumps every 1000 units
+                if (Math.abs(globalPos % 1000) < 50) {
+                    let distanceFromJump = Math.abs(globalPos % 1000 - 25)
+                    if (distanceFromJump < 20) {
+                        // Gentle hill-like jump with limited height
+                        let jumpShape = Math.cos(distanceFromJump * (Math.PI / 20))
+                        points[index].y += jumpShape * 40 * FEATURE_SCALE
+                    }
+                }
+                
+                // Small, gentle bumps for more interesting terrain
+                // Combine several sine waves with different frequencies
+                let bumps = globalNoise(globalPos * 0.5, 15, 1.5) * FEATURE_SCALE
+                points[index].y += bumps
+                
+                // Add occasional gentle slopes
+                if (Math.abs(globalPos % 1500) < 300) {
+                    let slopePosition = (globalPos % 1500) / 300
+                    let slopeIntensity = Math.sin(slopePosition * Math.PI) * 0.3
+                    points[index].y += slopeIntensity * (globalPos % 3000 - 1500) * 0.05 * FEATURE_SCALE
+                }
             }
-
+            
             return points
         },
         checkChunks () {
