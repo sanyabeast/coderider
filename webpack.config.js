@@ -2,23 +2,14 @@ const {
     VueLoaderPlugin
 } = require("vue-loader");
 const path = require('path')
-const TerserPlugin = require('terser-webpack-plugin')
-const JsDocPlugin = require('jsdoc-webpack4-plugin')
-const jsonfile = require("jsonfile")
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
-const ip = require("ip")
-const CopyPlugin = require('copy-webpack-plugin');
 const webpack = require('webpack');
 
-const packageJSON = jsonfile.readFileSync("package.json")
-
-
-const env = process.env.NODE_ENV
+// Simplified configuration
+const env = process.env.NODE_ENV || 'development'
 const sourceMap = env === 'development'
-let host = ip.address()
-
-env == "production" && increaseVersionBuildNumber();
+const host = 'localhost'
+console.log('Current NODE_ENV:', env)
 
 
 let webpackConfig = {
@@ -29,7 +20,7 @@ let webpackConfig = {
         // https: true
     },
     devtool: sourceMap ? 'cheap-module-eval-source-map' : undefined,
-    mode: env,
+    mode: 'development', // Explicitly set mode to development
     output: {
         filename: '[name].min.js',
         path: path.resolve(__dirname, 'dist'),
@@ -65,11 +56,20 @@ let webpackConfig = {
                 },
                 {
                     loader: 'css-loader',
-                }, {
-                    loader: 'sass-loader',
+                    options: {
+                        url: false,
+                        importLoaders: 1
+                    }
                 }
-
             ]
+        }, {
+            test: /\.(mp3|ogg)$/,
+            use: [{
+              loader: 'file-loader',
+              options: {
+                name: '[path][name].[ext]'
+              }
+            }]
         }, {
             test: /\.vue$/,
             use: [
@@ -84,7 +84,7 @@ let webpackConfig = {
         }, {
             test: /\.(ttf|eot|svg|png|woff(2)?)(\?[a-z0-9]+)?$/,
             use: [{
-              loader: 'file-loader'
+                loader: 'file-loader'
             }]
         }]
     },
@@ -104,62 +104,14 @@ let webpackConfig = {
             inject: true,
         }),
         new webpack.ProvidePlugin({
-           "THREE": "three"
+            "THREE": "three"
         })
     ],
 };
 
-if (env == "production") {
-    webpackConfig.entry = {
-        "main": "main"
-    }
-
-    webpackConfig.optimization = {
-        minimizer: [new TerserPlugin({
-            test: /\.js(\?.*)?$/i,
-            terserOptions: {
-                ecma: 5,
-                warnings: false,
-                parse: {},
-                compress: {},
-                mangle: true, // Note `mangle.properties` is `false` by default.
-                module: false,
-                output: null,
-                toplevel: false,
-                nameCache: null,
-                ie8: false,
-                keep_classnames: undefined,
-                keep_fnames: false,
-                safari10: true
-            }
-        })]
-    }
-
-    webpackConfig.plugins.push( new CopyPlugin([
-      { from: 'res', to: 'res' },
-    ]) )
-
-    webpackConfig.plugins.push( new BundleAnalyzerPlugin({
-        reportFilename: "../misc/bundle-stats.html",
-        analyzerMode: "static",
-        openAnalyzer: false
-    }) )
-} else {
-    webpackConfig.entry = {
-        "main": "main",
-    }
-}
-
-function increaseVersionBuildNumber() {
-    var splittedVersion = packageJSON.version.split(".");
-    var splittedMinorBuild = splittedVersion[2].split("-");
-    splittedMinorBuild[0]++;
-    var newVersion = [splittedVersion[0], splittedVersion[1], splittedMinorBuild.join("-")].join(".");
-    packageJSON.version = newVersion;
-
-    jsonfile.writeFileSync("package.json", packageJSON, {
-        spaces: 4
-    });
+// Simplified entry configuration
+webpackConfig.entry = {
+    "main": "main"
 }
 
 module.exports = webpackConfig
