@@ -53,11 +53,14 @@ The project uses a modular configuration system:
 npm install
 
 # Run development server
-NODE_OPTIONS=--openssl-legacy-provider npm run dev
+npm run dev
 
 # Build for production
-NODE_OPTIONS=--openssl-legacy-provider npm run build
+npm run build
 ```
+
+### Note for Node.js compatibility
+This project requires the OpenSSL legacy provider flag when using Node.js 17 or higher due to older webpack dependencies. This flag is already included in the npm scripts.
 
 ## Author
 

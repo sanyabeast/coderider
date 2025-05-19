@@ -9,7 +9,8 @@
         "start": "set NODE_ENV=development && set NODE_OPTIONS=--openssl-legacy-provider && webpack-dev-server",
         "start-linux": "NODE_ENV=development NODE_OPTIONS=--openssl-legacy-provider webpack-dev-server",
         "build": "set NODE_ENV=production && set NODE_OPTIONS=--openssl-legacy-provider && webpack",
-        "build-linux": "NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider webpack"
+        "build-linux": "NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider webpack",
+        "dev": "npm run start"
     },
     "devDependencies": {
         "@babel/core": "7.4.4",
