@@ -40,6 +40,7 @@ import _ from "../../Helpers";
 import { forEach, forEachRight } from "lodash";
 import Matter from "matter-js";
 import ChunkBufferGeometry from "./ChunkBufferGeometry";
+import { TerrainGenerator, Point } from "./TerrainGenerator";
 const DPR = window.devicePixelRatio;
 
 // Type definitions for Chunk and related objects
@@ -145,6 +146,7 @@ export class Game {
     hour: number = 0;
     sunOffset: Vector3 = new Vector3(0, 0, 0);
     hoursCount: number = 0;
+    terrainGenerator: TerrainGenerator;
 
     renderingActive: boolean;
     dayCycleEnabled: boolean;
@@ -206,6 +208,7 @@ export class Game {
     constructor(rootElement: HTMLElement, canvas: HTMLCanvasElement) {
         this.rootElement = rootElement;
         this.canvas = canvas;
+        this.terrainGenerator = new TerrainGenerator();
 
         this.setupRenderer();
         this.setupBackground();
@@ -232,35 +235,33 @@ export class Game {
         let count = 5; // Reduced from 15 to further minimize random props
 
         for (let a = 0; a < count; a++) {
-            this.modules.objects.stuff[`can${a}`] = this.createObject(
-                `can${a}`,
-                objects.can,
-                300,
-                -250
-            );
+            this.modules.objects.stuff[`can${a}`] = this.createObject({
+                objectName: `can${a}`,
+                config: objects.can,
+                spawnX: 300,
+                spawnY: -250
+            });
         }
 
         for (let b = 0; b < count; b++) {
-            this.modules.objects.stuff[`box${b}`] = this.createObject(
-                `box${b}`,
-                objects.box,
-                300,
-                -250
-            );
+            this.modules.objects.stuff[`box${b}`] = this.createObject({
+                objectName: `box${b}`,
+                config: objects.box,
+                spawnX: 300,
+                spawnY: -250
+            });
         }
 
         let moto_count = 1;
 
         for (let c = 0; c < moto_count; c++) {
-            this.modules.objects.motos[`moto${c}`] = this.createObject(
-                `moto${c}`,
-                objects.moto,
-                {
-                    spawnX: 300,
-                    spawnY: -225,
-                    collisionGroup: -1,
-                }
-            );
+            this.modules.objects.motos[`moto${c}`] = this.createObject({
+                objectName: `moto${c}`,
+                config: objects.moto,
+                spawnX: 300,
+                spawnY: -225,
+                collisionGroup: -1,
+            });
         }
 
         this.createCar();
@@ -383,7 +384,7 @@ export class Game {
         modules.ground.currentGroundEmissionMap = emissionMap;
         modules.ground.currentGroundNormalScale = 1;
 
-        forEach(modules.chunks, (chunk) => {
+        forEach(modules.chunks, (chunk: Chunk) => {
             if (chunk && chunk.mesh) {
                 // When changing environments, recreate the material from scratch
                 // instead of modifying existing material to ensure consistent appearance
@@ -712,25 +713,9 @@ export class Game {
             }`
         );
     }
-    getSpawnPosition(x) {
-        let chunkLength = this.chunkLength;
-        let chunkIndex = _.nearestMult(x, chunkLength, false, true) / chunkLength;
-
-        let chunk = this.modules.chunks[chunkIndex];
-
-        if (!chunk) {
-            this.addChunk(chunkIndex);
-            chunk = this.modules.chunks[chunkIndex];
-        }
-
-        let count = config.chunkSize;
-        let step = config.curve.pointsStep;
-        let pointIndex = _.nearestMult(x, step, false, false) / step;
-        let pointIndexOffset = chunkIndex * count;
-
-        let point = chunk.points[pointIndex - pointIndexOffset];
-
-        return point ? point.y : -500;
+    getSpawnPosition(x: number): number {
+        const chunkLength = this.chunkLength;
+        return this.terrainGenerator.getSpawnPositionY(x, chunkLength);
     }
     spawnObject(object, position) {
         Matter.Body.setStatic(object.bodies[0], true);
@@ -1231,40 +1216,39 @@ export class Game {
         console.log(`renderer size: ${width} - ${height}`);
     }
     createCar() {
-        this.createObject("car", carConfig);
+        this.createObject({
+            objectName: "car",
+            config: carConfig
+        });
         this.spawnObject(this.modules.objects.car.composite, {
             x: carConfig.spawnPosition.x,
             y: this.getSpawnPosition(carConfig.spawnPosition.x) - 10,
         });
     }
-    createObject(objectName: string, config: any, params?: any) {
+    // Define an interface for the object creation parameters
+    createObject(params: {
+        objectName: string;
+        config: any;
+        spawnX?: number;
+        spawnY?: number;
+        collisionGroup?: number;
+    }) {
         let modules = this.modules;
-        let spawnX;
-        let spawnY;
         let composite;
-        let collisionGroup = -1;
 
-        if (params && typeof params.spawnX == "number") {
-            spawnX = params.spawnX || 0;
-        } else if (config.spawnPosition) {
-            spawnX = config.spawnPosition.x || 0;
-        } else {
-            spawnX = 0;
-        }
+        // Extract parameters from the single object parameter
+        const { objectName, config } = params;
 
-        if (params && typeof params.spawnY == "number") {
-            spawnY = params.spawnY || 0;
-        } else if (config.spawnPosition) {
-            spawnY = config.spawnPosition.y || 0;
-        } else {
-            spawnY = 0;
-        }
+        // Handle spawn position with fallbacks
+        const spawnX = params.spawnX !== undefined ? params.spawnX :
+            (config.spawnPosition ? config.spawnPosition.x || 0 : 0);
 
-        if (params && typeof params.collisionGroup == "number") {
-            collisionGroup = params.collisionGroup;
-        } else {
-            collisionGroup = config.collisionGroup || 0;
-        }
+        const spawnY = params.spawnY !== undefined ? params.spawnY :
+            (config.spawnPosition ? config.spawnPosition.y || 0 : 0);
+
+        // Handle collision group with fallbacks
+        const collisionGroup = params.collisionGroup !== undefined ?
+            params.collisionGroup : (config.collisionGroup || 0);
 
         forEach(config.bodies, (bodyConfig, name) => {
             let geometry;
@@ -1578,83 +1562,12 @@ export class Game {
 
         return modules.objects[objectName];
     }
-    generatePoints(chunkIndex) {
-        // Get configuration values
-        let count = config.chunkSize;
-        let start = chunkIndex * count;
-        let points = [];
-        let index = 0;
-        let step = config.curve.pointsStep;
-
-        // Global seed to ensure consistent terrain across all chunks
-        // This makes the entire world determined by a single global seed
-        const GLOBAL_SEED = 6289371;
-
-        // Deterministic noise function that depends on position
-        // We use a simple but effective pseudo-random noise function
-        let globalNoise = (x, amplitude = 1, frequency = 1) => {
-            // Use a combination of sine waves with different frequencies
-            // This creates a continuous noise pattern
-            return (
-                amplitude *
-                (Math.sin(x * 0.01 * frequency + GLOBAL_SEED * 0.1) * 0.5 +
-                    Math.sin(x * 0.02 * frequency + GLOBAL_SEED * 0.2) * 0.3 +
-                    Math.sin(x * 0.04 * frequency + GLOBAL_SEED * 0.3) * 0.2)
-            );
-        };
-
-        // Reduced terrain feature magnitudes to avoid distorting trees
-        // Use global position rather than chunk-relative features for seamless transitions
-        const FEATURE_SCALE = 0.5; // Scale down all feature sizes
-
-        // Generate base points
-        for (let a = start; a <= start + count; a++) {
-            index = points.length;
-            let globalPos = a; // Use global position for seamless features
-
-            points.push({
-                x: a * step,
-                y: 0,
-            });
-
-            // Apply standard sinusoid terrain with reduced magnitude
-            forEach(config.curve.sinMap, (tuple) => {
-                if ((points[index].x / step) % tuple[3] === 0) {
-                    // Reduce magnitude by 30% to make terrain less extreme
-                    let magnitude = tuple[1] * 0.7;
-                    points[index].y +=
-                        Math.pow(Math.sin(a / tuple[0]), tuple[2]) * magnitude;
-                }
-            });
-
-            // Determine terrain features based on global position, not chunk index
-            // This ensures seamless transitions between chunks
-
-            // Add gentler jumps every 1000 units
-            if (Math.abs(globalPos % 1000) < 50) {
-                let distanceFromJump = Math.abs((globalPos % 1000) - 25);
-                if (distanceFromJump < 20) {
-                    // Gentle hill-like jump with limited height
-                    let jumpShape = Math.cos(distanceFromJump * (Math.PI / 20));
-                    points[index].y += jumpShape * 40 * FEATURE_SCALE;
-                }
-            }
-
-            // Small, gentle bumps for more interesting terrain
-            // Combine several sine waves with different frequencies
-            let bumps = globalNoise(globalPos * 0.5, 15, 1.5) * FEATURE_SCALE;
-            points[index].y += bumps;
-
-            // Add occasional gentle slopes
-            if (Math.abs(globalPos % 1500) < 300) {
-                let slopePosition = (globalPos % 1500) / 300;
-                let slopeIntensity = Math.sin(slopePosition * Math.PI) * 0.3;
-                points[index].y +=
-                    slopeIntensity * ((globalPos % 3000) - 1500) * 0.05 * FEATURE_SCALE;
-            }
-        }
-
-        return points;
+    /**
+     * Generate terrain points for a chunk based on its index
+     * Delegates to TerrainGenerator
+     */
+    generatePoints(chunkIndex: number): Point[] {
+        return this.terrainGenerator.generatePoints(chunkIndex);
     }
     checkChunks() {
         let currentChunkIndex = this.currentChunkIndex;
@@ -1699,7 +1612,7 @@ export class Game {
 
             if (this.modules.chunks[chunkIndex].matterBody) {
                 Matter.Composite.remove(this.modules.matter.engine.world, [
-                    this.modules.chunks[chunkIndex].matterBody,
+                    this.modules.chunks[chunkIndex].matterBody
                 ]);
                 // Matter.Composite.remove( this.modules.matter.world, [ y ] )
                 // this.modules.matter.world.remove( this.modules.chunks[ chunkIndex ].matterBod )
@@ -1722,17 +1635,18 @@ export class Game {
                 this.modules.chunks[chunkIndex].greenery
             );
             Matter.World.add(this.modules.matter.engine.world, [
-                this.modules.chunks[chunkIndex].matterBody,
+                this.modules.chunks[chunkIndex].matterBody
             ]);
         }
     }
+    
     addChunk(chunkIndex) {
         if (this.modules.chunks[chunkIndex]) {
             this.showChunk(chunkIndex);
             return;
         }
 
-        let points = this.generatePoints(chunkIndex);
+        let points = this.terrainGenerator.generatePoints(chunkIndex);
         let modules = this.modules;
 
         let groundGeometry = new ChunkBufferGeometry({
