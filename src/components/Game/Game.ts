@@ -18,6 +18,7 @@ import {
     Vector2,
     Vector3,
     WebGLRenderer,
+    Material,
 } from "three";
 import SoundBlaster from "./SoundBlaster";
 
@@ -40,6 +41,100 @@ import { forEach, forEachRight } from "lodash";
 import Matter from "matter-js";
 import ChunkBufferGeometry from "./ChunkBufferGeometry";
 const DPR = window.devicePixelRatio;
+
+// Type definitions for Chunk and related objects
+interface Point {
+    x: number;
+    y: number;
+}
+
+interface ChunkPart {
+    mesh: Mesh;
+    matterBody: Matter.Body;
+}
+
+interface GameObjectParts {
+    [key: string]: ChunkPart;
+}
+
+interface GameObject {
+    parts: GameObjectParts;
+    bodies: Matter.Body[];
+    composite?: Matter.Composite;
+}
+
+interface Chunk {
+    mesh: Mesh;
+    matterBody: Matter.Body;
+    points: Point[];
+    greenery: Mesh;
+}
+
+interface Ground {
+    currentGroundTexture?: Texture;
+    currentGroundNormalMap?: Texture;
+    currentGroundNormalScale: number;
+    currentGreeneryTexture?: Texture;
+    currentGreeneryNormalMap?: Texture;
+    currentGroundEmissionMap?: Texture;
+    currentGreeneryNormalScale: number;
+}
+
+interface RenderGroups {
+    greenery: Group;
+    objects: Group | any;
+    groundChunks: Group;
+}
+
+interface FXPasses {
+    [key: string]: any;
+}
+
+interface FX {
+    passes: FXPasses;
+}
+
+interface Lights {
+    sun?: DirectionalLight;
+    ambient?: AmbientLight;
+    headlight?: PointLight;
+}
+
+interface DataCache {
+    textures: { [key: string]: Texture };
+}
+
+interface Objects {
+    stuff?: { [key: string]: GameObject };
+    motos?: { [key: string]: GameObject };
+    car?: GameObject;
+}
+
+interface Modules {
+    fx: FX;
+    renderGroups: RenderGroups;
+    ground: Ground;
+    camera?: PerspectiveCamera;
+    scene?: Scene;
+    composer?: any; // EffectComposer
+    soundBlaster: any; // SoundBlaster
+    renderer?: WebGLRenderer;
+    objects: Objects;
+    lights: Lights;
+    data: DataCache;
+    time: Vector2;
+    matter: {
+        engine?: any; // Matter.Engine
+    };
+    chunks: { [key: string]: Chunk };
+    activeChunks: { [key: string]: boolean };
+    size: Vector2;
+    car: {
+        parts: {};
+    };
+    bg?: Mesh; // Background mesh with shader material
+    lightGroup?: Group;
+}
 
 export class Game {
     rootElement: HTMLElement;
