@@ -556,13 +556,18 @@ export class Game {
 
         // Start from night (second state in daynight.json, index 1)
         this.hour = 1;
-        this.setDaytime(this.hour, true);
+        this.setDaytime(this.hour);
 
         // Set up automatic day/night cycle
         this.dayCycleEnabled = true;
         this.dayCycleTimer = 0;
         this.dayCycleDuration = 60; // Seconds for a complete day/night cycle
 
+        this._setupDaynightControls();
+        this._setupHeadlight();
+    }
+    
+    _setupDaynightControls() {
         // Add key listener for toggling day/night (N key)
         window.addEventListener("keydown", (event) => {
             if (event.key === "n" || event.key === "N") {
@@ -577,8 +582,10 @@ export class Game {
                 );
             }
         });
-
-        // Create headlight for the car
+    }
+    
+    _setupHeadlight() {
+        // Create headlight for the car if it doesn't exist
         if (!this.modules.lights.headlight) {
             const hourData = daynight[this.hour];
             const headlightConfig = hourData.headlight;
@@ -602,36 +609,47 @@ export class Game {
             this.modules.scene.add(headlight);
             this.modules.lights.headlight = headlight;
         }
-
-        // Commenting out the interval to prevent automatic day/night cycle
-        /*
-            this.daynightInterval = setInterval( ()=>{
-                this.hour++
-                this.hour = this.hour % daynight.length
-                this.setDaytime( this.hour )
-            }, config.daynightHourDuration * 1000 )
-            */
     }
     setDaytime(hour: number) {
-        let modules = this.modules;
-        let hourData = daynight[hour];
-        let sun = this.modules.lights.sun;
-        let duration = config.daynightHourDuration / 2;
-        let bg_uniforms = modules.bg.material.uniforms;
-
-        /*colors*/
-        let sunColor = new Color();
+        const modules = this.modules;
+        const hourData = daynight[hour];
+        const duration = config.daynightHourDuration / 2;
+        
+        // Initialize colors
+        const colors = this._prepareDaytimeColors(hourData);
+        
+        // Update sun position and properties
+        this._updateSunSettings(hourData, colors.sunColor, duration);
+        
+        // Update headlight if it exists
+        this._updateHeadlightSettings(hourData, duration);
+        
+        // Update background visuals
+        this._updateBackgroundSettings(hourData, colors, duration);
+    }
+    
+    _prepareDaytimeColors(hourData) {
+        // Parse all colors needed for the daytime settings
+        const sunColor = new Color();
         sunColor.setHex(_.cssHex2Hex(hourData.sunColor));
-        let skyColor = new Color();
+        
+        const skyColor = new Color();
         skyColor.setHex(_.cssHex2Hex(hourData.skyColor));
-        let skyColorB = new Color();
+        
+        const skyColorB = new Color();
         skyColorB.setHex(_.cssHex2Hex(hourData.skyColorB));
-
+        
+        return { sunColor, skyColor, skyColorB };
+    }
+    
+    _updateSunSettings(hourData, sunColor, duration) {
+        const sun = this.modules.lights.sun;
+        
         // Initialize sunOffset if it doesn't exist
         if (!this.sunOffset) {
             this.sunOffset = new Vector3(0, 0, 0);
         }
-
+        
         // Update sunOffset from configuration
         if (hourData.sunOffset) {
             // Animate transition
@@ -642,29 +660,47 @@ export class Game {
                 ease: "linear",
             });
         }
-
+        
+        // Animate sun color
+        TweenMax.to(sun.color, duration, {
+            r: sunColor.r,
+            g: sunColor.g,
+            b: sunColor.b,
+            ease: "linear",
+        });
+        
+        // Animate sun intensity
+        TweenMax.to(sun, duration, {
+            intensity: hourData.intensity,
+            ease: "linear",
+        });
+    }
+    
+    _updateHeadlightSettings(hourData, duration) {
+        const modules = this.modules;
+        
         // Update headlight settings if it exists
         if (modules.lights.headlight && hourData.headlight) {
             const headlightConfig = hourData.headlight;
-
+            
             // Store headlight offset for use in updateThings
             this.headlightOffset = new Vector3(
                 headlightConfig.offset.x,
                 headlightConfig.offset.y,
                 headlightConfig.offset.z
             );
-
+            
             // Get headlight color
-            let headlightColor = new Color();
+            const headlightColor = new Color();
             headlightColor.setHex(_.cssHex2Hex(headlightConfig.color));
-
+            
             // Animate headlight property changes
             TweenMax.to(modules.lights.headlight, duration, {
                 intensity: headlightConfig.intensity,
                 distance: headlightConfig.distance,
                 ease: "linear",
             });
-
+            
             TweenMax.to(modules.lights.headlight.color, duration, {
                 r: headlightColor.r,
                 g: headlightColor.g,
@@ -672,36 +708,28 @@ export class Game {
                 ease: "linear",
             });
         }
-
-        // Animate sun property changes
-        TweenMax.to(sun.color, duration, {
-            r: sunColor.r,
-            g: sunColor.g,
-            b: sunColor.b,
-            ease: "linear",
-        });
-
-        TweenMax.to(sun, duration, {
-            intensity: hourData.intensity,
-            ease: "linear",
-        });
-
+    }
+    
+    _updateBackgroundSettings(hourData, colors, duration) {
+        const bg_uniforms = this.modules.bg.material.uniforms;
+        const { skyColor, skyColorB } = colors;
+        
         // Animate background uniforms
         TweenMax.to(bg_uniforms.amplitude, duration, {
             value: hourData.amplitude,
             ease: "linear",
         });
-
+        
         TweenMax.to(bg_uniforms.waves, duration, {
             value: hourData.waves,
             ease: "linear",
         });
-
+        
         TweenMax.to(bg_uniforms.grid, duration, {
             value: hourData.grid,
             ease: "linear",
         });
-
+        
         // Animate sky colors
         TweenMax.to(bg_uniforms.diffuse.value, duration, {
             r: skyColor.r,
@@ -709,7 +737,7 @@ export class Game {
             b: skyColor.b,
             ease: "linear",
         });
-
+        
         TweenMax.to(bg_uniforms.diffuseB.value, duration, {
             r: skyColorB.r,
             g: skyColorB.g,
