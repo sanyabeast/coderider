@@ -211,69 +211,107 @@ export class Game {
         this.canvas = canvas;
         this.terrainGenerator = new TerrainGenerator();
 
+        this._initializeCore();
+        this._initializeEnvironment();
+        this._initializeGameObjects();
+        
+        this.startMainLoop();
+        this.rootElement.focus();
+    }
+    
+    /**
+     * Initialize core systems and event handlers
+     */
+    private _initializeCore(): void {
+        // Set up core rendering and physics systems
         this.setupRenderer();
-        this.setupBackground();
         this.setupMatterEngine();
-        this.setupLights();
         this.updateSize();
-
+        
+        // Add resize event listener
         window.addEventListener("resize", () => {
             this.updateSize();
         });
-
+    }
+    
+    /**
+     * Initialize environment elements (background, lighting, terrain)
+     */
+    private _initializeEnvironment(): void {
+        // Set up visual environment
+        this.setupBackground();
+        this.setupLights();
         this.setupDaynight();
-
-        // Ensure normal maps are loaded and available before creating initial chunks
+        
+        // Set ground appearance
         this.setGroundSkin(config.groundSkin);
-
+        
+        // Create initial terrain chunks
+        this._initializeTerrainChunks();
+    }
+    
+    /**
+     * Initialize terrain chunks
+     */
+    private _initializeTerrainChunks(): void {
+        // Create initial set of chunks (previous, current, next)
         this.addChunk(-1);
         this.addChunk(0);
         this.addChunk(1);
-
+    }
+    
+    /**
+     * Initialize game objects (car, obstacles, props)
+     */
+    private _initializeGameObjects(): void {
+        // Initialize object collections
         this.modules.objects.stuff = {};
         this.modules.objects.motos = {};
-
-        let count = 5; // Reduced from 15 to further minimize random props
-
-        for (let a = 0; a < count; a++) {
-            this.modules.objects.stuff[`can${a}`] = this.createObject({
-                objectName: `can${a}`,
+        
+        // Create props and obstacles
+        this._createProps();
+        
+        // Create player vehicle
+        this.createCar();
+    }
+    
+    /**
+     * Create props and obstacles
+     */
+    private _createProps(): void {
+        const count = 5; // Reduced from 15 to minimize random props
+        
+        // Create cans
+        for (let i = 0; i < count; i++) {
+            this.modules.objects.stuff[`can${i}`] = this.createObject({
+                objectName: `can${i}`,
                 config: objects.can,
                 spawnX: 300,
                 spawnY: -250
             });
         }
-
-        for (let b = 0; b < count; b++) {
-            this.modules.objects.stuff[`box${b}`] = this.createObject({
-                objectName: `box${b}`,
+        
+        // Create boxes
+        for (let i = 0; i < count; i++) {
+            this.modules.objects.stuff[`box${i}`] = this.createObject({
+                objectName: `box${i}`,
                 config: objects.box,
                 spawnX: 300,
                 spawnY: -250
             });
         }
-
-        let moto_count = 1;
-
-        for (let c = 0; c < moto_count; c++) {
-            this.modules.objects.motos[`moto${c}`] = this.createObject({
-                objectName: `moto${c}`,
+        
+        // Create motorcycles
+        const motoCount = 1;
+        for (let i = 0; i < motoCount; i++) {
+            this.modules.objects.motos[`moto${i}`] = this.createObject({
+                objectName: `moto${i}`,
                 config: objects.moto,
                 spawnX: 300,
                 spawnY: -225,
                 collisionGroup: -1,
             });
         }
-
-        this.createCar();
-        // this.createObject("can1", objects.can, {
-        //     x:  300,
-        //     y: -250,
-        //     collisionGroup: -1
-        // })
-
-        this.startMainLoop();
-        this.rootElement.focus();
     }
 
     setPaused(paused: boolean) {
@@ -787,34 +825,74 @@ export class Game {
         this.hour = 0; // Set hour to first daynight state (bright daytime)
         this.setDaytime(this.hour, true); // Apply daytime immediately
     }
+    /**
+     * Set up the rendering system including scene, camera, renderer, and scene groups
+     */
     setupRenderer() {
-        let canvasElement = this.canvas;
-        let width = window.innerWidth * DPR;
-        let height = window.innerHeight * DPR;
-
-        let scene = new Scene();
-        let camera = new PerspectiveCamera(
+        // Create core rendering components
+        const { scene, camera, renderer, composer } = this._createRenderingCore();
+        
+        // Set up camera properties and animation
+        this._setupCamera(camera);
+        
+        // Create scene structure with groups for different types of objects
+        const { lightGroup, groundChunksGroup, greeneryChunksGroup, objectsGroup } = 
+            this._createSceneStructure(scene);
+        
+        // Store references to all rendering components
+        this._storeRenderingReferences(scene, camera, renderer, composer, 
+            lightGroup, groundChunksGroup, greeneryChunksGroup, objectsGroup);
+        
+        // Set up post-processing effects
+        this.setupComposer();
+        
+        // Set up time ticker for animations
+        this._setupTimeTicker();
+    }
+    
+    /**
+     * Create the core rendering components: scene, camera, renderer, and composer
+     */
+    private _createRenderingCore() {
+        // Create scene
+        const scene = new Scene();
+        
+        // Create camera
+        const camera = new PerspectiveCamera(
             90,
             window.innerWidth / window.innerHeight,
             0.001,
             100000
         );
-        // let camera = new OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 )
-        let renderer = new WebGLRenderer({
+        
+        // Create renderer
+        const renderer = new WebGLRenderer({
             antialias: false,
-            canvas: canvasElement,
+            canvas: this.canvas,
         });
-
+        
+        // Configure renderer settings
         renderer.autoClear = false;
         renderer.autoClearColor = false;
         renderer.autoClearDepth = false;
         renderer.autoClearStencil = false;
-
-        let composer = new EffectComposer(renderer);
-
+        renderer.setClearColor(0xfff17f);
+        
+        // Create effect composer for post-processing
+        const composer = new EffectComposer(renderer);
+        
+        return { scene, camera, renderer, composer };
+    }
+    
+    /**
+     * Set up camera properties and animation
+     */
+    private _setupCamera(camera: PerspectiveCamera) {
+        // Set initial rotation
         camera.rotation.z = Math.PI;
         camera.rotation.y = Math.PI;
-
+        
+        // Add subtle camera movement animation
         TweenMax.fromTo(
             camera.rotation,
             10,
@@ -828,85 +906,147 @@ export class Game {
                 ease: "Power1.easeInOut",
             }
         );
-
-        // Create light group for scene-wide lights (not including car headlights)
-        let lightGroup = new Group();
+    }
+    
+    /**
+     * Create scene structure with groups for different types of objects
+     */
+    private _createSceneStructure(scene: Scene) {
+        // Create light group for scene-wide lights
+        const lightGroup = new Group();
         lightGroup.name = "lights";
         scene.add(lightGroup);
-
-        renderer.setClearColor(0xfff17f);
-
-        let groundChunksGroup = new Group();
-        let greeneryChunksGroup = new Group();
+        
+        // Create ground chunks group
+        const groundChunksGroup = new Group();
         groundChunksGroup.name = "ground-chunks";
-        greeneryChunksGroup.name = "greenery-chunks";
-
-        // Set ground to z=0 (same as car) for consistent lighting effects
-        groundChunksGroup.position.z = 0;
-        // Keep greenery at a different z for parallax effect
-        greeneryChunksGroup.position.z = 10;
-        greeneryChunksGroup.position.y = 20;
-        let objectsGroup = new Group();
-        objectsGroup.name = "objects";
-
-        scene.add(greeneryChunksGroup);
+        groundChunksGroup.position.z = 0; // Same as car for consistent lighting
         scene.add(groundChunksGroup);
+        
+        // Create greenery chunks group with parallax offset
+        const greeneryChunksGroup = new Group();
+        greeneryChunksGroup.name = "greenery-chunks";
+        greeneryChunksGroup.position.z = 10; // Different z for parallax effect
+        greeneryChunksGroup.position.y = 20;
+        scene.add(greeneryChunksGroup);
+        
+        // Create objects group for game objects
+        const objectsGroup = new Group();
+        objectsGroup.name = "objects";
         scene.add(objectsGroup);
-
+        
+        return { lightGroup, groundChunksGroup, greeneryChunksGroup, objectsGroup };
+    }
+    
+    /**
+     * Store references to all rendering components in the modules object
+     */
+    private _storeRenderingReferences(
+        scene: Scene, 
+        camera: PerspectiveCamera, 
+        renderer: WebGLRenderer, 
+        composer: EffectComposer,
+        lightGroup: Group,
+        groundChunksGroup: Group,
+        greeneryChunksGroup: Group,
+        objectsGroup: Group
+    ) {
+        // Store scene groups
         this.modules.renderGroups.greenery = greeneryChunksGroup;
         this.modules.renderGroups.objects = objectsGroup;
         this.modules.renderGroups.groundChunks = groundChunksGroup;
-
+        
+        // Store core rendering components
         this.modules.scene = scene;
         this.modules.camera = camera;
         this.modules.renderer = renderer;
         this.modules.lightGroup = lightGroup;
-        // No longer using pointLight, removed reference
         this.modules.composer = composer;
-
-        this.setupComposer();
-
+    }
+    
+    /**
+     * Set up time ticker for animations
+     */
+    private _setupTimeTicker() {
         setInterval(() => {
             this.modules.time.x += 0.01;
             this.modules.time.x = this.modules.time.x % 10;
         }, 1000 / 30);
     }
+    /**
+     * Set up post-processing effects composer
+     */
     setupComposer() {
-        // Initialize all passes
-        let renderPass = new RenderPass(this.modules.scene, this.modules.camera);
-
+        // Create all post-processing passes
+        const { renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass, bloomParams } = 
+            this._createPostProcessingPasses();
+        
+        // Store passes for reference
+        this._storePostProcessingPasses(renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass);
+        
+        // Configure pass properties and behavior
+        this._configurePassProperties(renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass);
+        
+        // Add passes to composer in correct order
+        this._addPassesToComposer(renderPass, bloomPass, colorCorPass, rgbsPass, filmPass, copyPass);
+        
+        // Set up dynamic effects based on day/night cycle
+        this._setupDynamicEffects(bloomPass, bloomParams);
+    }
+    
+    /**
+     * Create all post-processing passes
+     */
+    private _createPostProcessingPasses() {
+        // Basic render pass
+        const renderPass = new RenderPass(this.modules.scene, this.modules.camera);
+        
         // Color correction for better contrast and vibrancy
-        let colorCorPass = new ShaderPass(ColorCorrectionShader);
+        const colorCorPass = new ShaderPass(ColorCorrectionShader);
         colorCorPass.uniforms.powRGB.value = new Vector3(1.1, 1.1, 1.15); // Slightly increase blue for sky
         colorCorPass.uniforms.mulRGB.value = new Vector3(1.2, 1.15, 1.1); // Better contrast
-
+        
         // Subtle RGB shift for a slight chromatic aberration effect
-        let rgbsPass = new ShaderPass(RGBShiftShader);
-        rgbsPass.material.uniforms.amount.value = 0.0015; // Reduced from 0.0022 for more subtlety
+        const rgbsPass = new ShaderPass(RGBShiftShader);
+        rgbsPass.material.uniforms.amount.value = 0.0015; // Reduced for subtlety
         rgbsPass.material.uniforms.angle.value = 0.5; // Angle of shift
-
+        
         // Minimal film grain without strong scanlines
         // Parameters: (noise intensity, scanline intensity, scanline count, grayscale)
-        let filmPass = new FilmPass(0.15, 0.1, 480, false); // Reduced scanline intensity from 0.45 to 0.1
-
+        const filmPass = new FilmPass(0.15, 0.1, 480, false); // Reduced scanline intensity
+        
         // Almost imperceptible bloom effect
         const bloomParams = {
-            strength: 0.05, // Drastically reduced bloom strength
-            radius: 0.2, // Very small bloom radius
-            threshold: 0.95, // Very high threshold so it barely affects anything
+            strength: 0.05, // Reduced bloom strength
+            radius: 0.2,   // Small bloom radius
+            threshold: 0.95, // High threshold for subtle effect
         };
-        let bloomPass = new UnrealBloomPass(
+        
+        const bloomPass = new UnrealBloomPass(
             new Vector2(window.innerWidth, window.innerHeight),
             bloomParams.strength,
             bloomParams.radius,
             bloomParams.threshold
         );
-
+        
         // Final copy to screen
-        let copyPass = new ShaderPass(CopyShader);
+        const copyPass = new ShaderPass(CopyShader);
         copyPass.renderToScreen = true;
-
-        // Store all passes for easy reference
+        
+        return { renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass, bloomParams };
+    }
+    
+    /**
+     * Store all post-processing passes in the modules object
+     */
+    private _storePostProcessingPasses(
+        renderPass: RenderPass,
+        colorCorPass: ShaderPass,
+        rgbsPass: ShaderPass,
+        bloomPass: UnrealBloomPass,
+        filmPass: FilmPass,
+        copyPass: ShaderPass
+    ) {
         this.modules.fx.passes = {
             renderPass,
             colorCorPass,
@@ -915,28 +1055,58 @@ export class Game {
             filmPass,
             copyPass,
         };
-
-        // Enable/disable post-processing based on fxEnabled state
+    }
+    
+    /**
+     * Configure pass properties and behavior
+     */
+    private _configurePassProperties(
+        renderPass: RenderPass,
+        colorCorPass: ShaderPass,
+        rgbsPass: ShaderPass,
+        bloomPass: UnrealBloomPass,
+        filmPass: FilmPass,
+        copyPass: ShaderPass
+    ) {
+        // Configure render pass to not render to screen directly
         _.getter(
             renderPass,
             "renderToScreen",
             () => false,
             () => { }
         );
+        
+        // Enable all effect passes
         _.getter(
             [colorCorPass, rgbsPass, bloomPass, filmPass, copyPass],
             "enabled",
             () => true
         );
-
-        // Add passes in the correct order
-        this.modules.composer.addPass(renderPass); // Render the scene
-        this.modules.composer.addPass(bloomPass); // Add bloom first
+    }
+    
+    /**
+     * Add passes to composer in the correct order
+     */
+    private _addPassesToComposer(
+        renderPass: RenderPass,
+        bloomPass: UnrealBloomPass,
+        colorCorPass: ShaderPass,
+        rgbsPass: ShaderPass,
+        filmPass: FilmPass,
+        copyPass: ShaderPass
+    ) {
+        this.modules.composer.addPass(renderPass);   // Render the scene
+        this.modules.composer.addPass(bloomPass);    // Add bloom first
         this.modules.composer.addPass(colorCorPass); // Then correct colors
-        this.modules.composer.addPass(rgbsPass); // Add subtle RGB shift
-        this.modules.composer.addPass(filmPass); // Add film grain last
-        this.modules.composer.addPass(copyPass); // Copy to screen
-
+        this.modules.composer.addPass(rgbsPass);     // Add subtle RGB shift
+        this.modules.composer.addPass(filmPass);     // Add film grain last
+        this.modules.composer.addPass(copyPass);     // Copy to screen
+    }
+    
+    /**
+     * Set up dynamic effects based on day/night cycle
+     */
+    private _setupDynamicEffects(bloomPass: UnrealBloomPass, bloomParams: any) {
         // Dynamic day/night effect on bloom strength
         _.getter(bloomPass, "strength", () => {
             // Increase bloom at night for better lighting effects
@@ -966,11 +1136,33 @@ export class Game {
         // modules.matter.render = render
         // run the renderer
     }
+    /**
+     * Set up scene lighting including sun and ambient light
+     */
     setupLights() {
-        let modules = this.modules;
-        let hour = this.hour || 1; // Use current hour or default to night (1)
-        let hourData = daynight[hour];
-
+        const modules = this.modules;
+        const hour = this.hour || 1; // Use current hour or default to night (1)
+        const hourData = daynight[hour];
+        
+        // Create and configure lights
+        const { sun, ambientLight } = this._createLights(hourData);
+        
+        // Add lights to scene
+        modules.scene.add(ambientLight);
+        modules.scene.add(sun);
+        
+        // Store references for later use
+        modules.lights.sun = sun;
+        modules.lights.ambient = ambientLight;
+        
+        // Debug output to verify color is applied
+        console.log("Sun light color:", sun.color.getHexString());
+    }
+    
+    /**
+     * Create and configure scene lights based on current hour data
+     */
+    private _createLights(hourData: any) {
         // Get sun color directly from daynight.json
         let sunColorHex = 0xffffff; // Default white
         if (hourData && hourData.sunColor) {
@@ -983,73 +1175,65 @@ export class Game {
                 sunColorHex.toString(16)
             );
         }
-
+        
         // Create directional light with the configured color
-        let sun = new DirectionalLight(sunColorHex, 1);
-
+        const sun = new DirectionalLight(sunColorHex, 1);
+        
         // Set intensity from config
         sun.intensity = hourData ? hourData.intensity : 1.2;
-
+        
         // Add a subtle ambient light to soften shadows
-        let ambientLight = new AmbientLight(0x3c4a9f, 0.35);
-
-        modules.scene.add(ambientLight);
-        modules.scene.add(sun);
-
-        // Store references for later use
-        modules.lights.sun = sun;
-        modules.lights.ambient = ambientLight;
-
-        // Debug output to verify color is applied
-        console.log("Sun light color:", sun.color.getHexString());
+        const ambientLight = new AmbientLight(0x3c4a9f, 0.35);
+        
+        return { sun, ambientLight };
     }
+    /**
+     * Set up the background shader and mesh
+     */
     setupBackground() {
-        let modules = this.modules;
-
-        // Setup background shader
-        let vertShader = require("raw-loader!shaders/bg.vert").default;
-        let fragShader = require("raw-loader!shaders/waves.frag").default;
-        // let fragShader = require( "raw-loader!shaders/helix.frag" ).default
-
-        let geometry = new PlaneGeometry(1, 1, 1);
-        // geometry.translate( height / 2, width / 2, 0 )
-
-        let bg = new Mesh(
+        const modules = this.modules;
+        
+        // Create background mesh with shader material
+        const bg = this._createBackgroundMesh(modules);
+        
+        // Configure background properties
+        bg.frustumCulled = false;
+        bg.position.z = 1000;
+        
+        // Store reference and add to scene
+        modules.bg = bg;
+        modules.scene.add(bg);
+    }
+    
+    /**
+     * Create background mesh with shader material
+     */
+    private _createBackgroundMesh(modules: any) {
+        // Load shader code
+        const vertShader = require("raw-loader!shaders/bg.vert").default;
+        const fragShader = require("raw-loader!shaders/waves.frag").default;
+        
+        // Create simple plane geometry
+        const geometry = new PlaneGeometry(1, 1, 1);
+        
+        // Create mesh with shader material
+        return new Mesh(
             geometry,
             new ShaderMaterial({
                 vertexShader: vertShader,
                 fragmentShader: fragShader,
                 uniforms: {
-                    diffuse: {
-                        value: new Color(),
-                    },
-                    diffuseB: {
-                        value: new Color(),
-                    },
-                    amplitude: {
-                        value: 1,
-                    },
-                    waves: {
-                        value: 20,
-                    },
-                    grid: {
-                        value: 5,
-                    },
-                    camera: {
-                        value: modules.camera.position,
-                    },
+                    diffuse: { value: new Color() },
+                    diffuseB: { value: new Color() },
+                    amplitude: { value: 1 },
+                    waves: { value: 20 },
+                    grid: { value: 5 },
+                    camera: { value: modules.camera.position },
                 },
                 side: DoubleSide,
                 transparent: true,
             })
         );
-
-        modules.bg = bg;
-
-        bg.frustumCulled = false;
-        bg.position.z = 1000;
-
-        modules.scene.add(bg);
     }
     startMainLoop() {
         this.prevUpdateDate = +new Date();
