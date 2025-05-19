@@ -37,7 +37,6 @@ import UnrealBloomPass from "three_fx/passes/UnrealBloomPass"
 
 import { forEach, forEachRight } from "lodash"
 import _ from "Helpers"
-import Hamer from "hammerjs"
 import { TweenMax } from "gsap/TweenMax"
 import SoundBlaster from "components/Game/SoundBlaster"
 import { mapState } from 'vuex'
@@ -91,79 +90,13 @@ export default {
     },
     watch: {
         paused(value) {
-            if (value) {
-                this.stopRendering()
-                TweenMax.pauseAll(TweenMax.getAllTweens())
-            } else {
-                this.startRendering()
-                TweenMax.resumeAll(TweenMax.getAllTweens())
-            }
-        },
-        currentChunkIndex(value) {
-            this.checkChunks(value)
+            this.setPaused(value)
         },
         engineActive(value) {
-            if (value) {
-                if (this.__accelerationTween) {
-                    this.__accelerationTween.kill()
-                    delete this.__accelerationTween
-                }
-
-                this.__accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
-                    acceleration: carConfig.wheelVelocity,
-                    ease: "Power3.easeIn",
-                    onComplete: () => {
-                        delete this.__accelerationTween
-                    }
-                })
-
-            } else {
-
-                if (this.__accelerationTween) {
-                    this.__accelerationTween.kill()
-                    delete this.__accelerationTween
-                }
-
-                this.__accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
-                    acceleration: 0,
-                    ease: "Power3.easeOut",
-                    onComplete: () => {
-                        delete this.__accelerationTween
-                    }
-                })
-            }
-
+            this.setEngineActive(value);
         },
         breakActive(value) {
-            if (value) {
-                if (this.__accelerationTween) {
-                    this.__accelerationTween.kill()
-                    delete this.__accelerationTween
-                }
-
-                this.__accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
-                    acceleration: -carConfig.wheelVelocity / 2,
-                    ease: "Power3.easeOut",
-                    onComplete: () => {
-                        delete this.__accelerationTween
-                    }
-                })
-            } else {
-                if (this.__accelerationTween) {
-                    this.__accelerationTween.kill()
-                    delete this.__accelerationTween
-                }
-
-                this.__accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
-                    acceleration: 0,
-                    ease: "Power3.easeIn",
-                    onComplete: () => {
-                        delete this.__accelerationTween
-                    }
-                })
-
-
-            }
+            this.setBreakActive(value)
         }
     },
     mounted() {
@@ -203,7 +136,6 @@ export default {
                 parts: {}
             }
         }
-
 
         this.setupRenderer()
         this.setupBackground()
@@ -254,11 +186,80 @@ export default {
         //     collisionGroup: -1
         // })
 
-        console.log(this.modules)
         this.startRendering()
         this.$refs.root.focus()
     },
     methods: {
+        setPaused(paused: boolean) {
+            if (paused) {
+                this.stopRendering()
+                TweenMax.pauseAll(TweenMax.getAllTweens())
+            } else {
+                this.startRendering()
+                TweenMax.resumeAll(TweenMax.getAllTweens())
+            }
+        },
+        setEngineActive(active: boolean) {
+            if (active) {
+                if (this.__accelerationTween) {
+                    this.__accelerationTween.kill()
+                    delete this.__accelerationTween
+                }
+
+                this.__accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
+                    acceleration: carConfig.wheelVelocity,
+                    ease: "Power3.easeIn",
+                    onComplete: () => {
+                        delete this.__accelerationTween
+                    }
+                })
+
+            } else {
+
+                if (this.__accelerationTween) {
+                    this.__accelerationTween.kill()
+                    delete this.__accelerationTween
+                }
+
+                this.__accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
+                    acceleration: 0,
+                    ease: "Power3.easeOut",
+                    onComplete: () => {
+                        delete this.__accelerationTween
+                    }
+                })
+            }
+
+        },
+        setBreakActive(active: boolean) {
+            if (active) {
+                if (this.__accelerationTween) {
+                    this.__accelerationTween.kill()
+                    delete this.__accelerationTween
+                }
+
+                this.__accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
+                    acceleration: -carConfig.wheelVelocity / 2,
+                    ease: "Power3.easeOut",
+                    onComplete: () => {
+                        delete this.__accelerationTween
+                    }
+                })
+            } else {
+                if (this.__accelerationTween) {
+                    this.__accelerationTween.kill()
+                    delete this.__accelerationTween
+                }
+
+                this.__accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
+                    acceleration: 0,
+                    ease: "Power3.easeIn",
+                    onComplete: () => {
+                        delete this.__accelerationTween
+                    }
+                })
+            }
+        },
         setGroundSkin(name) {
             if (!config.groundSkins[name]) name = "forest"
 
@@ -1114,6 +1115,10 @@ export default {
                     true
                 ) / (chunkLength);
 
+                if (true || currentChunkIndex !== this.currentChunkIndex) {
+                    this.checkChunks()
+                }
+
                 this.currentChunkIndex = currentChunkIndex
 
                 // Position the headlight relative to the car if it exists
@@ -1147,7 +1152,7 @@ export default {
         },
         renderFrame() {
             // Add safety check to prevent error when composer is not initialized
-            if (false && this.modules && this.modules.composer) {
+            if (this.modules && this.modules.composer) {
                 this.modules.composer.render()
             } else {
                 this.modules.renderer.render(this.modules.scene, this.modules.camera)
