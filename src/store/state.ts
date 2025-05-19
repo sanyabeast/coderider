@@ -2,7 +2,7 @@
 import Device from "device.js/dist/device"
 import Bowser from "bowser"
 
-import { config, daynight, objects, car as carConfig } from "../../res/data/index.js"
+import { config, daynight, objects, car as carConfig } from "../../res/data/index"
 
 const browser = Bowser.getParser(window.navigator.userAgent);
 const device = new Device()

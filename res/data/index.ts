@@ -15,7 +15,6 @@ import car from './entities/car.json';
 import objects from './entities/objects.json';
 
 // UI configs
-import localization from './ui/localization.json';
 
 // Create a merged config that mirrors the old structure for backwards compatibility
 const config = {
@@ -23,18 +22,18 @@ const config = {
   cameraPosition: cameraConfig.position,
   cameraSpeedPosition: cameraConfig.speedPosition,
   cameraOffset: cameraConfig.offset,
-  
+
   // Physics settings
   groundFriction: physicsConfig.ground.friction,
   groundRestirution: physicsConfig.ground.restitution,
   groundFrictionAir: physicsConfig.ground.frictionAir,
   gravityY: physicsConfig.gravity.y,
-  
+
   // Rendering settings
   sunColor: renderingConfig.sunColor,
   chunkSize: renderingConfig.chunkSize,
   daynightHourDuration: renderingConfig.daynightHourDuration,
-  
+
   // Terrain settings
   groundColor: terrainConfig.groundColor,
   groundHeight: terrainConfig.groundHeight,
@@ -45,7 +44,7 @@ const config = {
   greeneryTextureUVYScale: terrainConfig.greeneryTextureUVYScale,
   groundSkin: terrainConfig.defaultSkin,
   curve: terrainConfig.curve,
-  
+
   // Landscapes
   groundSkins: {
     forest: forestLandscape,
@@ -54,8 +53,6 @@ const config = {
   }
 };
 
-// Data mimics the old data.json for backward compatibility
-const data = localization;
 
 // Export individual configs and the backward-compatible merged config
 export {
@@ -68,5 +65,4 @@ export {
   daynight,
   car,
   objects,
-  data
 };

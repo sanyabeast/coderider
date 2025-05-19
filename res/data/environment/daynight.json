@@ -8,7 +8,7 @@
     "grid": 3,
     "waves": 14,
     "amplitude": 0.4,
-    "headlight": { "color": "#ffcc88", "intensity": 0.5, "distance": 256, "offset": { "x": 128, "y": -5, "z": 0 } }
+    "headlight": { "color": "#ffcc88", "intensity": 0.5, "distance": 256, "offset": { "x": 32, "y": -5, "z": 0 } }
   },
   {
     "sunOffset": { "x": 0, "y": -128, "z": 1 },
@@ -19,6 +19,6 @@
     "grid": 3,
     "waves": 14,
     "amplitude": 0.4,
-    "headlight": { "color": "#ffcc88", "intensity": 1.5, "distance": 500, "offset": { "x": 128, "y": -5, "z": 0 } }
+    "headlight": { "color": "#ffcc88", "intensity": 1.5, "distance": 500, "offset": { "x": 32, "y": -5, "z": 0 } }
   }
 ]
