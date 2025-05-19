@@ -3,6 +3,7 @@ import {
     CircleBufferGeometry,
     Color,
     DirectionalLight,
+    Texture,
     DoubleSide,
     Group,
     Mesh,
@@ -351,49 +352,90 @@ export class Game {
     setGroundSkin(name) {
         if (!config.groundSkins[name]) name = "forest";
 
-        let modules = this.modules;
+        const modules = this.modules;
+        const data = config.groundSkins[name];
+        
+        // Handle ground textures and materials
+        this._setupGroundTextures(data);
+        this._updateGroundMaterials();
+        
+        // Handle greenery textures and materials
+        this._setupGreeneryTextures(data.greenery);
+        this._updateGreeneryMaterials();
 
-        let data = config.groundSkins[name];
-        let texture = this.laodTexture(data.texture);
-
-        // Always use the naming convention regardless of what's in the config
-        // This ensures we use dirt_a_n.png instead of bumps/dirt_a.png
-        let normalMap = this.loadNormalMap(data.texture);
-
-        // Load emission map if available using the _e naming convention
-        let emissionMap = this.loadEmissionMap(data.texture);
-
-        if (texture) {
-            texture.flipY = false;
-            // Configure texture for mirrored tiling
-            texture.wrapS = RepeatWrapping; // Standard repeat horizontally
-            texture.wrapT = MirroredRepeatWrapping; // Mirrored repeat vertically
-            texture.repeat.set(1, 1); // Define tile repetition (adjust values as needed)
-        }
-
-        if (normalMap) {
-            normalMap.flipY = false;
-            // Configure normal map with same wrapping mode as the texture
-            normalMap.wrapS = RepeatWrapping;
-            normalMap.wrapT = MirroredRepeatWrapping;
-            normalMap.repeat.set(1, 1);
-        }
-
+        this.render();
+    }
+    
+    _setupGroundTextures(data) {
+        const modules = this.modules;
+        const texture = this.loadTexture(data.texture);
+        const normalMap = this.loadNormalMap(data.texture);
+        const emissionMap = this.loadEmissionMap(data.texture);
+        
+        this._configureTexture(texture);
+        this._configureTexture(normalMap);
+        
         modules.ground.currentGroundTexture = texture;
         modules.ground.currentGroundNormalMap = normalMap;
         modules.ground.currentGroundEmissionMap = emissionMap;
         modules.ground.currentGroundNormalScale = 1;
-
+    }
+    
+    _setupGreeneryTextures(greeneryData) {
+        const modules = this.modules;
+        const greeneryTexture = this.loadTexture(greeneryData.texture);
+        const greeneryNormalMap = this.loadNormalMap(greeneryData.texture);
+        const greeneryEmissionMap = this.loadEmissionMap(greeneryData.texture);
+        
+        // Normalize the scale for normal maps - apply consistent scaling
+        const rawGreeneryScale = greeneryData.bumpScale || 1.0;
+        const greeneryNormalScale = Math.min(rawGreeneryScale, 3.0); // Cap at 3.0 maximum for greenery
+        
+        // Configure greenery textures with mirrored tiling - using original code
+        if (greeneryTexture) {
+            greeneryTexture.wrapS = RepeatWrapping; // Standard repeat horizontally
+            greeneryTexture.wrapT = MirroredRepeatWrapping; // Mirrored repeat vertically
+            greeneryTexture.repeat.set(1, 1); // Define tile repetition
+        }
+        
+        if (greeneryNormalMap) {
+            greeneryNormalMap.wrapS = RepeatWrapping;
+            greeneryNormalMap.wrapT = MirroredRepeatWrapping;
+            greeneryNormalMap.repeat.set(1, 1);
+        }
+        
+        modules.ground.currentGreeneryTexture = greeneryTexture;
+        modules.ground.currentGreeneryNormalMap = greeneryNormalMap;
+        modules.ground.currentGreeneryEmissionMap = greeneryEmissionMap;
+        modules.ground.currentGreeneryNormalScale = greeneryNormalScale;
+    }
+    
+    _configureTexture(texture) {
+        if (!texture) return;
+        
+        if (texture instanceof Texture) {
+            // Keep the original flipY behavior from the previous implementation
+            texture.flipY = false;
+            // Configure texture for mirrored tiling
+            texture.wrapS = RepeatWrapping; // Standard repeat horizontally
+            texture.wrapT = MirroredRepeatWrapping; // Mirrored repeat vertically
+            texture.repeat.set(1, 1); // Define tile repetition
+        }
+    }
+    
+    _updateGroundMaterials() {
+        const modules = this.modules;
+        const { currentGroundTexture: texture, currentGroundNormalMap: normalMap, currentGroundEmissionMap: emissionMap } = modules.ground;
+        
         forEach(modules.chunks, (chunk: Chunk) => {
             if (chunk && chunk.mesh) {
                 // When changing environments, recreate the material from scratch
-                // instead of modifying existing material to ensure consistent appearance
-                let newMaterial = new MeshStandardMaterial({
+                const newMaterial = new MeshStandardMaterial({
                     map: texture,
                     normalMap: normalMap,
-                    emissiveMap: emissionMap, // Add emission map if available
-                    emissive: emissionMap ? new Color(0xffffff) : new Color(0x000000), // White for full emission
-                    emissiveIntensity: emissionMap ? 3.0 : 0.0, // Higher intensity (3.0) for more noticeable glow
+                    emissiveMap: emissionMap,
+                    emissive: emissionMap ? new Color(0xffffff) : new Color(0x000000),
+                    emissiveIntensity: emissionMap ? 3.0 : 0.0,
                     metalness: 0, // Non-metallic (organic material)
                     roughness: 1.0, // Completely rough/matte
                     side: DoubleSide,
@@ -404,43 +446,19 @@ export class Game {
                 chunk.mesh.material.needsUpdate = true;
             }
         });
-
-        let greeneryData = data.greenery;
-        let greeneryTexture = this.laodTexture(greeneryData.texture);
-
-        // Always use the naming convention for normal maps
-        let greeneryNormalMap = this.loadNormalMap(greeneryData.texture);
-
-        // Load emission map for greenery if available
-        let greeneryEmissionMap = this.loadEmissionMap(greeneryData.texture);
-
-        // Normalize the scale for normal maps - apply consistent scaling
-        let rawGreeneryScale = greeneryData.bumpScale || 1.0;
-        let greeneryNormalScale = Math.min(rawGreeneryScale, 3.0); // Cap at 3.0 maximum for greenery
-
-        // Configure greenery textures with mirrored tiling
-        if (greeneryTexture) {
-            greeneryTexture.wrapS = RepeatWrapping; // Standard repeat horizontally
-            greeneryTexture.wrapT = MirroredRepeatWrapping; // Mirrored repeat vertically
-            greeneryTexture.repeat.set(1, 1); // Define tile repetition
-        }
-
-        if (greeneryNormalMap) {
-            greeneryNormalMap.wrapS = RepeatWrapping;
-            greeneryNormalMap.wrapT = MirroredRepeatWrapping;
-            greeneryNormalMap.repeat.set(1, 1);
-        }
-
-        modules.ground.currentGreeneryTexture = greeneryTexture;
-        modules.ground.currentGreeneryNormalMap = greeneryNormalMap;
-        modules.ground.currentGreeneryEmissionMap = greeneryEmissionMap;
-        modules.ground.currentGreeneryNormalScale = greeneryNormalScale;
-
+    }
+    
+    _updateGreeneryMaterials() {
+        const modules = this.modules;
+        const { currentGreeneryTexture: greeneryTexture, 
+                currentGreeneryNormalMap: greeneryNormalMap, 
+                currentGreeneryEmissionMap: greeneryEmissionMap } = modules.ground;
+        
         forEach(modules.chunks, (chunk) => {
             if (chunk && chunk.greenery) {
                 // When changing environments, recreate the greenery material from scratch
                 // instead of modifying existing material to ensure consistent appearance
-                let newGreeneryMaterial = new MeshStandardMaterial({
+                const newGreeneryMaterial = new MeshStandardMaterial({
                     map: greeneryTexture,
                     normalMap: greeneryNormalMap,
                     emissiveMap: greeneryEmissionMap, // Add emission map if available
@@ -460,10 +478,9 @@ export class Game {
                 chunk.greenery.material.needsUpdate = true;
             }
         });
-
-        this.render();
     }
-    laodTexture(name, catchErrors = false) {
+    
+    loadTexture(name, catchErrors = false) {
         let modules = this.modules;
 
         if (modules.data.textures[name]) return modules.data.textures[name];
@@ -496,7 +513,7 @@ export class Game {
         // Construct normal map name by adding "_n" before the extension
         let normalMapName = baseName + "_n." + extension;
 
-        return this.laodTexture(normalMapName, true);
+        return this.loadTexture(normalMapName, true);
     }
     /**
      * Try to load an emission map based on diffuse texture name
@@ -518,7 +535,7 @@ export class Game {
         console.log("Looking for emission map:", emissionMapName);
 
         // Try to load the emission map with error catching
-        const emissionMap = this.laodTexture(emissionMapName, true);
+        const emissionMap = this.loadTexture(emissionMapName, true);
 
         if (emissionMap) {
             console.log("✅ Emission map loaded successfully:", emissionMapName);
@@ -1316,7 +1333,7 @@ export class Game {
                 color = _.cssHex2Hex(bodyConfig.color);
             }
 
-            if (bodyConfig.texture) texture = this.laodTexture(bodyConfig.texture);
+            if (bodyConfig.texture) texture = this.loadTexture(bodyConfig.texture);
 
             // Create basic material properties object
             const materialProps = {
