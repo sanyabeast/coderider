@@ -24,12 +24,7 @@
             title="Press 'R' key">
             <div><i class="material-icons">undo</i></div>
         </div>
-
-        <div class="mute-button topbar-button" @click="$store.state.soundMuted = !$store.state.soundMuted;"
-            v-show="!pauseMenuShown">
-            <div><i class="material-icons">{{ $store.state.soundMuted ? `volume_muted` : `volume_up` }}</i></div>
-        </div>
-
+        
         <Pause v-show="pauseMenuShown" @resume="onResumeClick" />
     </v-app>
 </template>

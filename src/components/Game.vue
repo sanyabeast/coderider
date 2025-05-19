@@ -1,5 +1,5 @@
 <template>
-    <div ref="root" class="game root" @click="onRootClick" @keydown.right.stop.prevent="engineActive = true"
+    <div ref="root" class="game root" @keydown.right.stop.prevent="engineActive = true"
         @keyup.right.stop.prevent="engineActive = false" @keydown.left.stop.prevent="breakActive = true"
         @keyup.left.stop.prevent="breakActive = false" @keydown.68.stop.prevent="engineActive = true"
         @keyup.68.stop.prevent="engineActive = false" @keydown.65.stop.prevent="breakActive = true"
@@ -41,6 +41,7 @@ import Hamer from "hammerjs"
 import { TweenMax } from "gsap/TweenMax"
 import SoundBlaster from "components/Game/SoundBlaster"
 import { mapState } from 'vuex'
+import { config, daynight, objects, carConfig } from "../../res/data/data.ts"
 
 import ChunkBufferGeometry from "components/Game/ChunkBufferGeometry"
 
@@ -80,65 +81,15 @@ export default {
     },
     computed: {
         chunkLength() {
-            return this.$store.state.config.chunkSize * this.$store.state.config.curve.pointsStep
+            return config.chunkSize * config.curve.pointsStep
         },
         ...mapState([
-            "daynight",
-            "gravityY",
             "paused",
-            "mainThemePlays",
-            "soundMuted",
-            "enginePower",
-            "groundFriction",
-            "groundRestirution",
-            "groundSkin",
-            "screenAspect",
             "pauseMenuShown",
             "settingsMenuShown",
-            "timeScale",
-            "fxEnabled",
-            "isAndroid",
-            "renderingResolution"
         ])
     },
     watch: {
-        renderingResolution() {
-            this.updateSize()
-            this.renderFrame()
-        },
-        fxEnabled() {
-            this.renderFrame()
-        },
-        timeScale(value) {
-            this.modules.matter.engine.timing.timeScale = value
-        },
-        groundSkin(name) {
-            this.setGroundSkin(name)
-        },
-        groundFriction(friction) {
-            forEach(this.modules.chunks, (chunk) => {
-                if (chunk.matterBody) {
-                    chunk.matterBody.friction = friction
-                }
-            })
-        },
-        groundRestirution(restitution) {
-            forEach(this.modules.chunks, (chunk) => {
-                if (chunk && chunk.matterBody) {
-                    chunk.matterBody.restitution = restitution
-                }
-            })
-        },
-        mainThemePlays(plays) {
-            if (plays) {
-                this.modules.soundBlaster.play("main_theme", 0.333, true)
-            } else {
-                this.modules.soundBlaster.stop("main_theme")
-            }
-        },
-        soundMuted(muted) {
-            this.modules.soundBlaster.mute(muted)
-        },
         paused(value) {
             if (value) {
                 this.stopRendering()
@@ -147,9 +98,6 @@ export default {
                 this.startRendering()
                 TweenMax.resumeAll(TweenMax.getAllTweens())
             }
-        },
-        gravityY(value) {
-            this.modules.matter.engine.world.gravity.y = value
         },
         currentChunkIndex(value) {
             this.checkChunks(value)
@@ -161,8 +109,8 @@ export default {
                     delete this.__accelerationTween
                 }
 
-                this.__accelerationTween = TweenMax.to(this, this.$store.state.carConfig.accelerationTime, {
-                    acceleration: this.$store.state.carConfig.wheelVelocity,
+                this.__accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
+                    acceleration: carConfig.wheelVelocity,
                     ease: "Power3.easeIn",
                     onComplete: () => {
                         delete this.__accelerationTween
@@ -176,7 +124,7 @@ export default {
                     delete this.__accelerationTween
                 }
 
-                this.__accelerationTween = TweenMax.to(this, this.$store.state.carConfig.accelerationTime, {
+                this.__accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
                     acceleration: 0,
                     ease: "Power3.easeOut",
                     onComplete: () => {
@@ -193,8 +141,8 @@ export default {
                     delete this.__accelerationTween
                 }
 
-                this.__accelerationTween = TweenMax.to(this, this.$store.state.carConfig.decelerationTime, {
-                    acceleration: -this.$store.state.carConfig.wheelVelocity / 2,
+                this.__accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
+                    acceleration: -carConfig.wheelVelocity / 2,
                     ease: "Power3.easeOut",
                     onComplete: () => {
                         delete this.__accelerationTween
@@ -206,7 +154,7 @@ export default {
                     delete this.__accelerationTween
                 }
 
-                this.__accelerationTween = TweenMax.to(this, this.$store.state.carConfig.decelerationTime, {
+                this.__accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
                     acceleration: 0,
                     ease: "Power3.easeIn",
                     onComplete: () => {
@@ -219,12 +167,6 @@ export default {
         }
     },
     mounted() {
-        window.addEventListener("gamepadconnected", function (e) {
-            console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-                e.gamepad.index, e.gamepad.id,
-                e.gamepad.buttons.length, e.gamepad.axes.length);
-        });
-
         this.modules = {
             fx: {
                 passes: {}
@@ -273,11 +215,10 @@ export default {
             this.updateSize()
         })
 
-
         this.setupDaynight()
 
         // Ensure normal maps are loaded and available before creating initial chunks
-        this.setGroundSkin(this.$store.state.groundSkin)
+        this.setGroundSkin(config.groundSkin)
 
         this.addChunk(-1)
         this.addChunk(0)
@@ -289,17 +230,17 @@ export default {
         let count = 5  // Reduced from 15 to further minimize random props
 
         for (let a = 0; a < count; a++) {
-            this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, this.$store.state.objects.can, 300, -250)
+            this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, objects.can, 300, -250)
         }
 
         for (let b = 0; b < count; b++) {
-            this.modules.objects.stuff[`box${b}`] = this.createObject(`box${b}`, this.$store.state.objects.box, 300, -250)
+            this.modules.objects.stuff[`box${b}`] = this.createObject(`box${b}`, objects.box, 300, -250)
         }
 
         let moto_count = 1
 
         for (let c = 0; c < moto_count; c++) {
-            this.modules.objects.motos[`moto${c}`] = this.createObject(`moto${c}`, this.$store.state.objects.moto, {
+            this.modules.objects.motos[`moto${c}`] = this.createObject(`moto${c}`, objects.moto, {
                 spawnX: 300,
                 spawnY: -225,
                 collisionGroup: -1
@@ -307,28 +248,23 @@ export default {
         }
 
         this.createCar()
-        // this.createObject("can1", this.$store.state.objects.can, {
+        // this.createObject("can1", objects.can, {
         //     x:  300,
         //     y: -250,
         //     collisionGroup: -1
         // })
 
+        console.log(this.modules)
         this.startRendering()
-
-        if (this.$store.state.isHybridApp) {
-            this.$store.state.mainThemePlays = true
-        }
-
-        this.modules.soundBlaster.mute(this.$store.state.soundMuted)
         this.$refs.root.focus()
     },
     methods: {
         setGroundSkin(name) {
-            if (!this.$store.state.config.groundSkins[name]) name = "forest"
+            if (!config.groundSkins[name]) name = "forest"
 
             let modules = this.modules
 
-            let data = this.$store.state.config.groundSkins[name]
+            let data = config.groundSkins[name]
             let texture = this.laodTexture(data.texture)
 
             // Always use the naming convention regardless of what's in the config
@@ -472,11 +408,6 @@ export default {
 
             this.renderFrame()
         },
-        onRootClick() {
-            if (!this.mainThemePlays && !this.$store.state.isHybridApp) {
-                this.$store.state.mainThemePlays = true
-            }
-        },
         laodTexture(name, catchErrors = false) {
             let modules = this.modules
 
@@ -544,7 +475,7 @@ export default {
             return emissionMap;
         },
         setupDaynight() {
-            this.hoursCount = this.$store.state.daynight.length
+            this.hoursCount = daynight.length
 
             // Start from night (second state in daynight.json, index 1)
             this.hour = 1
@@ -570,7 +501,7 @@ export default {
 
             // Create headlight for the car
             if (!this.modules.lights.headlight) {
-                const hourData = this.$store.state.daynight[this.hour];
+                const hourData = daynight[this.hour];
                 const headlightConfig = hourData.headlight;
 
                 // Create the headlight
@@ -597,16 +528,16 @@ export default {
             /*
             this.daynightInterval = setInterval( ()=>{
                 this.hour++
-                this.hour = this.hour % this.$store.state.daynight.length
+                this.hour = this.hour % daynight.length
                 this.setDaytime( this.hour )
-            }, this.$store.state.config.daynightHourDuration * 1000 )
+            }, config.daynightHourDuration * 1000 )
             */
         },
         setDaytime(hour, immediately) {
             let modules = this.modules
-            let hourData = this.$store.state.daynight[hour]
+            let hourData = daynight[hour]
             let sun = this.modules.lights.sun
-            let duration = this.$store.state.config.daynightHourDuration / 2
+            let duration = config.daynightHourDuration / 2
             let bg_uniforms = modules.bg.material.uniforms
 
             /*colors*/
@@ -751,7 +682,7 @@ export default {
             this.setDaytime(this.hour, false);
 
             // Log the change for debugging
-            console.log(`Switched to ${this.hour === 0 ? 'DAY' : 'NIGHT'} mode with sun color: ${this.$store.state.daynight[this.hour].sunColor}`);
+            console.log(`Switched to ${this.hour === 0 ? 'DAY' : 'NIGHT'} mode with sun color: ${daynight[this.hour].sunColor}`);
         },
         getSpawnPosition(x) {
 
@@ -770,8 +701,8 @@ export default {
                 chunk = this.modules.chunks[chunkIndex]
             }
 
-            let count = this.$store.state.config.chunkSize
-            let step = this.$store.state.config.curve.pointsStep
+            let count = config.chunkSize
+            let step = config.curve.pointsStep
             let pointIndex = (_.nearestMult(x, step, false, false)) / step
             let pointIndexOffset = chunkIndex * count
 
@@ -797,38 +728,13 @@ export default {
             // Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.1 )
 
             this.spawnObject(this.modules.objects.car.composite, {
-                x: this.$store.state.carConfig.spawnPosition.x,
-                y: this.getSpawnPosition(this.$store.state.carConfig.spawnPosition.x) - 100
+                x: carConfig.spawnPosition.x,
+                y: this.getSpawnPosition(carConfig.spawnPosition.x) - 100
             })
 
             // Reset the day/night cycle to the first (bright) state when respawning
             this.hour = 0 // Set hour to first daynight state (bright daytime)
             this.setDaytime(this.hour, true) // Apply daytime immediately
-        },
-        setupGestures() {
-            // Create an instance of Hammer with the reference.
-            var manager = new Hammer.Manager(this.$refs.root);
-
-            // Create a recognizer
-            var Swipe = new Hammer.Swipe();
-
-            // Add the recognizer to the manager
-            manager.add(Swipe);
-
-            // Declare global variables to swiped correct distance
-            var deltaX = 0;
-            var deltaY = 0;
-
-            // Subscribe to a desired event
-            manager.on('swipe', (e) => {
-                if (!this.mainThemePlays && !this.$store.state.isHybridApp) {
-                    this.$store.state.mainThemePlays = true
-                }
-
-                e.preventDefault()
-                this.setVelocity(e.overallVelocityX * config.velocityMultiplier * window.devicePixelRatio, e.overallVelocityY * config.velocityMultiplier * window.devicePixelRatio)
-            });
-
         },
         setupRenderer() {
             let canvasElement = this.$refs.canvas
@@ -953,8 +859,8 @@ export default {
             }
 
             // Enable/disable post-processing based on fxEnabled state
-            _.getter(renderPass, "renderToScreen", () => !this.fxEnabled, () => { })
-            _.getter([colorCorPass, rgbsPass, bloomPass, filmPass, copyPass], "enabled", () => this.fxEnabled)
+            _.getter(renderPass, "renderToScreen", () => false, () => { })
+            _.getter([colorCorPass, rgbsPass, bloomPass, filmPass, copyPass], "enabled", () => true)
 
             // Add passes in the correct order
             this.modules.composer.addPass(renderPass)     // Render the scene
@@ -984,20 +890,20 @@ export default {
                 // enableSleeping: true,
             });
 
-            engine.timing.timeScale = this.timeScale
+            engine.timing.timeScale = 1
 
 
             // add all of the bodies to the world
             // run the engine
             modules.matter.engine = engine
-            modules.matter.engine.world.gravity.y = this.$store.state.config.gravityY
+            modules.matter.engine.world.gravity.y = config.gravityY
             // modules.matter.render = render
             // run the renderer
         },
         setupLights() {
             let modules = this.modules
             let hour = this.hour || 1; // Use current hour or default to night (1)
-            let hourData = this.$store.state.daynight[hour];
+            let hourData = daynight[hour];
 
             // Get sun color directly from daynight.json
             let sunColorHex = 0xffffff; // Default white
@@ -1135,9 +1041,10 @@ export default {
         updateThings(delta) {
             let modules = this.modules
 
-            let cameraOffset = this.$store.state.config.cameraOffset
+            let cameraOffset = config.cameraOffset
             modules.camera.position.y = modules.objects.car.parts.wheelA.mesh.position.y + cameraOffset.y
             modules.camera.position.x = modules.objects.car.parts.wheelA.mesh.position.x + cameraOffset.x
+
 
             // Position the single directional light
             // Only update Y and Z coordinates, keep X fixed to maintain consistent lighting direction
@@ -1148,16 +1055,16 @@ export default {
             )
 
             modules.camera.position.z = _.smoothstep(
-                this.$store.state.config.cameraPosition,
-                this.$store.state.config.cameraSpeedPosition,
-                Math.abs(this.acceleration) / this.$store.state.carConfig.wheelVelocity
+                config.cameraPosition,
+                config.cameraSpeedPosition,
+                Math.abs(this.acceleration) / carConfig.wheelVelocity
             )
 
             /* engine/break */
 
             if (this.engineActive || this.breakActive) {
-                Matter.Body.setAngularVelocity(this.modules.objects.car.parts.wheelA.matterBody, this.acceleration * this.enginePower)
-                Matter.Body.setAngularVelocity(this.modules.objects.car.parts.wheelB.matterBody, this.acceleration * this.enginePower)
+                Matter.Body.setAngularVelocity(this.modules.objects.car.parts.wheelA.matterBody, this.acceleration)
+                Matter.Body.setAngularVelocity(this.modules.objects.car.parts.wheelB.matterBody, this.acceleration)
 
             }
 
@@ -1240,8 +1147,10 @@ export default {
         },
         renderFrame() {
             // Add safety check to prevent error when composer is not initialized
-            if (this.modules && this.modules.composer) {
+            if (false && this.modules && this.modules.composer) {
                 this.modules.composer.render()
+            } else {
+                this.modules.renderer.render(this.modules.scene, this.modules.camera)
             }
         },
         stopRendering() {
@@ -1255,22 +1164,24 @@ export default {
 
             let canvasElement = this.$refs.canvas
 
-            let width = window.innerWidth * this.renderingResolution
-            let height = window.innerHeight * this.renderingResolution
+            let width = window.innerWidth * window.devicePixelRatio
+            let height = window.innerHeight * window.devicePixelRatio
 
-            modules.camera.aspect = this.$store.state.screenAspect = width / height
+            modules.camera.aspect = width / height
             modules.size.x = width
             modules.size.y = height
 
             modules.camera.updateProjectionMatrix()
             modules.renderer.setSize(width, height)
             modules.composer.setSize(width, height)
+
+            console.log(`renderer size: ${width} - ${height}`)
         },
         createCar() {
-            this.createObject("car", this.$store.state.carConfig)
+            this.createObject("car", carConfig)
             this.spawnObject(this.modules.objects.car.composite, {
-                x: this.$store.state.carConfig.spawnPosition.x,
-                y: this.getSpawnPosition(this.$store.state.carConfig.spawnPosition.x) - 10
+                x: carConfig.spawnPosition.x,
+                y: this.getSpawnPosition(carConfig.spawnPosition.x) - 10
             })
         },
         createObject(objectName, config, params) {
@@ -1579,11 +1490,11 @@ export default {
         },
         generatePoints(chunkIndex) {
             // Get configuration values
-            let count = this.$store.state.config.chunkSize
+            let count = config.chunkSize
             let start = chunkIndex * count
             let points = []
             let index = 0
-            let step = this.$store.state.config.curve.pointsStep
+            let step = config.curve.pointsStep
 
             // Global seed to ensure consistent terrain across all chunks
             // This makes the entire world determined by a single global seed
@@ -1616,7 +1527,7 @@ export default {
                 })
 
                 // Apply standard sinusoid terrain with reduced magnitude
-                forEach(this.$store.state.config.curve.sinMap, (tuple) => {
+                forEach(config.curve.sinMap, (tuple) => {
                     if ((points[index].x / step) % tuple[3] === 0) {
                         // Reduce magnitude by 30% to make terrain less extreme
                         let magnitude = tuple[1] * 0.7
@@ -1721,10 +1632,10 @@ export default {
 
             let groundGeometry = new ChunkBufferGeometry({
                 points,
-                textureSize: this.$store.state.config.groundTextureSize,
-                pointsStep: this.$store.state.config.curve.pointsStep,
-                textureUVYScale: this.$store.state.config.groundTextureUVYScale,
-                groundHeight: this.$store.state.config.groundHeight,
+                textureSize: config.groundTextureSize,
+                pointsStep: config.curve.pointsStep,
+                textureUVYScale: config.groundTextureUVYScale,
+                groundHeight: config.groundHeight,
                 normalZ: 1
             })
 
@@ -1732,7 +1643,7 @@ export default {
             // Don't use cached materials since they may have outdated textures
             let groundMaterial = new THREE.MeshStandardMaterial({
                 side: THREE.DoubleSide,
-                color: _.cssHex2Hex(this.$store.state.config.groundColor),
+                color: _.cssHex2Hex(config.groundColor),
                 map: modules.ground.currentGroundTexture,  // Current texture from active environment
                 normalMap: modules.ground.currentGroundNormalMap,
                 transparent: true,
@@ -1756,19 +1667,19 @@ export default {
 
             let matterBody = this.generateCurveMatterBody(points)
 
-            matterBody.friction = this.groundFriction
-            matterBody.restitution = this.groundRestirution
-            matterBody.frictionAir = this.$store.state.config.groundFrictionAir
+            matterBody.friction = config.groundFriction
+            matterBody.restitution = config.groundRestirution
+            matterBody.frictionAir = config.groundFrictionAir
 
             Matter.World.add(modules.matter.engine.world, [matterBody]);
 
             /*greenery*/
             let greeneryGeometry = new ChunkBufferGeometry({
                 points,
-                textureSize: this.$store.state.config.greeneryTextureSize,
-                pointsStep: this.$store.state.config.curve.pointsStep,
-                textureUVYScale: this.$store.state.config.greeneryTextureUVYScale,
-                groundHeight: -this.$store.state.config.greeneryHeight,
+                textureSize: config.greeneryTextureSize,
+                pointsStep: config.curve.pointsStep,
+                textureUVYScale: config.greeneryTextureUVYScale,
+                groundHeight: -config.greeneryHeight,
                 normalZ: -1
             })
 
@@ -1824,7 +1735,7 @@ export default {
             forEachRight(points, (point) => {
                 matterPoints.push({
                     x: point.x,
-                    y: this.$store.state.config.groundHeight
+                    y: config.groundHeight
                 })
             })
 
@@ -1844,7 +1755,7 @@ export default {
 
 
 
-            Matter.Body.translate(body, { x: firstPoint.x - (body.bounds.min.x), y: (this.$store.state.config.groundHeight - body.bounds.max.y) })
+            Matter.Body.translate(body, { x: firstPoint.x - (body.bounds.min.x), y: (config.groundHeight - body.bounds.max.y) })
 
             body.restitution = 0
 

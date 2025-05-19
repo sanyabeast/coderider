@@ -1,23 +1,36 @@
 // Centralized config exports
-import cameraConfig from './config/camera.json';
-import physicsConfig from './config/physics.json';
-import renderingConfig from './config/rendering.json';
-import terrainConfig from './config/terrain.json';
+import cameraConfigJson from './config/camera.json';
+import physicsConfigJson from './config/physics.json';
+import renderingConfigJson from './config/rendering.json';
+import terrainConfigJson from './config/terrain.json';
 
 // Environment configs
-import daynight from './environment/daynight.json';
-import forestLandscape from './environment/landscapes/forest.json';
-import stonesLandscape from './environment/landscapes/stones.json';
-import desertLandscape from './environment/landscapes/desert.json';
+import daynightJson from './environment/daynight.json';
+import forestLandscapeJson from './environment/landscapes/forest.json';
+import stonesLandscapeJson from './environment/landscapes/stones.json';
+import desertLandscapeJson from './environment/landscapes/desert.json';
 
 // Entity configs
-import car from './entities/car.json';
-import objects from './entities/objects.json';
+import carJson from './entities/car.json';
+import objectsJson from './entities/objects.json';
 
 // UI configs
 
+export const cameraConfig = cameraConfigJson;
+export const physicsConfig = physicsConfigJson;
+export const renderingConfig = renderingConfigJson;
+export const terrainConfig = terrainConfigJson;
+export const daynight = daynightJson;
+export const forestLandscape = forestLandscapeJson;
+export const stonesLandscape = stonesLandscapeJson;
+export const desertLandscape = desertLandscapeJson;
+
+export const carConfig = carJson;
+export const objects = objectsJson;
+
+
 // Create a merged config that mirrors the old structure for backwards compatibility
-const config = {
+export const config = {
   // Camera settings
   cameraPosition: cameraConfig.position,
   cameraSpeedPosition: cameraConfig.speedPosition,
@@ -53,16 +66,3 @@ const config = {
   }
 };
 
-
-// Export individual configs and the backward-compatible merged config
-export {
-  config as default,
-  config,
-  cameraConfig,
-  physicsConfig,
-  renderingConfig,
-  terrainConfig,
-  daynight,
-  car,
-  objects,
-};
