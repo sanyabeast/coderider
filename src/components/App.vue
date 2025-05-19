@@ -1,31 +1,25 @@
 <template>
-    <v-app dark class="app root" v-bind:class="{ overlayActive: pauseMenuShown }"
-        :data-browser-name="$store.state.browserName" :data-mobile-device="$store.state.mobileDevice ? 1 : 0"
-        tabindex="-1">
+    <v-app dark class="app root" v-bind:class="{ overlayActive: paused }" :data-browser-name="$store.state.browserName"
+        :data-mobile-device="$store.state.mobileDevice ? 1 : 0" tabindex="-1">
         <Game @pauseClick="onPauseClick" ref="game"></Game>
+        <div class="overlay" v-if="paused"></div>
 
-
-
-        <div class="overlay" v-if="pauseMenuShown"></div>
-
-        <div class="pause-button topbar-button" @click="onPauseClick" v-if="!$store.state.pauseMenuShown"
-            v-show="!pauseMenuShown" title="Press 'Space' key">
+        <div class="pause-button topbar-button" @click="onPauseClick" v-if="!$store.state.paused" v-show="!paused"
+            title="Press 'Space' key">
             <div>
                 <i class="material-icons">pause</i>
             </div>
         </div>
 
-        <div class="revoke-button topbar-button" @click="$refs.game.revoke()" v-show="!pauseMenuShown"
-            title="Press 'Q' key">
+        <div class="revoke-button topbar-button" @click="$refs.game.revoke()" v-show="!paused" title="Press 'Q' key">
             <div><i class="material-icons">replay</i></div>
         </div>
 
-        <div class="respawn-button topbar-button" @click="$refs.game.respawn()" v-show="!pauseMenuShown"
-            title="Press 'R' key">
+        <div class="respawn-button topbar-button" @click="$refs.game.respawn()" v-show="!paused" title="Press 'R' key">
             <div><i class="material-icons">undo</i></div>
         </div>
-        
-        <Pause v-show="pauseMenuShown" @resume="onResumeClick" />
+
+        <Pause v-show="paused" @resume="onResumeClick" />
     </v-app>
 </template>
 
@@ -46,15 +40,14 @@ export default {
         }
     },
     computed: mapState([
-        "pauseMenuShown",
-        "paused"
+        "paused",
     ]),
     watch: {
         paused(key) {
             if (key) {
-                this.$store.state.pauseMenuShown = true
+                this.$store.state.paused = true
             } else {
-                this.$store.state.pauseMenuShown = false
+                this.$store.state.paused = false
             }
         }
     },
@@ -70,10 +63,7 @@ export default {
         },
         onResumeClick() {
             this.$store.state.paused = false
-        },
-        onAppClick() {
-
-        },
+        }
     }
 
 }

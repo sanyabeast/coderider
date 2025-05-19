@@ -9,14 +9,7 @@ const device = new Device()
 
 var state = {
 	$root: null,
-	paused: false,
-	browserName: browser.getBrowserName().toLowerCase(),
-	mobileDevice: !device.desktop,
-	mainThemePlays: false,
-	pauseMenuShown: false,
-	isAndroid: device.android,
-	version: "1.1",
-	DPR: window.devicePixelRatio
+	paused: false
 };
 
 export default state;

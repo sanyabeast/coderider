@@ -26,7 +26,7 @@ class Helpers {
 		return 1 - ((to - position) / (to - from))
 	}
 
-	static getter(object, name, getter, setter) {
+	static getter(object: any, name: string, getter: () => any, setter?: (any) => void) {
 		if (typeof object.length == "number") {
 			forEach(object, (object) => {
 				this.getter(object, name, getter, setter)
