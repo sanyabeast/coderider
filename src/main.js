@@ -1,2 +1,2 @@
-import Euphoria from "Euphoria"
-window.euphoria = new Euphoria()
+import App from "App"
+window.app = new App()

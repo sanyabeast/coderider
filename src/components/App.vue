@@ -1,32 +1,30 @@
 <template>
     <v-app
         dark
-        class="euphoria root"
-        v-bind:class="{ overlayActive: (pauseMenuShown || settingsMenuShown) }"
+        class="app root"
+        v-bind:class="{ overlayActive: pauseMenuShown }"
         :data-browser-name="$store.state.browserName"
         :data-mobile-device="$store.state.mobileDevice ? 1 : 0"
         tabindex="-1"
         
     >
-        <Wonderland
+        <Game
             @pauseClick="onPauseClick"
-            ref="wonderland"
-        ></Wonderland>
+            ref="game"
+        ></Game>
 
-        <Tokens
-            v-show="!(pauseMenuShown || settingsMenuShown)"
-        />
+
 
         <div class="overlay"
-            v-if="pauseMenuShown || settingsMenuShown"
+            v-if="pauseMenuShown"
         ></div>
 
         <div 
             class="pause-button topbar-button"
             @click="onPauseClick"
-            v-if="!$store.state.pauseMenuShown && !$store.state.settingsMenuShown"
-            v-show="!(pauseMenuShown || settingsMenuShown)"
-            title="Клавиша 'Пробел'"
+            v-if="!$store.state.pauseMenuShown"
+            v-show="!pauseMenuShown"
+            title="Press 'Space' key"
         >
             <div>
                 <i class="material-icons">pause</i>
@@ -35,9 +33,9 @@
 
         <div 
             class="revoke-button topbar-button"
-            @click="$refs.wonderland.revoke()"
-            v-show="!(pauseMenuShown || settingsMenuShown)"
-            title="Клавиша 'Q'"
+            @click="$refs.game.revoke()"
+            v-show="!pauseMenuShown"
+            title="Press 'Q' key"
             
         >
             <div><i class="material-icons">replay</i></div>
@@ -45,20 +43,18 @@
 
         <div 
             class="respawn-button topbar-button"
-            @click="$refs.wonderland.respawn()"
-            v-show="!(pauseMenuShown || settingsMenuShown)"
-            title="Клавиша 'R'"
+            @click="$refs.game.respawn()"
+            v-show="!pauseMenuShown"
+            title="Press 'R' key"
             
         >
             <div><i class="material-icons">undo</i></div>
         </div>
 
-        
-
         <div 
             class="mute-button topbar-button"
             @click="$store.state.soundMuted = !$store.state.soundMuted; $store.dispatch( `checkFullscreen` )"
-            v-show="!(pauseMenuShown || settingsMenuShown)"
+            v-show="!pauseMenuShown"
         >
             <div><i 
                 class="material-icons"
@@ -67,21 +63,8 @@
 
         <Pause
             v-show="pauseMenuShown"
-            @showSettings="onShowSettings"
             @resume="onResumeClick"
         />
-        
-        <transition 
-            :css="false"
-            @enter="onSettingsEnter"
-            @leave="onSettingsLeave"
-        >
-            <Settings 
-                v-show="settingsMenuShown"
-                ref="settingsMenu"
-                @exit="onSettingsExit"
-            />
-        </transition>
     </v-app>
 </template>
 
@@ -89,14 +72,14 @@
 
 import Button from "components/Button.vue"
 import Pause from "components/Pause.vue"
-import Settings from "components/Settings.vue"
-import Wonderland from "components/Wonderland.vue"
-import Tokens from "components/Tokens.vue"
+
+import Game from "components/Game.vue"
+
 import { mapState } from 'vuex'
 
 
 export default {
-	components: { Button, Wonderland, Tokens, Pause, Settings },
+	components: { Button, Game, Pause },
     data () {
         return {
 
@@ -104,7 +87,6 @@ export default {
     },
     computed: mapState( [
         "pauseMenuShown",
-        "settingsMenuShown",
         "paused"
     ] ),
     watch: {
@@ -112,19 +94,13 @@ export default {
             if ( key ) {
                 this.$store.state.pauseMenuShown = true
             } else {
-                this.$store.state.settingsMenuShown = false 
                 this.$store.state.pauseMenuShown = false
             }
         }
     },
 	mounted () {
         this.$store.dispatch( "load" )
-
-        if ( this.$store.state.performanceIndex < 0 ) {
-            this.$store.dispatch( "loadDefaults" )
-        } 
-
-        // this.$store.dispatch( "loadDefaults" )
+        this.$store.dispatch( "loadDefaults" )
 
         if ( !this.$store.state.isHybridApp && this.$store.state.mobileDevice && this.$store.state.browserName != "safari" ) {
             document.body.addEventListener( "click", ()=>{
@@ -164,21 +140,6 @@ export default {
         onResumeClick () {
             this.$store.state.paused = false
         },  
-        onShowSettings () {
-            this.$store.state.pauseMenuShown = false;
-            this.$store.state.settingsMenuShown = true;
-        },
-        onSettingsExit () {
-            this.$store.dispatch( "save" )
-            this.$store.state.paused = false
-        },
-        onSettingsEnter ( el, done ) {
-            this.$refs.settingsMenu.reset()
-            done()
-        },
-        onSettingsLeave ( el, done ) {
-            done()
-        },
         onAppClick () {  
                   
         },

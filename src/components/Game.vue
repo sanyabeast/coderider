@@ -1,7 +1,7 @@
 <template>
     <div 
         ref="root"
-        class="wonderland root"
+        class="game root"
         @click="onRootClick"
         @keydown.right.stop.prevent="engineActive = true"
         @keyup.right.stop.prevent="engineActive = false"
@@ -82,7 +82,7 @@
 
 <script>
 
-import Speedometer from "components/Speedometer.vue"
+
 
 import EffectComposer  from "three_fx/EffectComposer"
 import RenderPass from "three_fx/passes/RenderPass"
@@ -97,10 +97,10 @@ import { forEach, forEachRight } from "lodash"
 import _ from "Helpers"
 import Hamer from "hammerjs"
 import { TweenMax } from "gsap/TweenMax"
-import SoundBlaster from "components/Wonderland/SoundBlaster"
+import SoundBlaster from "components/Game/SoundBlaster"
 import { mapState } from 'vuex'
 
-import ChunkBufferGeometry from "components/Wonderland/ChunkBufferGeometry"
+import ChunkBufferGeometry from "components/Game/ChunkBufferGeometry"
 
 import decomp from 'poly-decomp'
 window.decomp = decomp
@@ -109,7 +109,7 @@ const Matter = window.Matter = require("matter-js")
 const DPR = window.devicePixelRatio
 
 export default {
-    components: { Speedometer },
+    components: { },
     data () {
         return {
             prevRenderedFrameTime: +new Date(),
@@ -432,7 +432,7 @@ export default {
         
         // Restore the original bumpmappingEnabled setting
         this.$store.state.bumpmappingEnabled = originalBumpmappingEnabled;
-        // this.createObject("truck", wonder.$store.state.objects.truck, {
+        // this.createObject("truck", this.$store.state.objects.truck, {
         //     spawnX: 300,
         //     spawnY: 300,
         //     collisionGroup: -1
@@ -444,17 +444,17 @@ export default {
         let count = 5  // Reduced from 15 to further minimize random props
 
         for ( let a = 0; a < count; a++ ) {
-            this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, wonder.$store.state.objects.can, 300, -250)
+            this.modules.objects.stuff[`can${a}`] = this.createObject(`can${a}`, this.$store.state.objects.can, 300, -250)
         }
 
         for ( let b = 0; b < count; b++ ) {
-            this.modules.objects.stuff[`box${b}`] = this.createObject(`box${b}`, wonder.$store.state.objects.box, 300, -250)
+            this.modules.objects.stuff[`box${b}`] = this.createObject(`box${b}`, this.$store.state.objects.box, 300, -250)
         }
 
         let moto_count = 1
 
         for ( let c = 0; c < moto_count; c++ ) {
-            this.modules.objects.motos[`moto${c}`] = this.createObject(`moto${c}`, wonder.$store.state.objects.moto, {
+            this.modules.objects.motos[`moto${c}`] = this.createObject(`moto${c}`, this.$store.state.objects.moto, {
                 spawnX: 300,
                 spawnY: -225,
                 collisionGroup: -1
@@ -466,7 +466,7 @@ export default {
         this.createCar()
 
         
-        // this.createObject("can1", wonder.$store.state.objects.can, {
+        // this.createObject("can1", this.$store.state.objects.can, {
         //     x:  300,
         //     y: -250,
         //     collisionGroup: -1
@@ -1869,5 +1869,5 @@ export default {
 </script>
 
 <style lang="sass">
-    import "sass/wonderland.scss"
+    import "sass/game.scss"
 </style>

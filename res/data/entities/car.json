@@ -30,12 +30,12 @@
 		},
 		"corpse": {
 			"texture": "caer_body_a.png",
-			"bumpMap": "caer_body_a.png",
+
 			"scale": { 
 				"x": 1.1,
 				"y": 1.1
 			},
-			"bumpScale": 1,
+
 			"textureFlip": true,
 			"geometry": "rectangle",
 			"color" : "#ffffff",
@@ -92,9 +92,8 @@
 		},
 		"wheelA": {
 			"texture": "wheel.png",
-			"bumpMap": "bumps/wheel.png",
-			"bumpScale": 1,
-			"color": "#ffffff",
+
+
 			"geometry": "circle",
 			"radius": 11,
 			"color": "#ff0000",
@@ -115,9 +114,8 @@
 		},
 		"wheelB": {
 			"texture": "wheel.png",
-			"bumpMap": "bumps/wheel.png",
-			"bumpScale": 1,
-			"color": "#ffffff",
+
+
 			"geometry": "circle",
 			"radius": 11,
 			"mass": 0.7,

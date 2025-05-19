@@ -6,7 +6,7 @@ const filesToFix = [
   'res/sass/material-overrides.scss',
   'res/sass/app.scss',
   'res/sass/fonts.scss',
-  'res/sass/wonderland.scss'
+  'res/sass/game.scss'
 ];
 
 const baseDir = process.cwd();

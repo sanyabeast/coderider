@@ -1,0 +1,23 @@
+{
+  "groundColor": "#ffffff",
+  "groundHeight": 2000,
+  "groundTextureSize": 10,
+  "groundTextureUVYScale": 7,
+  "greeneryHeight": 2000,
+  "greeneryTextureSize": 27,
+  "greeneryTextureUVYScale": 3.1,
+  "defaultSkin": "forest",
+  "curve": {
+    "pointsStep": 20,
+    "sinMap": [
+      [ 2.12345, 5.5, 1, 1 ],
+      [ 5.23456, 20, 1, 1 ],
+      [ 7.34567, 22, 1, 1 ],
+      [ 16.34567, 42, 1, 1 ],
+      [ 21.4567, 23, 2, 1 ],
+      [ 72.5678, 270, 2, 1 ],
+      [ 160.5678, 370, 1, 1 ],
+      [ 400.5678, 570, 1, 1 ]
+    ]
+  }
+}

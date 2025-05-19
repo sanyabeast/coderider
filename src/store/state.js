@@ -1,11 +1,8 @@
-import translations from "store/state/translations"
+
 import Device from "device.js/dist/device"
 import Bowser from "bowser"
 
-import config from "data/config.json"
-import daynight from "data/daynight.json"
-import objects from "data/objects.json"
-import carConfig from "data/car.json"
+import { config, daynight, objects, car as carConfig } from "data/index.js"
 import packageData from "../../package.json"
 
 const browser = Bowser.getParser(window.navigator.userAgent);
@@ -40,8 +37,7 @@ var state = {
 		"timeScale",
 		"fxEnabled",
 		"version",
-		"renderingResolution",
-		"performanceIndex"
+		"renderingResolution"
 	],
 	defaultSettings: {
 		soundMuted: false,
@@ -64,8 +60,7 @@ var state = {
 		timeScale: 1,
 		fxEnabled: true || (device.ios || device.desktop),
 		version: packageData.version,
-		renderingResolution: ( device.android ? 1 : window.devicePixelRatio ),
-		performanceIndex: -1
+		renderingResolution: ( device.android ? 1 : window.devicePixelRatio )
 
 	},
 	isHybridApp: typeof window.native == "object",
@@ -73,19 +68,17 @@ var state = {
 	paused: false,
 	browserName: browser.getBrowserName().toLowerCase(),
 	mobileDevice: !device.desktop,
-	/*l18n*/
-	language : "ukr",
+
 	routes: {
 		"main": [ "contacts", "projects" ],
 		"projects": [ "main", "contacts" ],
 		"contacts": [ "projects", "main" ]
 	},
 	currentPage: "main",
-	translations: translations,
+
 	mainThemePlays: false,
 	soundMuted: false,
 	pauseMenuShown: false,
-	settingsMenuShown: false,
 	wonderMatterTestRenderer: false,
 	isAndroid: device.android,
 	saveChunks: false,
@@ -114,8 +107,7 @@ var state = {
 	fxEnabled: true,
 	version: packageData.version,
 	renderingResolution: ( device.android ? 1 : window.devicePixelRatio ),
-	DPR: window.devicePixelRatio,
-	performanceIndex: -1
+	DPR: window.devicePixelRatio
 };
 
 export default state;
