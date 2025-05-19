@@ -1,30 +1,24 @@
 [
-	{
-		"sunOffset": { 
-			"x": 0,
-			"y": -800,
-			"z": 1
-		},
-		"sunColor": "#ffe083",
-		"skyColorB": "#cacaca",
-		"skyColor": "#bdf8ff",
-		"intensity": 1.5,
-		"grid": 3,
-		"waves": 14,
-		"amplitude": 0.4
-	},
-	{
-		"sunOffset": { 
-			"x": 0,
-			"y": 0,
-			"z": 0.15
-		},
-		"sunColor": "#dd9800",
-		"skyColorB": "#000000",
-		"skyColor": "#111111",
-		"intensity": 1,
-		"grid": 3,
-		"waves": 14,
-		"amplitude": 0.4
-	}
+  {
+    "sunOffset": { "x": 128, "y": -1024, "z": 1 },
+    "sunColor": "#ffe0b1",
+    "skyColorB": "#cacaca",
+    "skyColor": "#bdf8ff",
+    "intensity": 1,
+    "grid": 3,
+    "waves": 14,
+    "amplitude": 0.4,
+    "headlight": { "color": "#ffcc88", "intensity": 0.5, "distance": 256, "offset": { "x": 128, "y": -5, "z": 0 } }
+  },
+  {
+    "sunOffset": { "x": 0, "y": -128, "z": 1 },
+    "sunColor": "#c0cdff",
+    "skyColorB": "#000000",
+    "skyColor": "#111111",
+    "intensity": 0.2,
+    "grid": 3,
+    "waves": 14,
+    "amplitude": 0.4,
+    "headlight": { "color": "#ffcc88", "intensity": 1.5, "distance": 500, "offset": { "x": 128, "y": -5, "z": 0 } }
+  }
 ]

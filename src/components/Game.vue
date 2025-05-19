@@ -495,6 +495,9 @@ export default {
             // This ensures we use dirt_a_n.png instead of bumps/dirt_a.png
             let normalMap = this.loadNormalMap(data.texture)
             
+            // Load emission map if available using the _e naming convention
+            let emissionMap = this.loadEmissionMap(data.texture)
+            
             // Normalize the scale for normal maps - they need much lower values than bump maps
             // Cap the maximum scale and reduce very high values
             let rawScale = data.bumpScale || 1.0
@@ -505,11 +508,25 @@ export default {
                 normalScale = 2.0 + (rawScale - 10) * 0.1 // Scale down high values
             }
 
-            if (texture) texture.flipY = false
-            if (normalMap) normalMap.flipY = false
+            if (texture) {
+                texture.flipY = false
+                // Configure texture for mirrored tiling
+                texture.wrapS = THREE.RepeatWrapping      // Standard repeat horizontally
+                texture.wrapT = THREE.MirroredRepeatWrapping  // Mirrored repeat vertically
+                texture.repeat.set(1, 1)  // Define tile repetition (adjust values as needed)
+            }
+            
+            if (normalMap) {
+                normalMap.flipY = false
+                // Configure normal map with same wrapping mode as the texture
+                normalMap.wrapS = THREE.RepeatWrapping
+                normalMap.wrapT = THREE.MirroredRepeatWrapping
+                normalMap.repeat.set(1, 1)
+            }
 
             modules.ground.currentGroundTexture = texture
             modules.ground.currentGroundNormalMap = normalMap
+            modules.ground.currentGroundEmissionMap = emissionMap
             modules.ground.currentGroundNormalScale = normalScale
 
             forEach( modules.chunks, ( chunk )=>{
@@ -519,6 +536,9 @@ export default {
                     let newMaterial = new THREE.MeshStandardMaterial({
                         map: texture,
                         normalMap: this.bumpmappingEnabled ? normalMap : null,
+                        emissiveMap: emissionMap,  // Add emission map if available
+                        emissive: emissionMap ? new THREE.Color(0xffffff) : new THREE.Color(0x000000), // White for full emission
+                        emissiveIntensity: emissionMap ? 3.0 : 0.0, // Higher intensity (3.0) for more noticeable glow
                         metalness: 0,         // Non-metallic (organic material)
                         roughness: 1.0,       // Completely rough/matte
                         side: THREE.DoubleSide
@@ -555,12 +575,29 @@ export default {
             // Always use the naming convention for normal maps
             let greeneryNormalMap = this.loadNormalMap(greeneryData.texture)
             
+            // Load emission map for greenery if available
+            let greeneryEmissionMap = this.loadEmissionMap(greeneryData.texture)
+            
             // Normalize the scale for normal maps - apply consistent scaling
             let rawGreeneryScale = greeneryData.bumpScale || 1.0
             let greeneryNormalScale = Math.min(rawGreeneryScale, 3.0) // Cap at 3.0 maximum for greenery
 
+            // Configure greenery textures with mirrored tiling
+            if (greeneryTexture) {
+                greeneryTexture.wrapS = THREE.RepeatWrapping      // Standard repeat horizontally
+                greeneryTexture.wrapT = THREE.MirroredRepeatWrapping  // Mirrored repeat vertically
+                greeneryTexture.repeat.set(1, 1)  // Define tile repetition
+            }
+            
+            if (greeneryNormalMap) {
+                greeneryNormalMap.wrapS = THREE.RepeatWrapping
+                greeneryNormalMap.wrapT = THREE.MirroredRepeatWrapping
+                greeneryNormalMap.repeat.set(1, 1)
+            }
+
             modules.ground.currentGreeneryTexture = greeneryTexture
             modules.ground.currentGreeneryNormalMap = greeneryNormalMap
+            modules.ground.currentGreeneryEmissionMap = greeneryEmissionMap
             modules.ground.currentGreeneryNormalScale = greeneryNormalScale
 
             forEach( modules.chunks, ( chunk )=>{
@@ -570,6 +607,9 @@ export default {
                     let newGreeneryMaterial = new THREE.MeshStandardMaterial({
                         map: greeneryTexture,
                         normalMap: this.bumpmappingEnabled ? greeneryNormalMap : null,
+                        emissiveMap: greeneryEmissionMap,  // Add emission map if available
+                        emissive: greeneryEmissionMap ? new THREE.Color(0xffffff) : new THREE.Color(0x000000), // White for full emission
+                        emissiveIntensity: greeneryEmissionMap ? 3.0 : 0.0, // Higher intensity (3.0) for more noticeable glow
                         metalness: 0,         // Non-metallic (plants)
                         roughness: 1.0,       // Completely rough/matte 
                         side: THREE.DoubleSide,
@@ -635,32 +675,111 @@ export default {
         loadNormalMap(textureName) {
             if (!textureName) return null
             
-            // Simply add _n before the extension
-            const dotIndex = textureName.lastIndexOf('.')
-            const normalMapName = dotIndex >= 0 ?
-                textureName.substring(0, dotIndex) + '_n' + textureName.substring(dotIndex) :
-                textureName + '_n'
+            // Extract the base name without extension
+            let baseName = textureName.split('.');
+            let extension = baseName.pop();
+            baseName = baseName.join('.');
             
-            // Try to load the normal map, but catch errors silently
+            // Construct normal map name by adding "_n" before the extension
+            let normalMapName = baseName + '_n.' + extension;
+            
             return this.laodTexture(normalMapName, true)
         },
-        setupDaynight () {
+        
+        /**
+         * Try to load an emission map based on diffuse texture name
+         * Uses the same pattern as normal maps but with "_e" suffix
+         */
+        loadEmissionMap(textureName) {
+            if (!textureName) return null;
             
+            // Get the file extension
+            const dotIndex = textureName.lastIndexOf('.');
+            if (dotIndex < 0) return null; // No extension found
+            
+            const extension = textureName.substring(dotIndex);
+            const baseName = textureName.substring(0, dotIndex);
+            
+            // Construct emission map name by adding "_e" before the extension
+            let emissionMapName = baseName + '_e' + extension;
+            
+            console.log('Looking for emission map:', emissionMapName);
+            
+            // Try to load the emission map with error catching
+            const emissionMap = this.laodTexture(emissionMapName, true);
+            
+            if (emissionMap) {
+                console.log('✅ Emission map loaded successfully:', emissionMapName);
+                console.log('Emission map URL:', emissionMap.image && emissionMap.image.src ? emissionMap.image.src : 'No source');
+            } else {
+                console.log('❌ No emission map found for:', textureName);
+            }
+            
+            return emissionMap;
+        },
+        setupDaynight () {
             this.hoursCount = this.$store.state.daynight.length
-
-            this.setDaytime( this.hour, true )
-
+            
+            // Start from night (second state in daynight.json, index 1)
+            this.hour = 1
+            this.setDaytime(this.hour, true)
+            
+            // Set up automatic day/night cycle
+            this.dayCycleEnabled = true;
+            this.dayCycleTimer = 0;
+            this.dayCycleDuration = 60; // Seconds for a complete day/night cycle
+            
+            // Add key listener for toggling day/night (N key)
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'n' || event.key === 'N') {
+                    this.toggleDayNight();
+                }
+                
+                // Add P key to pause/resume the automatic day/night cycle
+                if (event.key === 'p' || event.key === 'P') {
+                    this.dayCycleEnabled = !this.dayCycleEnabled;
+                    console.log(`Day/night cycle ${this.dayCycleEnabled ? 'enabled' : 'disabled'}`);
+                }
+            })
+            
+            // Create headlight for the car
+            if (!this.modules.lights.headlight) {
+                const hourData = this.$store.state.daynight[this.hour];
+                const headlightConfig = hourData.headlight;
+                
+                // Create the headlight
+                const headlight = new THREE.PointLight(
+                    headlightConfig.color,
+                    headlightConfig.intensity,
+                    headlightConfig.distance
+                );
+                headlight.name = "headlight";
+                
+                // Store headlight offset from config
+                this.headlightOffset = {
+                    x: headlightConfig.offset.x,
+                    y: headlightConfig.offset.y,
+                    z: headlightConfig.offset.z
+                };
+                
+                // Add to scene (will be positioned in updateThings)
+                this.modules.scene.add(headlight);
+                this.modules.lights.headlight = headlight;
+            }
+            
+            // Commenting out the interval to prevent automatic day/night cycle
+            /*
             this.daynightInterval = setInterval( ()=>{
                 this.hour++
                 this.hour = this.hour % this.$store.state.daynight.length
                 this.setDaytime( this.hour )
             }, this.$store.state.config.daynightHourDuration * 1000 )
+            */
         },
         setDaytime ( hour, immediately ) {
             let modules = this.modules
             let hourData = this.$store.state.daynight[ hour ]
-            let sun0 = this.modules.lights.sun0
-            let sun1 = this.modules.lights.sun1
+            let sun = this.modules.lights.sun
             let duration = this.$store.state.config.daynightHourDuration / 2
             let bg_uniforms = modules.bg.material.uniforms
 
@@ -671,92 +790,124 @@ export default {
             skyColor.setHex( _.cssHex2Hex( hourData.skyColor ) )
             let skyColorB = new THREE.Color()
             skyColorB.setHex( _.cssHex2Hex( hourData.skyColorB ) )
-
+            
+            // Initialize sunOffset if it doesn't exist
+            if (!this.sunOffset) {
+                this.sunOffset = { x: 0, y: 0, z: 0 };
+            }
+            
+            // Update sunOffset from configuration
+            if (hourData.sunOffset) {
+                if (immediately) {
+                    // Apply immediately
+                    this.sunOffset.x = hourData.sunOffset.x;
+                    this.sunOffset.y = hourData.sunOffset.y;
+                    this.sunOffset.z = hourData.sunOffset.z;
+                } else {
+                    // Animate transition
+                    TweenMax.to(this.sunOffset, duration, {
+                        x: hourData.sunOffset.x,
+                        y: hourData.sunOffset.y,
+                        z: hourData.sunOffset.z,
+                        ease: "linear"
+                    });
+                }
+            }
+            
+            // Update headlight settings if it exists
+            if (modules.lights.headlight && hourData.headlight) {
+                const headlightConfig = hourData.headlight;
+                
+                // Store headlight offset for use in updateThings
+                this.headlightOffset = {
+                    x: headlightConfig.offset.x,
+                    y: headlightConfig.offset.y,
+                    z: headlightConfig.offset.z
+                };
+                
+                // Get headlight color
+                let headlightColor = new THREE.Color()
+                headlightColor.setHex(_.cssHex2Hex(headlightConfig.color))
+                
+                if (immediately) {
+                    // Set headlight properties immediately
+                    modules.lights.headlight.color = headlightColor;
+                    modules.lights.headlight.intensity = headlightConfig.intensity;
+                    modules.lights.headlight.distance = headlightConfig.distance;
+                } else {
+                    // Animate headlight property changes
+                    TweenMax.to(modules.lights.headlight, duration, {
+                        intensity: headlightConfig.intensity,
+                        distance: headlightConfig.distance,
+                        ease: "linear"
+                    });
+                    
+                    TweenMax.to(modules.lights.headlight.color, duration, {
+                        r: headlightColor.r,
+                        g: headlightColor.g,
+                        b: headlightColor.b,
+                        ease: "linear"
+                    });
+                }
+            }
 
             if ( immediately ) {
-                sun0.intensity = hourData.intensity
-                sun1.intensity = hourData.intensity
-                bg_uniforms.amplitude.value = hourData.amplitude
-                bg_uniforms.waves.value = hourData.waves
+                // Get the correct sun color from config
+                let sunHex = _.cssHex2Hex(hourData.sunColor);
+                let sunColor = new THREE.Color(sunHex);
+                
+                // Set sun properties directly
+                sun.color.copy(sunColor); // Important: directly copy the color object
+                sun.intensity = hourData.intensity;
+                
+                // Log the color to verify it's applied correctly
+                console.log('Setting sun color immediately to:', hourData.sunColor, 'RGB:', sunColor.r, sunColor.g, sunColor.b);
+                
+                // Update background uniforms
+                bg_uniforms.amplitude.value = hourData.amplitude;
+                bg_uniforms.waves.value = hourData.waves;
                 bg_uniforms.grid.value = hourData.grid
-
-                this.sunOffset.x = hourData.sunOffset.x
-                this.sunOffset.y = hourData.sunOffset.y
-                this.sunOffset.z = hourData.sunOffset.z
-
-                sun0.color.r = sunColor.r
-                sun0.color.g = sunColor.g
-                sun0.color.b = sunColor.b
-
-                sun1.color.r = sunColor.r
-                sun1.color.g = sunColor.g
-                sun1.color.b = sunColor.b
-
-                bg_uniforms.diffuse.value.r = skyColor.r
-                bg_uniforms.diffuse.value.g = skyColor.g
-                bg_uniforms.diffuse.value.b = skyColor.b
-
-                bg_uniforms.diffuseB.value.r = skyColorB.r
-                bg_uniforms.diffuseB.value.g = skyColorB.g
-                bg_uniforms.diffuseB.value.b = skyColorB.b
-
-
+                
+                // Update sky colors
+                bg_uniforms.diffuse.value.copy(skyColor);
+                bg_uniforms.diffuseB.value.copy(skyColorB);
             } else {
-                TweenMax.to( sun0, duration, {
+                // Animate sun property changes
+                TweenMax.to(sun.color, duration, {
+                    r: sunColor.r,
+                    g: sunColor.g,
+                    b: sunColor.b,
+                    ease: "linear"
+                });
+                
+                TweenMax.to(sun, duration, {
                     intensity: hourData.intensity,
                     ease: "linear"
-                } )
-
-                TweenMax.to( sun1, duration, {
-                    intensity: hourData.intensity,
-                    ease: "linear"
-                } )
-
-                TweenMax.to( bg_uniforms.amplitude, duration, {
+                });
+                
+                // Animate background uniforms
+                TweenMax.to(bg_uniforms.amplitude, duration, {
                     value: hourData.amplitude,
                     ease: "linear"
-                } )
-
-                TweenMax.to( bg_uniforms.waves, duration, {
+                });
+                
+                TweenMax.to(bg_uniforms.waves, duration, {
                     value: hourData.waves,
                     ease: "linear"
-                } )
-
-                TweenMax.to( bg_uniforms.grid, duration, {
+                });
+                
+                TweenMax.to(bg_uniforms.grid, duration, {
                     value: hourData.grid,
                     ease: "linear"
-                } )
-
-
-
-                TweenMax.to( this.sunOffset, duration, {
-                    x: hourData.sunOffset.x,
-                    y: hourData.sunOffset.y,
-                    z: hourData.sunOffset.z,
-                    ease: "linear"
-                } )
-
-                TweenMax.to( sun1.color, duration, {
-                    r: sunColor.r,
-                    g: sunColor.g,
-                    b: sunColor.b,
-                    ease: "linear"
-                } )
-
-                TweenMax.to( sun1.color, duration, {
-                    r: sunColor.r,
-                    g: sunColor.g,
-                    b: sunColor.b,
-                    ease: "linear"
-                } )
-
-
-                TweenMax.to( bg_uniforms.diffuse.value, duration, {
+                });
+                
+                // Animate sky colors
+                TweenMax.to(bg_uniforms.diffuse.value, duration, {
                     r: skyColor.r,
                     g: skyColor.g,
                     b: skyColor.b,
                     ease: "linear"
-                } )
+                })
 
                 TweenMax.to( bg_uniforms.diffuseB.value, duration, {
                     r: skyColorB.r,
@@ -766,6 +917,17 @@ export default {
                 } )
             }
         },
+        toggleDayNight() {
+            // Toggle between day (0) and night (1)
+            this.hour = this.hour === 0 ? 1 : 0;
+            
+            // Apply the change with animation
+            this.setDaytime(this.hour, false);
+            
+            // Log the change for debugging
+            console.log(`Switched to ${this.hour === 0 ? 'DAY' : 'NIGHT'} mode with sun color: ${this.$store.state.daynight[this.hour].sunColor}`);
+        },
+        
         getSpawnPosition ( x ) {
 
             let chunkLength = this.chunkLength
@@ -812,7 +974,11 @@ export default {
             this.spawnObject( this.modules.objects.car.composite, {
                 x: this.$store.state.carConfig.spawnPosition.x,
                 y: this.getSpawnPosition( this.$store.state.carConfig.spawnPosition.x ) - 100
-            } )
+            })
+            
+            // Reset the day/night cycle to the first (bright) state when respawning
+            this.hour = 0 // Set hour to first daynight state (bright daytime)
+            this.setDaytime(this.hour, true) // Apply daytime immediately
         },  
         setupGestures () {
             // Create an instance of Hammer with the reference.
@@ -882,16 +1048,10 @@ export default {
                 ease: "Power1.easeInOut"
             } )
 
+            // Create light group for scene-wide lights (not including car headlights)
             let lightGroup = new THREE.Group()
             lightGroup.name = "lights"
-
-            let pointLight = new THREE.PointLight( 0xffffff, 1, 100000 );
-            pointLight.intensity = 1.2;
-            pointLight.position.y = 0
-
-            lightGroup.add( pointLight )
-
-            // scene.add(lightGroup)
+            scene.add(lightGroup)
 
             renderer.setClearColor(0xfff17f)    
 
@@ -901,7 +1061,9 @@ export default {
             groundChunksGroup.name = "ground-chunks"
             greeneryChunksGroup.name = "greenery-chunks"
 
-            groundChunksGroup.position.z = -3;
+            // Set ground to z=0 (same as car) for consistent lighting effects
+            groundChunksGroup.position.z = 0;
+            // Keep greenery at a different z for parallax effect
             greeneryChunksGroup.position.z = 10;
             greeneryChunksGroup.position.y = 20
             let objectsGroup = new THREE.Group()
@@ -920,7 +1082,7 @@ export default {
             this.modules.camera = camera
             this.modules.renderer = renderer
             this.modules.lightGroup = lightGroup
-            this.modules.pointLight = pointLight
+            // No longer using pointLight, removed reference
             this.modules.composer = composer
 
             this.setupComposer()
@@ -1046,35 +1208,47 @@ export default {
                         x: maxx,
                         y: maxy
                     }
-                },
+                }
             });
-
-            this.modules.matter.render = render
+            
+            this.modules.matter.render = render;
         },
         setupLights () {
             let modules = this.modules
-
-            // Main directional lights
-            let sun0 = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
-            let sun1 = new THREE.PointLight( _.cssHex2Hex( this.$store.state.config.sunColor ), 1, 1000000 )
-
-            // Add a subtle blue ambient light to soften shadows
-            let ambientLight = new THREE.AmbientLight(0x3c4a9f, 0.35)  // Dim blue ambient light
+            let hour = this.hour || 1; // Use current hour or default to night (1)
+            let hourData = this.$store.state.daynight[hour];
             
-            modules.scene.add(ambientLight)
-            modules.scene.add(sun0)
-            modules.scene.add(sun1)
+            // Get sun color directly from daynight.json
+            let sunColorHex = 0xffffff; // Default white
+            if (hourData && hourData.sunColor) {
+                // Parse the color correctly from hex string to number
+                sunColorHex = _.cssHex2Hex(hourData.sunColor);
+                console.log('Setting sun color to:', hourData.sunColor, 'hex:', sunColorHex.toString(16));
+            }
+            
+            // Create directional light with the configured color
+            let sun = new THREE.DirectionalLight(sunColorHex, 1, 1000000);
+            
+            // Set intensity from config
+            sun.intensity = hourData ? hourData.intensity : 1.2;
+            
+            // Add a subtle ambient light to soften shadows
+            let ambientLight = new THREE.AmbientLight(0x3c4a9f, 0.35);
+            
+            modules.scene.add(ambientLight);
+            modules.scene.add(sun);
 
             // Store references for later use
-            modules.lights.sun0 = sun0
-            modules.lights.sun1 = sun1
-            modules.lights.ambient = ambientLight
+            modules.lights.sun = sun;
+            modules.lights.ambient = ambientLight;
+            
+            // Debug output to verify color is applied
+            console.log('Sun light color:', sun.color.getHexString());
         },
         setupBackground () {
-            let self = this
-
             let modules = this.modules
-
+            
+            // Setup background shader
             let vertShader = require( "raw-loader!shaders/bg.vert" ).default
             let fragShader = require( "raw-loader!shaders/waves.frag" ).default
             // let fragShader = require( "raw-loader!shaders/helix.frag" ).default
@@ -1141,6 +1315,27 @@ export default {
                 frameTime = 100
             }
             
+            // Update day/night cycle if enabled
+            if (this.dayCycleEnabled && !this.$store.state.paused) {
+                // Convert frameTime from ms to seconds for timer
+                const secondsElapsed = frameTime / 1000;
+                
+                // Update the day cycle timer
+                this.dayCycleTimer += secondsElapsed;
+                
+                // Check if it's time to change hour
+                if (this.dayCycleTimer >= this.dayCycleDuration / this.hoursCount) {
+                    // Reset timer
+                    this.dayCycleTimer = 0;
+                    
+                    // Advance to next hour (cycle through all hours)
+                    this.hour = (this.hour + 1) % this.hoursCount;
+                    
+                    // Update the daytime with a smooth transition
+                    this.setDaytime(this.hour, false);
+                }
+            }
+            
             // Accumulate time since last frame
             this.accumulator = (this.accumulator || 0) + frameTime
             
@@ -1187,16 +1382,12 @@ export default {
                 this.updateMatterRendererBounds()
             }
 
-            modules.lights.sun0.position.set( 
-                modules.camera.position.x + this.sunOffset.x,  
-                modules.camera.position.y + this.sunOffset.y, 
-                (modules.camera.position.z * 4 ) * this.sunOffset.z
-            )
-
-            modules.lights.sun1.position.set( 
-                modules.camera.position.x + this.sunOffset.x,  
-                modules.camera.position.y + this.sunOffset.y, 
-                (-1 * modules.camera.position.z * 4 ) * this.sunOffset.z
+            // Position the single directional light
+            // Only update Y and Z coordinates, keep X fixed to maintain consistent lighting direction
+            modules.lights.sun.position.set(
+                this.sunOffset.x, // Fixed X position - not tied to camera/car movement
+                modules.camera.position.y + this.sunOffset.y, // Y position still follows terrain
+                (modules.camera.position.z * 4) * this.sunOffset.z // Z position for height
             )
 
             if ( this.speedCamera && !this.freeCamera ) {
@@ -1255,18 +1446,34 @@ export default {
             } )
 
             if ( this.modules.objects.car.parts.corpse ) {
-                let chunkLength = this.chunkLength
+            let chunkLength = this.chunkLength
 
-                let currentChunkIndex = _.nearestMult( 
-                    this.modules.objects.car.parts.corpse.mesh.position.x, 
-                    ( chunkLength ),
-                    false,
-                    true
-                ) / ( chunkLength );
+            let currentChunkIndex = _.nearestMult( 
+                this.modules.objects.car.parts.corpse.mesh.position.x, 
+                ( chunkLength ),
+                false,
+                true
+            ) / ( chunkLength );
 
-                this.currentChunkIndex = currentChunkIndex
-
+            this.currentChunkIndex = currentChunkIndex
+            
+            // Position the headlight relative to the car if it exists
+            if (modules.lights.headlight && this.headlightOffset) {
+                const carPosition = this.modules.objects.car.parts.corpse.mesh.position;
+                const carRotation = this.modules.objects.car.parts.corpse.mesh.rotation.z;
+                
+                // Calculate position with offset relative to car's current rotation
+                const offsetX = Math.cos(carRotation) * this.headlightOffset.x;
+                const offsetY = Math.sin(carRotation) * this.headlightOffset.x + this.headlightOffset.y;
+                
+                // Position the headlight
+                modules.lights.headlight.position.set(
+                    carPosition.x + offsetX,
+                    carPosition.y + offsetY,
+                    this.headlightOffset.z
+                );
             }
+        }
         },
         setBodiesPosition ( bodies, position ) {
             forEach( bodies, ( body )=>{
@@ -1280,7 +1487,10 @@ export default {
             } )
         },  
         renderFrame ( ) {
-            this.modules.composer.render()
+            // Add safety check to prevent error when composer is not initialized
+            if (this.modules && this.modules.composer) {
+                this.modules.composer.render()
+            }
         },
         stopRendering () {
             this.renderingActive = false
@@ -1305,9 +1515,10 @@ export default {
             // modules.camera.position.y = 
             // modules.camera.position.z = modules.lightGroup.position.z = ( ( Math.sqrt( 3 ) / 2 ) * height )
 
-            // modules.lightGroup.position.z
+    // modules.lightGroup.position.z
 
-            modules.pointLight.position.y = -height / 2
+    // Removed pointLight reference as it no longer exists
+    // modules.pointLight.position.y = -height / 2
 
             modules.size.x = width
             modules.size.y = height
@@ -1414,17 +1625,71 @@ export default {
 
                 if ( bodyConfig.texture ) texture = this.laodTexture( bodyConfig.texture )
 
-                material = new THREE.MeshStandardMaterial( {
+                // Create basic material properties object
+                const materialProps = {
                     color,
                     map: texture,
                     transparent: true,
-                    // depthTest: true,
-                    metalness: 1,
+                    metalness: 0.5,
                     roughness: 0.5,
                     side: THREE.DoubleSide,
                     shininess: 10, // Lower shininess for less glossy look
-                    specular: new THREE.Color(0x222222) // Reduce specular highlights
-                } )
+                    specular: new THREE.Color(0x222222), // Reduce specular highlights
+                    emissive: new THREE.Color(0x000000), // Black = no emission by default
+                    emissiveIntensity: 0.0 // No emission by default
+                };
+                
+                // Create the material with basic properties
+                material = new THREE.MeshStandardMaterial(materialProps);
+                
+                // Add universal direct emission map loading for all textures
+                if (bodyConfig.texture) {
+                    // Extract the base name and extension
+                    const dotIndex = bodyConfig.texture.lastIndexOf('.');
+                    if (dotIndex > 0) {
+                        const baseName = bodyConfig.texture.substring(0, dotIndex);
+                        const extension = bodyConfig.texture.substring(dotIndex);
+                        const emissionMapName = baseName + '_e' + extension;
+                        
+                        console.log('🔧 Attempting direct emission map loading for:', emissionMapName);
+                        
+                        // Create a new texture loader
+                        const loader = new THREE.TextureLoader();
+                        
+                        // Load emission map directly for any texture
+                        loader.load('res/pics/' + emissionMapName, 
+                            // Success callback
+                            function(texture) {
+                                console.log('✅ DIRECT LOADING SUCCESS for:', emissionMapName);
+                                
+                                // Match texture settings to main texture
+                                if (material.map) {
+                                    texture.flipY = material.map.flipY;
+                                    texture.wrapS = material.map.wrapS || THREE.RepeatWrapping;
+                                    texture.wrapT = material.map.wrapT || THREE.RepeatWrapping;
+                                    
+                                    // Copy UV transformations
+                                    if (material.map.offset) texture.offset.copy(material.map.offset);
+                                    if (material.map.repeat) texture.repeat.copy(material.map.repeat);
+                                }
+                                
+                                // Apply to material
+                                material.emissiveMap = texture;
+                                material.emissive.setRGB(1, 1, 1); // Pure white for maximum emission
+                                material.emissiveIntensity = 25.0; // Very high intensity
+                                material.needsUpdate = true;
+                                texture.needsUpdate = true;
+                                
+                                // Adjust material properties for better emission visibility
+                                material.metalness = 0.1; // Lower metalness helps emission show better
+                            },
+                            // Progress callback
+                            undefined,
+                            // Error callback - silently fail for files that don't exist
+                            function(err) {}
+                        );
+                    }
+                }
 
                 _.getter( material, "wireframe", ()=>{
                     return this.wireframeMode
@@ -1438,8 +1703,24 @@ export default {
                 // Always use the naming convention for normal maps
                 let normalMap = null
                 
+                // Check for emission map with _e suffix
+                let emissionMap = null
+                
                 if (bodyConfig.texture) {
-                    normalMap = this.loadNormalMap(bodyConfig.texture)
+                    console.log('LOADING TEXTURES FOR:', bodyConfig.texture, 'PART:', bodyConfig.name || 'unnamed');
+                    
+                    normalMap = this.loadNormalMap(bodyConfig.texture);
+                    emissionMap = this.loadEmissionMap(bodyConfig.texture);
+                    
+                    // Log detailed emission map status for debugging
+                    if (emissionMap) {
+                        console.log('✓✓✓ SUCCESSFUL EMISSION MAP LOAD for', bodyConfig.name || 'unnamed part');
+                        console.log('    - Texture source:', bodyConfig.texture);
+                        console.log('    - Has image:', emissionMap.image ? 'YES' : 'NO');
+                        console.log('    - Is valid texture:', emissionMap instanceof THREE.Texture ? 'YES' : 'NO');
+                    } else {
+                        console.log('✗✗✗ NO EMISSION MAP for', bodyConfig.name || 'unnamed part', 'texture:', bodyConfig.texture);
+                    }
                 }
                 
                 if (normalMap) {
