@@ -17,7 +17,6 @@ THREE.ParallaxShader = {
 	},
 
 	uniforms: {
-		"bumpMap": { value: null },
 		"map": { value: null },
 		"parallaxScale": { value: null },
 		"parallaxMinLayers": { value: null },

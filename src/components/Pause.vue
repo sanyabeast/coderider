@@ -2,14 +2,11 @@
     <div class="pause-menu-container">
         <div class="pause-menu">
             <div class="game-title">CODE RIDER</div>
-            
-
-            
             <div class="menu-buttons">
                 <button class="game-button continue-button" @click="onResumeClick">CONTINUE</button>
                 <button class="game-button restart-button" @click="reload()">RESTART</button>
             </div>
-            
+
             <div class="game-controls-info">
                 <div class="control-item">
                     <span class="key">←/→</span> Drive
@@ -25,10 +22,10 @@
 <script>
 export default {
     methods: {
-        onResumeClick ( evt ) {
-            this.$emit( "resume" )
+        onResumeClick(evt) {
+            this.$emit("resume")
         },
-        reload () {
+        reload() {
             window.location.reload()
         }
     }
@@ -86,12 +83,12 @@ export default {
     transition: all 0.2s ease;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2);
-    
+
     &:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 0, 0, 0.3);
     }
-    
+
     &:active {
         transform: translateY(2px);
         box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 0 5px rgba(0, 0, 0, 0.2);
@@ -120,7 +117,7 @@ export default {
     font-size: 14px;
     display: flex;
     align-items: center;
-    
+
     &:last-child {
         margin-bottom: 0;
     }

@@ -1,21 +1,11 @@
 <template>
-    <div
-      class="button"
-      :data-mode="mode"
-      @click="onClick"
-    >
-        <img 
-            class="icon" 
-            src="buttonIconSrc"
-        />
-        <p 
-            class="button-caption"
-            v-html="buttonCaptionContent"
-        ></p>
+    <div class="button" :data-mode="mode" @click="onClick">
+        <img class="icon" src="buttonIconSrc" />
+        <p class="button-caption" v-html="buttonCaptionContent"></p>
     </div>
 </template>
 
-<script>
+<script lang="ts">
 
 export default {
     props: {
@@ -33,16 +23,16 @@ export default {
         }
     },
     methods: {
-        onClick ( evt ) {
+        onClick(evt) {
             evt.stopPropagation()
-            
-            this.$emit( "click", {
-                
-            } )
+
+            this.$emit("click", {
+
+            })
         }
     }
 }
-   
+
 </script>
 
 <style lang="sass">

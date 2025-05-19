@@ -29,6 +29,21 @@ let webpackConfig = {
     },
     module: {
         rules: [{
+            test: /\.(ts|tsx)$/,
+            exclude: /node_modules/,
+            use: [
+                {
+                    loader: "babel-loader"
+                },
+                {
+                    loader: "ts-loader",
+                    options: {
+                        appendTsSuffixTo: [/\.vue$/],
+                        transpileOnly: true
+                    }
+                }
+            ]
+        }, {
             test: /\.(js$)/,
             // exclude: /(node_modules)/,
             use: [{
@@ -90,6 +105,10 @@ let webpackConfig = {
     },
     resolve: {
         modules: ["src", "node_modules", "res"],
+        extensions: [".ts", ".tsx", ".js", ".vue", ".json"],
+        alias: {
+            '@': path.resolve(__dirname, 'src/'),
+        }
     },
     resolveLoader: {
         alias: {

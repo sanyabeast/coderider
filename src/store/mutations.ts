@@ -1,14 +1,14 @@
-import _ from "Helpers";
+import _ from "../Helpers";
 
 var mutations = {
-	setRoot ( state, root ){
+	setRoot(state, root) {
 		state.$root = root;
 	},
 	/*l18n*/
-	language ( state, language){
+	language(state, language) {
 		state.language = language;
-	},	
-	currentPage ( state, pageName ) {
+	},
+	currentPage(state, pageName) {
 		state.currentPage = pageName
 	}
 };

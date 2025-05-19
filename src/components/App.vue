@@ -1,152 +1,88 @@
 <template>
-    <v-app
-        dark
-        class="app root"
-        v-bind:class="{ overlayActive: pauseMenuShown }"
-        :data-browser-name="$store.state.browserName"
-        :data-mobile-device="$store.state.mobileDevice ? 1 : 0"
-        tabindex="-1"
-        
-    >
-        <Game
-            @pauseClick="onPauseClick"
-            ref="game"
-        ></Game>
+    <v-app dark class="app root" v-bind:class="{ overlayActive: pauseMenuShown }"
+        :data-browser-name="$store.state.browserName" :data-mobile-device="$store.state.mobileDevice ? 1 : 0"
+        tabindex="-1">
+        <Game @pauseClick="onPauseClick" ref="game"></Game>
 
 
 
-        <div class="overlay"
-            v-if="pauseMenuShown"
-        ></div>
+        <div class="overlay" v-if="pauseMenuShown"></div>
 
-        <div 
-            class="pause-button topbar-button"
-            @click="onPauseClick"
-            v-if="!$store.state.pauseMenuShown"
-            v-show="!pauseMenuShown"
-            title="Press 'Space' key"
-        >
+        <div class="pause-button topbar-button" @click="onPauseClick" v-if="!$store.state.pauseMenuShown"
+            v-show="!pauseMenuShown" title="Press 'Space' key">
             <div>
                 <i class="material-icons">pause</i>
             </div>
         </div>
 
-        <div 
-            class="revoke-button topbar-button"
-            @click="$refs.game.revoke()"
-            v-show="!pauseMenuShown"
-            title="Press 'Q' key"
-            
-        >
+        <div class="revoke-button topbar-button" @click="$refs.game.revoke()" v-show="!pauseMenuShown"
+            title="Press 'Q' key">
             <div><i class="material-icons">replay</i></div>
         </div>
 
-        <div 
-            class="respawn-button topbar-button"
-            @click="$refs.game.respawn()"
-            v-show="!pauseMenuShown"
-            title="Press 'R' key"
-            
-        >
+        <div class="respawn-button topbar-button" @click="$refs.game.respawn()" v-show="!pauseMenuShown"
+            title="Press 'R' key">
             <div><i class="material-icons">undo</i></div>
         </div>
 
-        <div 
-            class="mute-button topbar-button"
-            @click="$store.state.soundMuted = !$store.state.soundMuted; $store.dispatch( `checkFullscreen` )"
-            v-show="!pauseMenuShown"
-        >
-            <div><i 
-                class="material-icons"
-            >{{ $store.state.soundMuted ? `volume_muted` : `volume_up` }}</i></div>
+        <div class="mute-button topbar-button" @click="$store.state.soundMuted = !$store.state.soundMuted;"
+            v-show="!pauseMenuShown">
+            <div><i class="material-icons">{{ $store.state.soundMuted ? `volume_muted` : `volume_up` }}</i></div>
         </div>
 
-        <Pause
-            v-show="pauseMenuShown"
-            @resume="onResumeClick"
-        />
+        <Pause v-show="pauseMenuShown" @resume="onResumeClick" />
     </v-app>
 </template>
 
-<script>
+<script lang="ts">
 
 import Button from "components/Button.vue"
 import Pause from "components/Pause.vue"
 
 import Game from "components/Game.vue"
-
 import { mapState } from 'vuex'
 
 
 export default {
-	components: { Button, Game, Pause },
-    data () {
+    components: { Button, Game, Pause },
+    data() {
         return {
 
         }
     },
-    computed: mapState( [
+    computed: mapState([
         "pauseMenuShown",
         "paused"
-    ] ),
+    ]),
     watch: {
-        paused ( key ) {
-            if ( key ) {
+        paused(key) {
+            if (key) {
                 this.$store.state.pauseMenuShown = true
             } else {
                 this.$store.state.pauseMenuShown = false
             }
         }
     },
-	mounted () {
-        this.$store.dispatch( "load" )
-        this.$store.dispatch( "loadDefaults" )
-
-        if ( !this.$store.state.isHybridApp && this.$store.state.mobileDevice && this.$store.state.browserName != "safari" ) {
-            document.body.addEventListener( "click", ()=>{
-                this.$store.dispatch( "checkFullscreen" )
-            } )
-        }
-
-        document.body.addEventListener( "touchmove", ( evt )=>{
+    mounted() {
+        document.body.addEventListener("touchmove", (evt) => {
             evt.stopPropagation()
             evt.preventDefault()
-        } )
-
-
-		window.addEventListener( "android.key.back.pressed", ()=>{
-            this.$store.dispatch( "native", {
-                method: "showExitDialog",
-                args: [
-                    "Really?",
-                    "Yes",
-                    "No"
-                ]
-            } )
-        } )
-
-        this.$store.dispatch( "native", {
-            method: "setScreenOrientation",
-            args: [
-                "landscape"
-            ]
-        } )
-
-	},
+        })
+    },
     methods: {
-        onPauseClick () {
+        onPauseClick() {
             this.$store.state.paused = true
         },
-        onResumeClick () {
+        onResumeClick() {
             this.$store.state.paused = false
-        },  
-        onAppClick () {  
-                  
+        },
+        onAppClick() {
+
         },
     }
 
 }
-   
+
 </script>
 
 <style lang="sass">
