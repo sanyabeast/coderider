@@ -1,13 +1,13 @@
 import { AmbientLight, Color, DirectionalLight, DoubleSide, Group, Material, MeshStandardMaterial, Object3D, PerspectiveCamera, RepeatWrapping, Scene, Texture, TextureLoader, Vector2, Vector3, WebGLRenderer } from "three";
 
-import EffectComposer from "../../three_fx/EffectComposer";
-import RenderPass from "../../three_fx/passes/RenderPass";
-import CopyShader from "../../three_fx/shaders/CopyShader";
-import ShaderPass from "../../three_fx/passes/ShaderPass";
-import RGBShiftShader from "../../three_fx/shaders/RGBShiftShader";
-import ColorCorrectionShader from "../../three_fx/shaders/ColorCorrectionShader";
-import FilmPass from "../../three_fx/passes/FilmPass";
-import UnrealBloomPass from "../../three_fx/passes/UnrealBloomPass";
+import EffectComposer from "../three_fx/EffectComposer";
+import RenderPass from "../three_fx/passes/RenderPass";
+import CopyShader from "../three_fx/shaders/CopyShader";
+import ShaderPass from "../three_fx/passes/ShaderPass";
+import RGBShiftShader from "../three_fx/shaders/RGBShiftShader";
+import ColorCorrectionShader from "../three_fx/shaders/ColorCorrectionShader";
+import FilmPass from "../three_fx/passes/FilmPass";
+import UnrealBloomPass from "../three_fx/passes/UnrealBloomPass";
 
 import { Game } from "./Game";
 import { isObject, isString, isUndefined } from "lodash";

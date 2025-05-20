@@ -1,5 +1,5 @@
 import { forEach } from "lodash";
-import { config } from "../../../res/data/data";
+import { config, renderingConfig } from "../data/data";
 import { Point } from "./types";
 
 export class TerrainGenerator {
@@ -11,7 +11,7 @@ export class TerrainGenerator {
 
     generatePoints(chunkIndex: number): Point[] {
         // Get configuration values
-        const count = config.chunkSize;
+        const count = renderingConfig.chunkSize;
         const start = chunkIndex * count;
         const step = config.curve.pointsStep;
         const points: Point[] = [];
@@ -80,7 +80,7 @@ export class TerrainGenerator {
     }
 
     getSpawnPositionY(x: number, chunkLength: number): number {
-        const count = config.chunkSize;
+        const count = renderingConfig.chunkSize;
         const step = config.curve.pointsStep;
 
         // Calculate chunk index from x position

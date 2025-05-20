@@ -11,7 +11,7 @@ import {
 } from "three";
 import AudioSystem from "./AudioSystem";
 
-import { config, objects, carConfig, daycycleConfig } from "../../../res/data/data";
+import { config, objects, carConfig, daycycleConfig, landscapeSkins, cameraConfig, physicsConfig, renderingConfig } from "../data/data";
 import { forEach, isNumber } from "lodash";
 import ChunkBufferGeometry from "./ChunkBufferGeometry";
 import { TerrainGenerator } from "./TerrainGenerator";
@@ -20,6 +20,8 @@ import { ERenderGroup, RenderingSystem } from "./RenderingSystem";
 import { Ticker } from "./Ticker";
 import { cssHex2Hex, forEachAsync, nearestMult, lerp, moveTo, lerpColor, lerpV3 } from "@/Helpers";
 import { EPhysicBodyType, PhysicsSystem as PhysicsSystem } from "./PhysicsSystem";
+
+const DAYCYCLE_SPEED = 0.01
 
 interface Chunk {
     mesh: Mesh;
@@ -39,7 +41,7 @@ export class Game {
     private breakActive: boolean = false;
 
     private currentChunkIndex: number = 0;
-    private dayCycleHour: number = 0;
+    private dayProgress: number = 0;
     private sunOffset: Vector3 = new Vector3(0, 0, 0);
     private terrainGenerator: TerrainGenerator;
 
@@ -71,11 +73,15 @@ export class Game {
     backgroundMesh: Mesh;
 
     get chunkLength(): number {
-        return config.chunkSize * config.curve.pointsStep;
+        return renderingConfig.chunkSize * config.curve.pointsStep;
     }
 
     get acceleration(): number {
         return this.forwardAcceleration - this.backwardAcceleration
+    }
+
+    get dayState(): number {
+        return Math.pow(Math.abs(-0.5 + (this.dayProgress)) * 2, 0.5)
     }
 
     constructor(rootElement: HTMLElement, canvas: HTMLCanvasElement) {
@@ -110,22 +116,36 @@ export class Game {
     }
 
     private updateValues(delta: number, factor: number) {
-        this.dayCycleHour = (this.dayCycleHour + (0.25) * delta) % 1;
+        this.dayProgress = (this.dayProgress + (DAYCYCLE_SPEED) * delta) % 1;
         this.forwardAcceleration = moveTo(this.forwardAcceleration, this.targetForwardAcceleration, 1 * delta);
         this.backwardAcceleration = moveTo(this.backwardAcceleration, this.targetbackwardAcceleration, 1 * delta);
 
         // sun 
         this.renderingSystem.sunLight.intensity = lerp(
-            daycycleConfig.day.intensity,
-            daycycleConfig.night.intensity,
-            this.dayCycleHour
+            daycycleConfig.day.sunIntensity,
+            daycycleConfig.night.sunIntensity,
+            this.dayState
         )
 
         this.renderingSystem.sunLight.color = lerpColor(
             daycycleConfig.day.sunColor,
             daycycleConfig.night.sunColor,
-            this.dayCycleHour
+            this.dayState
         )
+
+        // amb
+        this.renderingSystem.ambLight.intensity = lerp(
+            daycycleConfig.day.ambientIntensity,
+            daycycleConfig.night.ambientIntensity,
+            this.dayState
+        )
+
+        this.renderingSystem.ambLight.color = lerpColor(
+            daycycleConfig.day.ambientColor,
+            daycycleConfig.night.ambientColor,
+            this.dayState
+        )
+
 
         //  bg
         let bgMaterial: ShaderMaterial = this.backgroundMesh.material as ShaderMaterial
@@ -133,19 +153,19 @@ export class Game {
         bgMaterial.uniforms.diffuse.value = lerpColor(
             daycycleConfig.day.skyColor,
             daycycleConfig.night.skyColor,
-            this.dayCycleHour
+            this.dayState
         );
 
         bgMaterial.uniforms.diffuseB.value = lerpColor(
             daycycleConfig.day.skyColorB,
             daycycleConfig.night.skyColorB,
-            this.dayCycleHour
+            this.dayState
         );
     }
 
     private updateThings(delta: number, factor: number) {
 
-        let cameraOffset = config.cameraOffset;
+        let cameraOffset = cameraConfig.offset;
         this.renderingSystem.camera.position.y =
             this.gameObjects.car.parts.wheelA.mesh.position.y + cameraOffset.y;
         this.renderingSystem.camera.position.x =
@@ -160,8 +180,8 @@ export class Game {
         );
 
         this.renderingSystem.camera.position.z = lerp(
-            config.cameraPosition,
-            config.cameraSpeedPosition,
+            cameraConfig.position,
+            cameraConfig.speedPosition,
             Math.abs(this.acceleration) / carConfig.wheelVelocity
         );
 
@@ -647,7 +667,7 @@ export class Game {
         });
 
         let groundMaterial = await this.renderingSystem.createMaterial('ground-material', {
-            texture: config.groundSkins.forest.texture,
+            texture: landscapeSkins.forest.texture,
             transparent: false,
             metallic: 0,
             roughness: 1
@@ -657,9 +677,9 @@ export class Game {
         this.renderingSystem.addToRenderGroup(ERenderGroup.Front, groundMesh)
 
         let physicBody = this.physicsSystem.generateCurvedBody(points, {
-            friction: config.groundFriction,
-            restitution: config.groundRestirution,
-            frictionAir: config.groundFrictionAir,
+            friction: physicsConfig.ground.friction,
+            restitution: physicsConfig.ground.restitution,
+            frictionAir: physicsConfig.ground.frictionAir,
         });
 
 
@@ -677,7 +697,7 @@ export class Game {
 
         // Always create a fresh material for greenery to ensure consistent appearance
         let greeneryMaterial = await this.renderingSystem.createMaterial("greenery", {
-            texture: config.groundSkins.forest.greenery.texture,
+            texture: landscapeSkins.forest.greenery.texture,
             transparent: true,
             metallic: 0,
             roughness: 1,

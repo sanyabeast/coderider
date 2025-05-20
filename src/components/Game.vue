@@ -27,7 +27,7 @@
 <script lang="ts">
 
 import { mapState } from 'vuex'
-import { Game } from "components/Game/Game"
+import { Game } from "../game/Game"
 
 export default {
     components: {},

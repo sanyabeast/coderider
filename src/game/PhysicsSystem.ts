@@ -1,6 +1,6 @@
 import Matter from "matter-js";
 import { Game } from "./Game";
-import { config, objects, carConfig, daycycleConfig } from "../../../res/data/data";
+import { config, physicsConfig } from "../data/data";
 import { forEach, forEachRight, isBoolean, isNumber } from "lodash";
 
 import decomp from 'poly-decomp'
@@ -61,7 +61,7 @@ export class PhysicsSystem {
         // add all of the bodies to the world
         // run the engine
         this.engine = engine;
-        this.engine.world.gravity.y = config.gravityY;
+        this.engine.world.gravity.y = physicsConfig.gravity.y;
         // this.matter.render = render
         // run the renderer
     }

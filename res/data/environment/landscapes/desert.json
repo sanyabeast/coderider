@@ -1,8 +1,0 @@
-{
-  "name": "Desert",
-  "texture": "ground_sand.png",
-
-  "greenery": {
-    "texture": "greenery/desert.png"
-  }
-}
