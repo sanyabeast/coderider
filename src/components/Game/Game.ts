@@ -22,15 +22,6 @@ import {
 } from "three";
 import SoundBlaster from "./SoundBlaster";
 
-import EffectComposer from "../../three_fx/EffectComposer";
-import RenderPass from "../../three_fx/passes/RenderPass";
-import CopyShader from "../../three_fx/shaders/CopyShader";
-import ShaderPass from "../../three_fx/passes/ShaderPass";
-import RGBShiftShader from "../../three_fx/shaders/RGBShiftShader";
-import ColorCorrectionShader from "../../three_fx/shaders/ColorCorrectionShader";
-import FilmPass from "../../three_fx/passes/FilmPass";
-import UnrealBloomPass from "../../three_fx/passes/UnrealBloomPass";
-
 import { TweenMax } from "gsap/TweenMax";
 
 import { config, daynight, objects, carConfig } from "../../../res/data/data";
@@ -42,6 +33,8 @@ import Matter from "matter-js";
 import ChunkBufferGeometry from "./ChunkBufferGeometry";
 import { TerrainGenerator } from "./TerrainGenerator";
 import { Point } from "./types";
+import { ERenderGroup, RenderingSystem } from "./RenderingSystem";
+import { Ticker } from "./Ticker";
 
 interface Chunk {
     mesh: Mesh;
@@ -51,6 +44,9 @@ interface Chunk {
 }
 
 export class Game {
+    renderingSystem: RenderingSystem
+    ticker: Ticker
+
     rootElement: HTMLElement;
     engineActive: boolean = false;
     breakActive: boolean = false;
@@ -67,13 +63,9 @@ export class Game {
     dayCycleDuration: number;
     paused: any = false;
 
-    camera: PerspectiveCamera
-    scene: Scene
-    composer: EffectComposer
-    soundBlaster: SoundBlaster = new SoundBlaster()
-    renderer: WebGLRenderer
 
-    fxPasses: {} = {}
+    soundBlaster: SoundBlaster = new SoundBlaster()
+
 
     sunLight: DirectionalLight
     headLight: PointLight
@@ -114,13 +106,12 @@ export class Game {
     matterEngine: Matter.Engine
     chunks: { [x: string]: Chunk } = {}
     activeChunks: { [key: string]: boolean } = {}
-    renderingResolution = new Vector2(1, 1)
+
 
     car = {
         parts: {},
     }
 
-    lightGroup: Group;
     backgroundMesh: Mesh;
 
     get chunkLength(): number {
@@ -130,29 +121,25 @@ export class Game {
     constructor(rootElement: HTMLElement, canvas: HTMLCanvasElement) {
         this.rootElement = rootElement;
         this.canvas = canvas;
+        this.ticker = new Ticker(this.onUpdate.bind(this), this.onFixedUpdate.bind(this))
+
         this.terrainGenerator = new TerrainGenerator();
+
+        this.renderingSystem = new RenderingSystem(this, { canvas })
 
         this._initializeCore();
         this._initializeEnvironment();
         this._initializeGameObjects();
 
-        this.startMainLoop();
         this.rootElement.focus();
+        this.ticker.start()
     }
 
     /**
      * Initialize core systems and event handlers
      */
     private _initializeCore(): void {
-        // Set up core rendering and physics systems
-        this.setupRenderer();
         this.setupMatterEngine();
-        this.updateSize();
-
-        // Add resize event listener
-        window.addEventListener("resize", () => {
-            this.updateSize();
-        });
     }
 
     /**
@@ -237,10 +224,10 @@ export class Game {
 
     setPaused(paused: boolean) {
         if (paused) {
-            this.stopMainLoop();
+            this.ticker.stop();
             TweenMax.pauseAll(TweenMax.getAllTweens());
         } else {
-            this.startMainLoop();
+            this.ticker.start();
             TweenMax.resumeAll(TweenMax.getAllTweens());
         }
 
@@ -321,7 +308,7 @@ export class Game {
         this._setupGreeneryTextures(data.greenery);
         this._updateGreeneryMaterials();
 
-        this.render();
+        this.renderingSystem.render();
     }
 
     _setupGroundTextures(data) {
@@ -559,7 +546,7 @@ export class Game {
             );
 
             // Add to scene (will be positioned in updateThings)
-            this.scene.add(headlight);
+            this.renderingSystem.addToScene(headlight);
             this.headLight = headlight;
         }
     }
@@ -736,141 +723,9 @@ export class Game {
         this.hour = 0; // Set hour to first daynight state (bright daytime)
         this.setDaytime(this.hour); // Apply daytime immediately
     }
-    /**
-     * Set up the rendering system including scene, camera, renderer, and scene groups
-     */
-    setupRenderer() {
-        // Create core rendering components
-        const { scene, camera, renderer, composer } = this._createRenderingCore();
 
-        // Set up camera properties and animation
-        this._setupCamera(camera);
 
-        // Create scene structure with groups for different types of objects
-        const { lightGroup, groundChunksGroup, greeneryChunksGroup, objectsGroup } =
-            this._createSceneStructure(scene);
 
-        // Store references to all rendering components
-        this._storeRenderingReferences(scene, camera, renderer, composer,
-            lightGroup, groundChunksGroup, greeneryChunksGroup, objectsGroup);
-
-        // Set up post-processing effects
-        this.setupComposer();
-
-        // Set up time ticker for animations
-        this._setupTimeTicker();
-    }
-
-    /**
-     * Create the core rendering components: scene, camera, renderer, and composer
-     */
-    private _createRenderingCore() {
-        // Create scene
-        const scene = new Scene();
-
-        // Create camera
-        const camera = new PerspectiveCamera(
-            90,
-            window.innerWidth / window.innerHeight,
-            0.001,
-            100000
-        );
-
-        // Create renderer
-        const renderer = new WebGLRenderer({
-            antialias: false,
-            canvas: this.canvas,
-        });
-
-        // Configure renderer settings
-        renderer.autoClear = false;
-        renderer.autoClearColor = false;
-        renderer.autoClearDepth = false;
-        renderer.autoClearStencil = false;
-        renderer.setClearColor(0xfff17f);
-
-        // Create effect composer for post-processing
-        const composer = new EffectComposer(renderer);
-
-        return { scene, camera, renderer, composer };
-    }
-
-    /**
-     * Set up camera properties and animation
-     */
-    private _setupCamera(camera: PerspectiveCamera) {
-        // Set initial rotation
-        camera.rotation.z = Math.PI;
-        camera.rotation.y = Math.PI;
-
-        // Add subtle camera movement animation
-        TweenMax.fromTo(
-            camera.rotation,
-            10,
-            {
-                z: Math.PI + -Math.PI / 128,
-            },
-            {
-                z: Math.PI + Math.PI / 128,
-                repeat: -1,
-                yoyo: true,
-                ease: "Power1.easeInOut",
-            }
-        );
-    }
-
-    /**
-     * Create scene structure with groups for different types of objects
-     */
-    private _createSceneStructure(scene: Scene) {
-        // Create light group for scene-wide lights
-        const lightGroup = new Group();
-        lightGroup.name = "lights";
-        scene.add(lightGroup);
-
-        // Create ground chunks group
-        const groundChunksGroup = new Group();
-        groundChunksGroup.name = "ground-chunks";
-        groundChunksGroup.position.z = 0; // Same as car for consistent lighting
-        scene.add(groundChunksGroup);
-
-        // Create greenery chunks group with parallax offset
-        const greeneryChunksGroup = new Group();
-        greeneryChunksGroup.name = "greenery-chunks";
-        greeneryChunksGroup.position.z = 10; // Different z for parallax effect
-        greeneryChunksGroup.position.y = 20;
-        scene.add(greeneryChunksGroup);
-
-        // Create objects group for game objects
-        const objectsGroup = new Group();
-        objectsGroup.name = "objects";
-        scene.add(objectsGroup);
-
-        return { lightGroup, groundChunksGroup, greeneryChunksGroup, objectsGroup };
-    }
-
-    private _storeRenderingReferences(
-        scene: Scene,
-        camera: PerspectiveCamera,
-        renderer: WebGLRenderer,
-        composer: EffectComposer,
-        lightGroup: Group,
-        groundChunksGroup: Group,
-        greeneryChunksGroup: Group,
-        objectsGroup: Group
-    ) {
-        // Store scene groups
-        this.greeneryRenderGroup = greeneryChunksGroup;
-        this.objectsRenderGroup = objectsGroup;
-        this.groundChunksRenderGroup = groundChunksGroup;
-
-        // Store core rendering components
-        this.scene = scene;
-        this.camera = camera;
-        this.renderer = renderer;
-        this.lightGroup = lightGroup;
-        this.composer = composer;
-    }
 
     /**
      * Set up time ticker for animations
@@ -881,147 +736,7 @@ export class Game {
             this.time.x = this.time.x % 10;
         }, 1000 / 30);
     }
-    /**
-     * Set up post-processing effects composer
-     */
-    setupComposer() {
-        // Create all post-processing passes
-        const { renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass, bloomParams } =
-            this._createPostProcessingPasses();
 
-        // Store passes for reference
-        this._storePostProcessingPasses(renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass);
-
-        // Configure pass properties and behavior
-        this._configurePassProperties(renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass);
-
-        // Add passes to composer in correct order
-        this._addPassesToComposer(renderPass, bloomPass, colorCorPass, rgbsPass, filmPass, copyPass);
-
-        // Set up dynamic effects based on day/night cycle
-        this._setupDynamicEffects(bloomPass, bloomParams);
-    }
-
-    /**
-     * Create all post-processing passes
-     */
-    private _createPostProcessingPasses() {
-        // Basic render pass
-        const renderPass = new RenderPass(this.scene, this.camera);
-
-        // Color correction for better contrast and vibrancy
-        const colorCorPass = new ShaderPass(ColorCorrectionShader);
-        colorCorPass.uniforms.powRGB.value = new Vector3(1.1, 1.1, 1.15); // Slightly increase blue for sky
-        colorCorPass.uniforms.mulRGB.value = new Vector3(1.2, 1.15, 1.1); // Better contrast
-
-        // Subtle RGB shift for a slight chromatic aberration effect
-        const rgbsPass = new ShaderPass(RGBShiftShader);
-        rgbsPass.material.uniforms.amount.value = 0.0015; // Reduced for subtlety
-        rgbsPass.material.uniforms.angle.value = 0.5; // Angle of shift
-
-        // Minimal film grain without strong scanlines
-        // Parameters: (noise intensity, scanline intensity, scanline count, grayscale)
-        const filmPass = new FilmPass(0.15, 0.1, 480, false); // Reduced scanline intensity
-
-        // Almost imperceptible bloom effect
-        const bloomParams = {
-            strength: 0.05, // Reduced bloom strength
-            radius: 0.2,   // Small bloom radius
-            threshold: 0.95, // High threshold for subtle effect
-        };
-
-        const bloomPass = new UnrealBloomPass(
-            new Vector2(window.innerWidth, window.innerHeight),
-            bloomParams.strength,
-            bloomParams.radius,
-            bloomParams.threshold
-        );
-
-        // Final copy to screen
-        const copyPass = new ShaderPass(CopyShader);
-        copyPass.renderToScreen = true;
-
-        return { renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass, bloomParams };
-    }
-
-
-    private _storePostProcessingPasses(
-        renderPass: RenderPass,
-        colorCorPass: ShaderPass,
-        rgbsPass: ShaderPass,
-        bloomPass: UnrealBloomPass,
-        filmPass: FilmPass,
-        copyPass: ShaderPass
-    ) {
-        this.fxPasses = {
-            renderPass,
-            colorCorPass,
-            rgbsPass,
-            bloomPass,
-            filmPass,
-            copyPass,
-        };
-    }
-
-    /**
-     * Configure pass properties and behavior
-     */
-    private _configurePassProperties(
-        renderPass: RenderPass,
-        colorCorPass: ShaderPass,
-        rgbsPass: ShaderPass,
-        bloomPass: UnrealBloomPass,
-        filmPass: FilmPass,
-        copyPass: ShaderPass
-    ) {
-        // Configure render pass to not render to screen directly
-        _.getter(
-            renderPass,
-            "renderToScreen",
-            () => false,
-            () => { }
-        );
-
-        // Enable all effect passes
-        _.getter(
-            [colorCorPass, rgbsPass, bloomPass, filmPass, copyPass],
-            "enabled",
-            () => true
-        );
-    }
-
-    /**
-     * Add passes to composer in the correct order
-     */
-    private _addPassesToComposer(
-        renderPass: RenderPass,
-        bloomPass: UnrealBloomPass,
-        colorCorPass: ShaderPass,
-        rgbsPass: ShaderPass,
-        filmPass: FilmPass,
-        copyPass: ShaderPass
-    ) {
-        this.composer.addPass(renderPass);   // Render the scene
-        this.composer.addPass(bloomPass);    // Add bloom first
-        this.composer.addPass(colorCorPass); // Then correct colors
-        this.composer.addPass(rgbsPass);     // Add subtle RGB shift
-        this.composer.addPass(filmPass);     // Add film grain last
-        this.composer.addPass(copyPass);     // Copy to screen
-    }
-
-    /**
-     * Set up dynamic effects based on day/night cycle
-     */
-    private _setupDynamicEffects(bloomPass: UnrealBloomPass, bloomParams: any) {
-        // Dynamic day/night effect on bloom strength
-        _.getter(bloomPass, "strength", () => {
-            // Increase bloom at night for better lighting effects
-            if (this.hour >= 18 || this.hour <= 6) {
-                return bloomParams.strength * 1.5;
-            }
-            return bloomParams.strength;
-        });
-    }
     setupMatterEngine() {
         // create an engine
         var engine = Matter.Engine.create({
@@ -1051,8 +766,8 @@ export class Game {
         const { sun, ambientLight } = this._createLights(hourData);
 
         // Add lights to scene
-        this.scene.add(ambientLight);
-        this.scene.add(sun);
+        this.renderingSystem.addToScene(ambientLight);
+        this.renderingSystem.addToScene(sun);
 
         // Store references for later use
         this.sunLight = sun;
@@ -1104,7 +819,7 @@ export class Game {
 
         // Store reference and add to scene
         this.backgroundMesh = bg;
-        this.scene.add(bg);
+        this.renderingSystem.addToScene(bg);
     }
 
     /**
@@ -1130,39 +845,21 @@ export class Game {
                     amplitude: { value: 1 },
                     waves: { value: 20 },
                     grid: { value: 5 },
-                    camera: { value: this.camera.position },
+                    camera: { value: this.renderingSystem.camera.position },
                 },
                 side: DoubleSide,
                 transparent: true,
             })
         );
     }
-    startMainLoop() {
-        this.prevUpdateDate = +new Date();
-        this.renderingActive = true;
-
-        // this.matter.runner = Engine.run(this.matterEngine);
-        this.onUpdate();
+    onUpdate(delta: number) {
+        this.renderingSystem.render()
+        this.updateDaycycle(delta)
+        this.updateThings(delta);
+        this.updatePhysics(delta)
     }
-    stopMainLoop() {
-        this.renderingActive = false;
-        // Matter.Runner.stop( this.matter.runner )
-
-        cancelAnimationFrame(this._rafId);
-    }
-    onUpdate() {
-        this._rafId = requestAnimationFrame(() => this.onUpdate());
-
-        // How much time has passed since last frame (in ms)
-        // Current timestamp in milliseconds
-        let now = +new Date();
-        let updateTime = now - this.prevUpdateDate;
-        this.prevUpdateDate = now;
-
-        this.render()
-        this.updateDaycycle(updateTime)
-        this.updateThings(updateTime);
-        this.updatePhysics(updateTime)
+    onFixedUpdate(delta: number) {
+        this.updatePhysics(delta)
     }
     updateDaycycle(updateTime: number) {
         // Update day/night cycle if enabled
@@ -1187,6 +884,30 @@ export class Game {
         }
     }
     updatePhysics(updateTime: number) {
+        Matter.Engine.update(this.matterEngine, 1000 / 60);
+    }
+    updateThings(delta) {
+
+        let cameraOffset = config.cameraOffset;
+        this.renderingSystem.camera.position.y =
+            this.gameObjects.car.parts.wheelA.mesh.position.y + cameraOffset.y;
+        this.renderingSystem.camera.position.x =
+            this.gameObjects.car.parts.wheelA.mesh.position.x + cameraOffset.x;
+
+        // Position the single directional light
+        // Only update Y and Z coordinates, keep X fixed to maintain consistent lighting direction
+        this.sunLight.position.set(
+            this.sunOffset.x, // Fixed X position - not tied to camera/car movement
+            this.renderingSystem.camera.position.y + this.sunOffset.y, // Y position still follows terrain
+            this.renderingSystem.camera.position.z * 4 * this.sunOffset.z // Z position for height
+        );
+
+        this.renderingSystem.camera.position.z = _.smoothstep(
+            config.cameraPosition,
+            config.cameraSpeedPosition,
+            Math.abs(this.acceleration) / carConfig.wheelVelocity
+        );
+
         /* engine/break */
 
         if (this.engineActive || this.breakActive) {
@@ -1215,6 +936,7 @@ export class Game {
             }
         });
 
+
         /****************/
         forEach(this.gameObjects, (object, name) => {
             forEach(object.parts, (part, name) => {
@@ -1224,31 +946,6 @@ export class Game {
             });
         });
 
-
-        Matter.Engine.update(this.matterEngine, 1000 / 60);
-
-    }
-    updateThings(delta) {
-
-        let cameraOffset = config.cameraOffset;
-        this.camera.position.y =
-            this.gameObjects.car.parts.wheelA.mesh.position.y + cameraOffset.y;
-        this.camera.position.x =
-            this.gameObjects.car.parts.wheelA.mesh.position.x + cameraOffset.x;
-
-        // Position the single directional light
-        // Only update Y and Z coordinates, keep X fixed to maintain consistent lighting direction
-        this.sunLight.position.set(
-            this.sunOffset.x, // Fixed X position - not tied to camera/car movement
-            this.camera.position.y + this.sunOffset.y, // Y position still follows terrain
-            this.camera.position.z * 4 * this.sunOffset.z // Z position for height
-        );
-
-        this.camera.position.z = _.smoothstep(
-            config.cameraPosition,
-            config.cameraSpeedPosition,
-            Math.abs(this.acceleration) / carConfig.wheelVelocity
-        );
 
 
         // forEach(this.objects.stuff, (object, name) => {
@@ -1308,14 +1005,7 @@ export class Game {
             }
         }
     }
-    render() {
-        // Add safety check to prevent error when composer is not initialized
-        if (this.composer) {
-            this.composer.render();
-        } else {
-            this.renderer.render(this.scene, this.camera);
-        }
-    }
+
     setBodiesPosition(bodies, position) {
         forEach(bodies, (body) => {
             Matter.Body.setPosition(body, position);
@@ -1326,23 +1016,6 @@ export class Game {
             Matter.Body.setVelocity(body, { x: 0, y: 0 });
             Matter.Body.setAngularVelocity(body, 0);
         });
-    }
-    updateSize() {
-
-        let canvasElement = this.canvas;
-
-        let width = window.innerWidth * window.devicePixelRatio;
-        let height = window.innerHeight * window.devicePixelRatio;
-
-        this.camera.aspect = width / height;
-        this.renderingResolution.x = width;
-        this.renderingResolution.y = height;
-
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(width, height);
-        this.composer.setSize(width, height);
-
-        console.log(`renderer size: ${width} - ${height}`);
     }
     createCar() {
         this.createObject({
@@ -1619,7 +1292,7 @@ export class Game {
 
             this.gameObjects[objectName].bodies.push(matterBody);
 
-            this.objectsRenderGroup.add(mesh);
+            this.renderingSystem.getRenderGroup(ERenderGroup.Props).add(mesh);
 
             if (!config.composite) {
                 Matter.World.add(this.matterEngine.world, [matterBody]);
@@ -1725,10 +1398,10 @@ export class Game {
         } else {
             delete this.activeChunks[chunkIndex];
 
-            this.groundChunksRenderGroup.remove(
+            this.renderingSystem.getRenderGroup(ERenderGroup.Front).remove(
                 this.chunks[chunkIndex].mesh
             );
-            this.greeneryRenderGroup.remove(
+            this.renderingSystem.getRenderGroup(ERenderGroup.Back).remove(
                 this.chunks[chunkIndex].greenery
             );
 
@@ -1755,10 +1428,10 @@ export class Game {
             return;
         } else {
             this.activeChunks[chunkIndex] = true;
-            this.groundChunksRenderGroup.add(
+            this.renderingSystem.getRenderGroup(ERenderGroup.Front).add(
                 this.chunks[chunkIndex].mesh
             );
-            this.greeneryRenderGroup.add(
+            this.renderingSystem.getRenderGroup(ERenderGroup.Back).add(
                 this.chunks[chunkIndex].greenery
             );
             Matter.World.add(this.matterEngine.world, [
@@ -1767,7 +1440,7 @@ export class Game {
         }
     }
 
-    addChunk(chunkIndex) {
+    addChunk(chunkIndex: number) {
         if (this.chunks[chunkIndex]) {
             this.showChunk(chunkIndex);
             return;
@@ -1797,7 +1470,7 @@ export class Game {
         });
 
         let groundMesh = new Mesh(groundGeometry, groundMaterial);
-        this.groundChunksRenderGroup.add(groundMesh);
+        this.renderingSystem.getRenderGroup(ERenderGroup.Front).add(groundMesh);
 
         let matterBody = this.generateCurveMatterBody(points);
 
@@ -1832,7 +1505,7 @@ export class Game {
         // this.data.greeneryMaterial = greeneryMaterial
 
         let greeneryMesh = new Mesh(greeneryGeometry, greeneryMaterial);
-        this.greeneryRenderGroup.add(greeneryMesh);
+        this.renderingSystem.getRenderGroup(ERenderGroup.Back).add(greeneryMesh);
 
         this.chunks[chunkIndex] = {
             mesh: groundMesh,

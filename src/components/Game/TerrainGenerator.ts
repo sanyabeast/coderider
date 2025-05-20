@@ -39,9 +39,9 @@ export class TerrainGenerator {
 
             // Apply different terrain features to the current point
             this.applySinusoidTerrain(points[index], a, step);
-            this.applyJumps(points[index], globalPos);
-            this.applyBumps(points[index], globalPos);
-            this.applySlopes(points[index], globalPos);
+            // this.applyJumps(points[index], globalPos);
+            // this.applyBumps(points[index], globalPos);
+            // this.applySlopes(points[index], globalPos);
         }
 
         return points;
