@@ -5,7 +5,6 @@ import renderingConfigJson from './config/rendering.json';
 import terrainConfigJson from './config/terrain.json';
 
 // Environment configs
-import daynightJson from './environment/daynight.json';
 import forestLandscapeJson from './environment/landscapes/forest.json';
 import stonesLandscapeJson from './environment/landscapes/stones.json';
 import desertLandscapeJson from './environment/landscapes/desert.json';
@@ -13,14 +12,69 @@ import desertLandscapeJson from './environment/landscapes/desert.json';
 // Entity configs
 import carJson from './entities/car.json';
 import objectsJson from './entities/objects.json';
+import { Color, Vector3 } from 'three';
 
 // UI configs
+
+export interface daycycleItem {
+  sunOffset: Vector3
+  sunColor: Color
+  skyColorB: Color
+  skyColor: Color
+  intensity: number
+  grid: number
+  waves: number
+  amplitude: number
+  headlight: {
+    color: Color
+    intensity: number
+    distance: number
+    offset: Vector3
+  }
+}
+
+export const daycycleConfig: {
+  day: daycycleItem,
+  night: daycycleItem
+} = {
+  day: {
+    sunOffset: new Vector3(128, -1024, 1),
+    sunColor: new Color(0xffe0b1),
+    skyColorB: new Color(0xcacaca),
+    skyColor: new Color(0xbdf8ff),
+    intensity: 1,
+    grid: 3,
+    waves: 14,
+    amplitude: 0.4,
+    headlight: {
+      color: new Color(0xffcc88),
+      intensity: 0.5,
+      distance: 256,
+      offset: new Vector3(32, -5, 0)
+    }
+  },
+  night: {
+    sunOffset: new Vector3(0, -128, 1),
+    sunColor: new Color(0xc0cdff),
+    skyColorB: new Color(0x000000),
+    skyColor: new Color(0x111111),
+    intensity: 0.2,
+    grid: 3,
+    waves: 14,
+    amplitude: 0.4,
+    headlight: {
+      color: new Color(0xffcc88),
+      intensity: 0.5,
+      distance: 256,
+      offset: new Vector3(32, -5, 0)
+    }
+  }
+}
 
 export const cameraConfig = cameraConfigJson;
 export const physicsConfig = physicsConfigJson;
 export const renderingConfig = renderingConfigJson;
 export const terrainConfig = terrainConfigJson;
-export const daynight = daynightJson;
 export const forestLandscape = forestLandscapeJson;
 export const stonesLandscape = stonesLandscapeJson;
 export const desertLandscape = desertLandscapeJson;

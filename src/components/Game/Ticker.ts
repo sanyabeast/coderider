@@ -1,32 +1,57 @@
 const FIXED_INTERVAL = (1000 / 60)
 
 export class Ticker {
-    public onLoop: (number: any) => void;
-    public onFixedLoop: (number: any) => void;
+    public onLoop: (delta: number, factor: number) => void;
+    public onFixedLoop: (delta: number, factor: number) => void;
     private running: boolean = false
     private rafId: number = null;
     private timeoutId: any = null;
 
     private prevLoopTickDate: number = +new Date();
     private prevFixedLoopTickDate: number = +new Date();
+    private documentVisible: boolean;
 
-    constructor(onLoop: (number) => void, onFixedLoop: (number) => void) {
+    constructor(
+        onLoop: (delta: number, factor: number) => void,
+        onFixedLoop: (delta: number, factor: number) => void
+    ) {
         this.onLoop = onLoop
         this.onFixedLoop = onFixedLoop
 
         this.updateLoop = this.updateLoop.bind(this)
         this.updateFixedLoop = this.updateFixedLoop.bind(this)
 
+        this.documentVisible = document.visibilityState === 'visible'
+
+        if (this.documentVisible) {
+            this.enableLoops()
+        }
+
+        document.addEventListener("visibilitychange", () => {
+            this.documentVisible = document.visibilityState === "visible"
+
+            if (this.documentVisible) {
+                this.enableLoops()
+            } else {
+                this.disableLoops()
+            }
+        })
+    }
+
+    private enableLoops() {
+        this.prevLoopTickDate = +new Date()
+        this.prevFixedLoopTickDate = +new Date()
         this.updateLoop();
         this.updateFixedLoop();
     }
 
-    start() {
-        this.running = true;
+    private disableLoops() {
+        cancelAnimationFrame(this.rafId)
+        clearTimeout(this.timeoutId)
     }
 
-    stop() {
-        this.running = false;
+    setRunning(isRunning: boolean) {
+        this.running = isRunning;
     }
 
     private updateLoop() {
@@ -37,7 +62,7 @@ export class Ticker {
         this.prevLoopTickDate = now
 
         if (this.running) {
-            this.onLoop(delta)
+            this.onLoop(delta / 1000, delta / FIXED_INTERVAL)
         }
     }
 
@@ -46,10 +71,10 @@ export class Ticker {
         let delta = now - this.prevFixedLoopTickDate
         this.prevFixedLoopTickDate = now
 
-        this.timeoutId = setTimeout(this.updateFixedLoop, FIXED_INTERVAL + Math.max((FIXED_INTERVAL - delta), 0));
+        this.timeoutId = setTimeout(this.updateFixedLoop, FIXED_INTERVAL);
 
         if (this.running) {
-            this.onFixedLoop(delta)
+            this.onFixedLoop(delta / 1000, delta / FIXED_INTERVAL)
         }
 
     }

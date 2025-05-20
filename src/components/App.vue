@@ -27,7 +27,6 @@
 
 import Button from "components/Button.vue"
 import Pause from "components/Pause.vue"
-
 import Game from "components/Game.vue"
 import { mapState } from 'vuex'
 

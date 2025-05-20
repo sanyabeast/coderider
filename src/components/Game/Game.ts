@@ -1,96 +1,55 @@
 import {
-    AmbientLight,
     CircleBufferGeometry,
     Color,
-    DirectionalLight,
     Texture,
     DoubleSide,
-    Group,
     Mesh,
-    MirroredRepeatWrapping,
-    PerspectiveCamera,
     PlaneBufferGeometry,
     PlaneGeometry,
-    PointLight,
-    Scene,
     ShaderMaterial,
-    TextureLoader,
-    Vector2,
     Vector3,
-    WebGLRenderer,
-    Material,
 } from "three";
-import SoundBlaster from "./SoundBlaster";
+import AudioSystem from "./AudioSystem";
 
-import { TweenMax } from "gsap/TweenMax";
-
-import { config, daynight, objects, carConfig } from "../../../res/data/data";
-import { RepeatWrapping } from "three";
-import { MeshStandardMaterial } from "three";
-import _ from "../../Helpers";
-import { forEach, forEachRight } from "lodash";
-import Matter from "matter-js";
+import { config, objects, carConfig, daycycleConfig } from "../../../res/data/data";
+import { forEach, isNumber } from "lodash";
 import ChunkBufferGeometry from "./ChunkBufferGeometry";
 import { TerrainGenerator } from "./TerrainGenerator";
 import { Point } from "./types";
 import { ERenderGroup, RenderingSystem } from "./RenderingSystem";
 import { Ticker } from "./Ticker";
+import { cssHex2Hex, forEachAsync, nearestMult, lerp, moveTo, lerpColor, lerpV3 } from "@/Helpers";
+import { EPhysicBodyType, PhysicsSystem as PhysicsSystem } from "./PhysicsSystem";
 
 interface Chunk {
     mesh: Mesh;
-    matterBody: Matter.Body;
+    physicBody: Matter.Body;
     points: Point[];
     greenery: Mesh;
 }
 
 export class Game {
-    renderingSystem: RenderingSystem
-    ticker: Ticker
+    private renderingSystem: RenderingSystem
+    private audioSystem: AudioSystem = new AudioSystem()
+    private physicsSystem: PhysicsSystem
+    private ticker: Ticker
 
-    rootElement: HTMLElement;
-    engineActive: boolean = false;
-    breakActive: boolean = false;
-    acceleration: number = 0;
-    currentChunkIndex: number = 0;
-    hour: number = 0;
-    sunOffset: Vector3 = new Vector3(0, 0, 0);
-    hoursCount: number = 0;
-    terrainGenerator: TerrainGenerator;
+    private rootElement: HTMLElement;
+    private engineActive: boolean = false;
+    private breakActive: boolean = false;
 
-    renderingActive: boolean;
-    dayCycleEnabled: boolean;
-    dayCycleTimer: number;
-    dayCycleDuration: number;
-    paused: any = false;
+    private currentChunkIndex: number = 0;
+    private dayCycleHour: number = 0;
+    private sunOffset: Vector3 = new Vector3(0, 0, 0);
+    private terrainGenerator: TerrainGenerator;
 
+    public paused: any = false;
 
-    soundBlaster: SoundBlaster = new SoundBlaster()
+    private forwardAcceleration: number = 0;
+    private targetForwardAcceleration: number = 0;
 
-
-    sunLight: DirectionalLight
-    headLight: PointLight
-    ambientLight: AmbientLight
-
-    headlightOffset: Vector3;
-
-    prevUpdateDate: number = +new Date();
-    _accelerationTween: any;
-    _rafId: number;
-
-    canvas: HTMLCanvasElement;
-
-    objectsRenderGroup = null
-    greeneryRenderGroup = null
-    groundChunksRenderGroup = null
-
-    groundTexture: Texture = null
-    groundNormalMap: Texture = null
-    groundNormalScale: number = 1
-    greeneryTexture: Texture = null
-    greeneryNormalMap: Texture = null
-    groundEmissionMap: Texture = null
-    greeneryNormalScale: number = 1
-    greeneryEmissionMap: Texture = null
+    private backwardAcceleration: number = 0;
+    private targetbackwardAcceleration: number = 0;
 
     gameObjects = {
         stuff: null,
@@ -102,11 +61,8 @@ export class Game {
         textures: {},
     }
 
-    time = new Vector2(0, 0)
-    matterEngine: Matter.Engine
     chunks: { [x: string]: Chunk } = {}
     activeChunks: { [key: string]: boolean } = {}
-
 
     car = {
         parts: {},
@@ -118,80 +74,209 @@ export class Game {
         return config.chunkSize * config.curve.pointsStep;
     }
 
+    get acceleration(): number {
+        return this.forwardAcceleration - this.backwardAcceleration
+    }
+
     constructor(rootElement: HTMLElement, canvas: HTMLCanvasElement) {
         this.rootElement = rootElement;
-        this.canvas = canvas;
         this.ticker = new Ticker(this.onUpdate.bind(this), this.onFixedUpdate.bind(this))
-
         this.terrainGenerator = new TerrainGenerator();
-
         this.renderingSystem = new RenderingSystem(this, { canvas })
+        this.physicsSystem = new PhysicsSystem(this)
 
-        this._initializeCore();
-        this._initializeEnvironment();
-        this._initializeGameObjects();
-
+        this.initialize()
         this.rootElement.focus();
-        this.ticker.start()
+
     }
 
-    /**
-     * Initialize core systems and event handlers
-     */
-    private _initializeCore(): void {
-        this.setupMatterEngine();
+    private async initialize() {
+        await this.initializeEnvironment();
+        await this.initializeGameObjects();
+
+        this.ticker.setRunning(true)
     }
 
-    /**
-     * Initialize environment elements (background, lighting, terrain)
-     */
-    private _initializeEnvironment(): void {
+
+    private onUpdate(delta: number, factor: number) {
+        this.renderingSystem.render()
+        this.updateValues(delta, factor)
+        this.updateThings(delta, factor);
+        // this.updatePhysics(delta)
+    }
+
+    private onFixedUpdate(delta: number, factor: number) {
+        this.physicsSystem.update(delta)
+    }
+
+    private updateValues(delta: number, factor: number) {
+        this.dayCycleHour = (this.dayCycleHour + (0.25) * delta) % 1;
+        this.forwardAcceleration = moveTo(this.forwardAcceleration, this.targetForwardAcceleration, 1 * delta);
+        this.backwardAcceleration = moveTo(this.backwardAcceleration, this.targetbackwardAcceleration, 1 * delta);
+
+        // sun 
+        this.renderingSystem.sunLight.intensity = lerp(
+            daycycleConfig.day.intensity,
+            daycycleConfig.night.intensity,
+            this.dayCycleHour
+        )
+
+        this.renderingSystem.sunLight.color = lerpColor(
+            daycycleConfig.day.sunColor,
+            daycycleConfig.night.sunColor,
+            this.dayCycleHour
+        )
+
+        //  bg
+        let bgMaterial: ShaderMaterial = this.backgroundMesh.material as ShaderMaterial
+
+        bgMaterial.uniforms.diffuse.value = lerpColor(
+            daycycleConfig.day.skyColor,
+            daycycleConfig.night.skyColor,
+            this.dayCycleHour
+        );
+
+        bgMaterial.uniforms.diffuseB.value = lerpColor(
+            daycycleConfig.day.skyColorB,
+            daycycleConfig.night.skyColorB,
+            this.dayCycleHour
+        );
+    }
+
+    private updateThings(delta: number, factor: number) {
+
+        let cameraOffset = config.cameraOffset;
+        this.renderingSystem.camera.position.y =
+            this.gameObjects.car.parts.wheelA.mesh.position.y + cameraOffset.y;
+        this.renderingSystem.camera.position.x =
+            this.gameObjects.car.parts.wheelA.mesh.position.x + cameraOffset.x;
+
+        // Position the single directional light
+        // Only update Y and Z coordinates, keep X fixed to maintain consistent lighting direction
+        this.renderingSystem.sunLight.position.set(
+            this.sunOffset.x, // Fixed X position - not tied to camera/car movement
+            this.renderingSystem.camera.position.y + this.sunOffset.y, // Y position still follows terrain
+            this.renderingSystem.camera.position.z * 4 * this.sunOffset.z // Z position for height
+        );
+
+        this.renderingSystem.camera.position.z = lerp(
+            config.cameraPosition,
+            config.cameraSpeedPosition,
+            Math.abs(this.acceleration) / carConfig.wheelVelocity
+        );
+
+        /* engine/break */
+
+        if (this.engineActive || this.breakActive) {
+            this.physicsSystem.setAngularVelocity(
+                this.gameObjects.car.parts.wheelA.physicBody,
+                this.acceleration
+            );
+            this.physicsSystem.setAngularVelocity(
+                this.gameObjects.car.parts.wheelB.physicBody,
+                this.acceleration
+            );
+        }
+
+        forEach(this.gameObjects.motos, (moto, name) => {
+            this.physicsSystem.setAngularVelocity(moto.parts.wheelA.physicBody, 0.811);
+            this.physicsSystem.setAngularVelocity(moto.parts.wheelB.physicBody, 0.811);
+
+            if (moto.parts.corpse.physicBody.position.y > 1500) {
+                this.spawnObject(moto.composite, {
+                    x: this.gameObjects.car.parts.corpse.physicBody.position.x - 659,
+                    y: this.getSpawnPosition(
+                        this.gameObjects.car.parts.corpse.physicBody.position.x - 659
+                    ) - 100,
+                });
+            }
+        });
+
+
+        /****************/
+        forEach(this.gameObjects, (object, name) => {
+            forEach(object.parts, (part, name) => {
+                part.mesh.position.x = part.physicBody.position.x;
+                part.mesh.position.y = part.physicBody.position.y;
+                part.mesh.rotation.z = part.physicBody.angle;
+            });
+        });
+
+
+
+        // forEach(this.objects.stuff, (object, name) => {
+        //     let offset =
+        //         (Math.random() > 0.5 ? 2000 : -2000) * (0.5 + Math.random() * 0.5);
+
+        //     if (object.parts.corpse.physicBody.position.y > 1500) {
+        //         this.spawnObject(object, {
+        //             x:
+        //                 this.objects.car.parts.corpse.physicBody.position.x +
+        //                 offset,
+        //             y:
+        //                 this.getSpawnPosition(
+        //                     this.objects.car.parts.corpse.physicBody.position.x +
+        //                     offset
+        //                 ) - 50,
+        //         });
+        //     }
+        // });
+
+
+        if (this.gameObjects.car.parts.corpse) {
+            let chunkLength = this.chunkLength;
+
+            let currentChunkIndex =
+                nearestMult(
+                    this.gameObjects.car.parts.corpse.mesh.position.x,
+                    chunkLength,
+                    false,
+                    true
+                ) / chunkLength;
+
+            if (true || currentChunkIndex !== this.currentChunkIndex) {
+                this.checkChunks();
+            }
+
+            this.currentChunkIndex = currentChunkIndex;
+
+        }
+    }
+
+
+    private async initializeEnvironment() {
         // Set up visual environment
         this.setupBackground();
-        this.setupLights();
-        this.setupDaynight();
-
-        // Set ground appearance
-        this.setGroundSkin(config.groundSkin);
 
         // Create initial terrain chunks
-        this._initializeTerrainChunks();
+        await this.initializeTerrainChunks();
     }
 
-    /**
-     * Initialize terrain chunks
-     */
-    private _initializeTerrainChunks(): void {
+    private async initializeTerrainChunks() {
         // Create initial set of chunks (previous, current, next)
-        this.addChunk(-1);
-        this.addChunk(0);
-        this.addChunk(1);
+        await this.addChunk(-1);
+        await this.addChunk(0);
+        await this.addChunk(1);
     }
 
-    /**
-     * Initialize game objects (car, obstacles, props)
-     */
-    private _initializeGameObjects(): void {
+    private async initializeGameObjects() {
         // Initialize object collections
         this.gameObjects.stuff = {};
         this.gameObjects.motos = {};
 
         // Create props and obstacles
-        this._createProps();
+        this.createProps();
 
         // Create player vehicle
-        this.createCar();
+        await this.createCar();
     }
 
-    /**
-     * Create props and obstacles
-     */
-    private _createProps(): void {
+    private async createProps() {
         const count = 5; // Reduced from 15 to minimize random props
 
         // Create cans
         for (let i = 0; i < count; i++) {
-            this.gameObjects.stuff[`can${i}`] = this.createObject({
+            this.gameObjects.stuff[`can${i}`] = await this.createObject({
                 objectName: `can${i}`,
                 config: objects.can,
                 spawnX: 300,
@@ -201,7 +286,7 @@ export class Game {
 
         // Create boxes
         for (let i = 0; i < count; i++) {
-            this.gameObjects.stuff[`box${i}`] = this.createObject({
+            this.gameObjects.stuff[`box${i}`] = await this.createObject({
                 objectName: `box${i}`,
                 config: objects.box,
                 spawnX: 300,
@@ -212,7 +297,7 @@ export class Game {
         // Create motorcycles
         const motoCount = 1;
         for (let i = 0; i < motoCount; i++) {
-            this.gameObjects.motos[`moto${i}`] = this.createObject({
+            this.gameObjects.motos[`moto${i}`] = await this.createObject({
                 objectName: `moto${i}`,
                 config: objects.moto,
                 spawnX: 300,
@@ -222,596 +307,53 @@ export class Game {
         }
     }
 
-    setPaused(paused: boolean) {
-        if (paused) {
-            this.ticker.stop();
-            TweenMax.pauseAll(TweenMax.getAllTweens());
-        } else {
-            this.ticker.start();
-            TweenMax.resumeAll(TweenMax.getAllTweens());
-        }
-
+    public setPaused(paused: boolean) {
+        this.ticker.setRunning(!paused)
         this.paused = paused;
     }
-    setEngineActive(active: boolean) {
-        if (active) {
-            if (this._accelerationTween) {
-                this._accelerationTween.kill();
-                delete this._accelerationTween;
-            }
 
-            this._accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
-                acceleration: carConfig.wheelVelocity,
-                ease: "Power3.easeIn",
-                onComplete: () => {
-                    delete this._accelerationTween;
-                },
-            });
-        } else {
-            if (this._accelerationTween) {
-                this._accelerationTween.kill();
-                delete this._accelerationTween;
-            }
-
-            this._accelerationTween = TweenMax.to(this, carConfig.accelerationTime, {
-                acceleration: 0,
-                ease: "Power3.easeOut",
-                onComplete: () => {
-                    delete this._accelerationTween;
-                },
-            });
-        }
-
+    public setEngineActive(active: boolean) {
+        this.targetForwardAcceleration = active ? carConfig.wheelVelocity : 0
         this.engineActive = active;
     }
-    setBreakActive(active: boolean) {
-        if (active) {
-            if (this._accelerationTween) {
-                this._accelerationTween.kill();
-                delete this._accelerationTween;
-            }
 
-            this._accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
-                acceleration: -carConfig.wheelVelocity / 2,
-                ease: "Power3.easeOut",
-                onComplete: () => {
-                    delete this._accelerationTween;
-                },
-            });
-        } else {
-            if (this._accelerationTween) {
-                this._accelerationTween.kill();
-                delete this._accelerationTween;
-            }
-
-            this._accelerationTween = TweenMax.to(this, carConfig.decelerationTime, {
-                acceleration: 0,
-                ease: "Power3.easeIn",
-                onComplete: () => {
-                    delete this._accelerationTween;
-                },
-            });
-        }
-
+    public setBreakActive(active: boolean) {
+        this.targetbackwardAcceleration = active ? carConfig.wheelVelocity / 2 : 0
         this.breakActive = active;
     }
-    setGroundSkin(name) {
-        if (!config.groundSkins[name]) name = "forest";
 
-        const data = config.groundSkins[name];
-
-        // Handle ground textures and materials
-        this._setupGroundTextures(data);
-        this._updateGroundMaterials();
-
-        // Handle greenery textures and materials
-        this._setupGreeneryTextures(data.greenery);
-        this._updateGreeneryMaterials();
-
-        this.renderingSystem.render();
-    }
-
-    _setupGroundTextures(data) {
-        const texture = this.loadTexture(data.texture);
-        const normalMap = this.loadNormalMap(data.texture);
-        const emissionMap = this.loadEmissionMap(data.texture);
-
-        this._configureTexture(texture);
-        this._configureTexture(normalMap);
-
-        this.groundTexture = texture;
-        this.groundNormalMap = normalMap;
-        this.groundEmissionMap = emissionMap;
-        this.groundNormalScale = 1;
-    }
-
-    _setupGreeneryTextures(greeneryData) {
-        const greeneryTexture = this.loadTexture(greeneryData.texture);
-        const greeneryNormalMap = this.loadNormalMap(greeneryData.texture);
-        const greeneryEmissionMap = this.loadEmissionMap(greeneryData.texture);
-
-        // Normalize the scale for normal maps - apply consistent scaling
-        const rawGreeneryScale = greeneryData.bumpScale || 1.0;
-        const greeneryNormalScale = Math.min(rawGreeneryScale, 3.0); // Cap at 3.0 maximum for greenery
-
-        // Configure greenery textures with mirrored tiling - using original code
-        if (greeneryTexture) {
-            greeneryTexture.wrapS = RepeatWrapping; // Standard repeat horizontally
-            greeneryTexture.wrapT = MirroredRepeatWrapping; // Mirrored repeat vertically
-            greeneryTexture.repeat.set(1, 1); // Define tile repetition
-        }
-
-        if (greeneryNormalMap) {
-            greeneryNormalMap.wrapS = RepeatWrapping;
-            greeneryNormalMap.wrapT = MirroredRepeatWrapping;
-            greeneryNormalMap.repeat.set(1, 1);
-        }
-
-        this.greeneryTexture = greeneryTexture;
-        this.greeneryNormalMap = greeneryNormalMap;
-        this.greeneryEmissionMap = greeneryEmissionMap;
-        this.greeneryNormalScale = greeneryNormalScale;
-    }
-
-    _configureTexture(texture) {
-        if (!texture) return;
-
-        if (texture instanceof Texture) {
-            // Keep the original flipY behavior from the previous implementation
-            texture.flipY = false;
-            // Configure texture for mirrored tiling
-            texture.wrapS = RepeatWrapping; // Standard repeat horizontally
-            texture.wrapT = MirroredRepeatWrapping; // Mirrored repeat vertically
-            texture.repeat.set(1, 1); // Define tile repetition
-        }
-    }
-
-    _updateGroundMaterials() {
-        const { groundTexture: texture, groundNormalMap: normalMap, groundEmissionMap: emissionMap } = this;
-
-        forEach(this.chunks, (chunk: Chunk) => {
-            if (chunk && chunk.mesh) {
-                // When changing environments, recreate the material from scratch
-                const newMaterial = new MeshStandardMaterial({
-                    map: texture,
-                    normalMap: normalMap,
-                    emissiveMap: emissionMap,
-                    emissive: emissionMap ? new Color(0xffffff) : new Color(0x000000),
-                    emissiveIntensity: emissionMap ? 3.0 : 0.0,
-                    metalness: 0, // Non-metallic (organic material)
-                    roughness: 1.0, // Completely rough/matte
-                    side: DoubleSide,
-                });
-
-                // Replace the material
-                chunk.mesh.material = newMaterial;
-                chunk.mesh.material.needsUpdate = true;
-            }
-        });
-    }
-
-    _updateGreeneryMaterials() {
-        const { greeneryTexture: greeneryTexture,
-            greeneryNormalMap: greeneryNormalMap,
-            greeneryEmissionMap: greeneryEmissionMap } = this;
-
-        forEach(this.chunks, (chunk: Chunk) => {
-            if (chunk && chunk.greenery) {
-                // When changing environments, recreate the greenery material from scratch
-                // instead of modifying existing material to ensure consistent appearance
-                const newGreeneryMaterial = new MeshStandardMaterial({
-                    map: greeneryTexture,
-                    normalMap: greeneryNormalMap,
-                    emissiveMap: greeneryEmissionMap, // Add emission map if available
-                    emissive: greeneryEmissionMap
-                        ? new Color(0xffffff)
-                        : new Color(0x000000), // White for full emission
-                    emissiveIntensity: greeneryEmissionMap ? 3.0 : 0.0, // Higher intensity (3.0) for more noticeable glow
-                    metalness: 0, // Non-metallic (plants)
-                    roughness: 1.0, // Completely rough/matte
-                    side: DoubleSide,
-                    transparent: true,
-                    alphaTest: 0.5,
-                });
-
-                // Replace the material
-                chunk.greenery.material = newGreeneryMaterial;
-                chunk.greenery.material.needsUpdate = true;
-            }
-        });
-    }
-
-    loadTexture(name, catchErrors = false) {
-
-        if (this.data.textures[name]) return this.data.textures[name];
-
-        try {
-            // Fix path back to original - use res/pics/ instead of /res/img/
-            let texture = new TextureLoader().load(`res/pics/${name}`);
-            texture.wrapT = RepeatWrapping;
-            texture.wrapS = RepeatWrapping;
-
-            // Store successful loads in cache
-            this.data.textures[name] = texture;
-            return texture;
-        } catch (error) {
-            if (!catchErrors) {
-                console.warn(`Failed to load texture: ${name}`, error);
-            }
-            return null;
-        }
-    }
-    // Try to load a normal map based on diffuse texture name
-    loadNormalMap(textureName) {
-        if (!textureName) return null;
-
-        // Extract the base name without extension
-        let baseName = textureName.split(".");
-        let extension = baseName.pop();
-        baseName = baseName.join(".");
-
-        // Construct normal map name by adding "_n" before the extension
-        let normalMapName = baseName + "_n." + extension;
-
-        return this.loadTexture(normalMapName, true);
-    }
-    /**
-     * Try to load an emission map based on diffuse texture name
-     * Uses the same pattern as normal maps but with "_e" suffix
-     */
-    loadEmissionMap(textureName) {
-        if (!textureName) return null;
-
-        // Get the file extension
-        const dotIndex = textureName.lastIndexOf(".");
-        if (dotIndex < 0) return null; // No extension found
-
-        const extension = textureName.substring(dotIndex);
-        const baseName = textureName.substring(0, dotIndex);
-
-        // Construct emission map name by adding "_e" before the extension
-        let emissionMapName = baseName + "_e" + extension;
-
-        console.log("Looking for emission map:", emissionMapName);
-
-        // Try to load the emission map with error catching
-        const emissionMap = this.loadTexture(emissionMapName, true);
-
-        if (emissionMap) {
-            console.log("✅ Emission map loaded successfully:", emissionMapName);
-            console.log(
-                "Emission map URL:",
-                emissionMap.image && emissionMap.image.src
-                    ? emissionMap.image.src
-                    : "No source"
-            );
-        } else {
-            console.log("❌ No emission map found for:", textureName);
-        }
-
-        return emissionMap;
-    }
-    setupDaynight() {
-        this.hoursCount = daynight.length;
-
-        // Start from night (second state in daynight.json, index 1)
-        this.hour = 1;
-        this.setDaytime(this.hour);
-
-        // Set up automatic day/night cycle
-        this.dayCycleEnabled = true;
-        this.dayCycleTimer = 0;
-        this.dayCycleDuration = 60; // Seconds for a complete day/night cycle
-
-        this._setupDaynightControls();
-        this._setupHeadlight();
-    }
-
-    _setupDaynightControls() {
-        // Add key listener for toggling day/night (N key)
-        window.addEventListener("keydown", (event) => {
-            if (event.key === "n" || event.key === "N") {
-                this.toggleDayNight();
-            }
-
-            // Add P key to pause/resume the automatic day/night cycle
-            if (event.key === "p" || event.key === "P") {
-                this.dayCycleEnabled = !this.dayCycleEnabled;
-                console.log(
-                    `Day/night cycle ${this.dayCycleEnabled ? "enabled" : "disabled"}`
-                );
-            }
-        });
-    }
-
-    _setupHeadlight() {
-        // Create headlight for the car if it doesn't exist
-        if (!this.headLight) {
-            const hourData = daynight[this.hour];
-            const headlightConfig = hourData.headlight;
-
-            // Create the headlight
-            const headlight = new PointLight(
-                headlightConfig.color,
-                headlightConfig.intensity,
-                headlightConfig.distance
-            );
-            headlight.name = "headlight";
-
-            // Store headlight offset from config
-            this.headlightOffset = new Vector3(
-                headlightConfig.offset.x,
-                headlightConfig.offset.y,
-                headlightConfig.offset.z
-            );
-
-            // Add to scene (will be positioned in updateThings)
-            this.renderingSystem.addToScene(headlight);
-            this.headLight = headlight;
-        }
-    }
-    setDaytime(hour: number) {
-        const hourData = daynight[hour];
-        const duration = config.daynightHourDuration / 2;
-
-        // Initialize colors
-        const colors = this._prepareDaytimeColors(hourData);
-
-        // Update sun position and properties
-        this._updateSunSettings(hourData, colors.sunColor, duration);
-
-        // Update headlight if it exists
-        this._updateHeadlightSettings(hourData, duration);
-
-        // Update background visuals
-        this._updateBackgroundSettings(hourData, colors, duration);
-    }
-
-    _prepareDaytimeColors(hourData) {
-        // Parse all colors needed for the daytime settings
-        const sunColor = new Color();
-        sunColor.setHex(_.cssHex2Hex(hourData.sunColor));
-
-        const skyColor = new Color();
-        skyColor.setHex(_.cssHex2Hex(hourData.skyColor));
-
-        const skyColorB = new Color();
-        skyColorB.setHex(_.cssHex2Hex(hourData.skyColorB));
-
-        return { sunColor, skyColor, skyColorB };
-    }
-
-    _updateSunSettings(hourData, sunColor, duration) {
-        const sun = this.sunLight;
-
-        // Initialize sunOffset if it doesn't exist
-        if (!this.sunOffset) {
-            this.sunOffset = new Vector3(0, 0, 0);
-        }
-
-        // Update sunOffset from configuration
-        if (hourData.sunOffset) {
-            // Animate transition
-            TweenMax.to(this.sunOffset, duration, {
-                x: hourData.sunOffset.x,
-                y: hourData.sunOffset.y,
-                z: hourData.sunOffset.z,
-                ease: "linear",
-            });
-        }
-
-        // Animate sun color
-        TweenMax.to(sun.color, duration, {
-            r: sunColor.r,
-            g: sunColor.g,
-            b: sunColor.b,
-            ease: "linear",
-        });
-
-        // Animate sun intensity
-        TweenMax.to(sun, duration, {
-            intensity: hourData.intensity,
-            ease: "linear",
-        });
-    }
-
-    _updateHeadlightSettings(hourData, duration) {
-
-        // Update headlight settings if it exists
-        if (this.headLight && hourData.headlight) {
-            const headlightConfig = hourData.headlight;
-
-            // Store headlight offset for use in updateThings
-            this.headlightOffset = new Vector3(
-                headlightConfig.offset.x,
-                headlightConfig.offset.y,
-                headlightConfig.offset.z
-            );
-
-            // Get headlight color
-            const headlightColor = new Color();
-            headlightColor.setHex(_.cssHex2Hex(headlightConfig.color));
-
-            // Animate headlight property changes
-            TweenMax.to(this.headLight, duration, {
-                intensity: headlightConfig.intensity,
-                distance: headlightConfig.distance,
-                ease: "linear",
-            });
-
-            TweenMax.to(this.headLight.color, duration, {
-                r: headlightColor.r,
-                g: headlightColor.g,
-                b: headlightColor.b,
-                ease: "linear",
-            });
-        }
-    }
-
-    _updateBackgroundSettings(hourData, colors, duration) {
-        const bg_uniforms = (this.backgroundMesh.material as ShaderMaterial).uniforms;
-        const { skyColor, skyColorB } = colors;
-
-        // Animate background uniforms
-        TweenMax.to(bg_uniforms.amplitude, duration, {
-            value: hourData.amplitude,
-            ease: "linear",
-        });
-
-        TweenMax.to(bg_uniforms.waves, duration, {
-            value: hourData.waves,
-            ease: "linear",
-        });
-
-        TweenMax.to(bg_uniforms.grid, duration, {
-            value: hourData.grid,
-            ease: "linear",
-        });
-
-        // Animate sky colors
-        TweenMax.to(bg_uniforms.diffuse.value, duration, {
-            r: skyColor.r,
-            g: skyColor.g,
-            b: skyColor.b,
-            ease: "linear",
-        });
-
-        TweenMax.to(bg_uniforms.diffuseB.value, duration, {
-            r: skyColorB.r,
-            g: skyColorB.g,
-            b: skyColorB.b,
-            ease: "linear",
-        });
-    }
-    toggleDayNight() {
-        // Toggle between day (0) and night (1)
-        this.hour = this.hour === 0 ? 1 : 0;
-
-        // Apply the change with animation
-        this.setDaytime(this.hour);
-
-        // Log the change for debugging
-        console.log(`Switched to ${this.hour === 0 ? "DAY" : "NIGHT"} mode with sun color: ${daynight[this.hour].sunColor}`
-        );
-    }
-    getSpawnPosition(x: number): number {
+    private getSpawnPosition(x: number): number {
         const chunkLength = this.chunkLength;
         return this.terrainGenerator.getSpawnPositionY(x, chunkLength);
     }
-    spawnObject(object, position) {
-        Matter.Body.setStatic(object.bodies[0], true);
 
-        this.setBodiesPosition(object.bodies, position);
-
-        Matter.Body.setStatic(object.bodies[0], false);
-        this.freezeComposite(object);
+    private spawnObject(object, position) {
+        this.physicsSystem.setStatic(object.bodies[0], true);
+        this.physicsSystem.setBodiesPosition(object.bodies, position);
+        this.physicsSystem.setStatic(object.bodies[0], false);
+        this.physicsSystem.freezeComposite(object);
     }
-    revoke() {
+
+    public revoke() {
         let car = this.gameObjects.car;
-        Matter.Body.setAngularVelocity(car.parts.hanger.matterBody, -0.13);
+        this.physicsSystem.setAngularVelocity(car.parts.hanger.physicBody, -0.13);
     }
-    respawn() {
+
+    public respawn() {
         // let car = this.objects.car
-        // Matter.Body.setAngularVelocity( car.parts.hanger.matterBody, -0.1 )
+        // this.physicsSystem.setAngularVelocity( car.parts.hanger.physicBody, -0.1 )
 
         this.spawnObject(this.gameObjects.car.composite, {
             x: carConfig.spawnPosition.x,
             y: this.getSpawnPosition(carConfig.spawnPosition.x) - 100,
         });
 
-        // Reset the day/night cycle to the first (bright) state when respawning
-        this.hour = 0; // Set hour to first daynight state (bright daytime)
-        this.setDaytime(this.hour); // Apply daytime immediately
     }
 
-
-
-
-    /**
-     * Set up time ticker for animations
-     */
-    private _setupTimeTicker() {
-        setInterval(() => {
-            this.time.x += 0.01;
-            this.time.x = this.time.x % 10;
-        }, 1000 / 30);
-    }
-
-    setupMatterEngine() {
-        // create an engine
-        var engine = Matter.Engine.create({
-            positionIterations: 1,
-            velocityIterations: 1,
-            constraintIterations: 1,
-            // enableSleeping: true,
-        });
-
-        engine.timing.timeScale = 1;
-
-        // add all of the bodies to the world
-        // run the engine
-        this.matterEngine = engine;
-        this.matterEngine.world.gravity.y = config.gravityY;
-        // this.matter.render = render
-        // run the renderer
-    }
-    /**
-     * Set up scene lighting including sun and ambient light
-     */
-    setupLights() {
-        const hour = this.hour || 1; // Use current hour or default to night (1)
-        const hourData = daynight[hour];
-
-        // Create and configure lights
-        const { sun, ambientLight } = this._createLights(hourData);
-
-        // Add lights to scene
-        this.renderingSystem.addToScene(ambientLight);
-        this.renderingSystem.addToScene(sun);
-
-        // Store references for later use
-        this.sunLight = sun;
-        this.ambientLight = ambientLight;
-
-        // Debug output to verify color is applied
-        console.log("Sun light color:", sun.color.getHexString());
-    }
-
-    /**
-     * Create and configure scene lights based on current hour data
-     */
-    private _createLights(hourData: any) {
-        // Get sun color directly from daynight.json
-        let sunColorHex = 0xffffff; // Default white
-        if (hourData && hourData.sunColor) {
-            // Parse the color correctly from hex string to number
-            sunColorHex = _.cssHex2Hex(hourData.sunColor);
-            console.log(
-                "Setting sun color to:",
-                hourData.sunColor,
-                "hex:",
-                sunColorHex.toString(16)
-            );
-        }
-
-        // Create directional light with the configured color
-        const sun = new DirectionalLight(sunColorHex, 1);
-
-        // Set intensity from config
-        sun.intensity = hourData ? hourData.intensity : 1.2;
-
-        // Add a subtle ambient light to soften shadows
-        const ambientLight = new AmbientLight(0x3c4a9f, 0.35);
-
-        return { sun, ambientLight };
-    }
-    /**
-     * Set up the background shader and mesh
-     */
-    setupBackground() {
+    private setupBackground() {
 
         // Create background mesh with shader material
-        const bg = this._createBackgroundMesh();
+        const bg = this.createBackgroundMesh();
 
         // Configure background properties
         bg.frustumCulled = false;
@@ -822,10 +364,7 @@ export class Game {
         this.renderingSystem.addToScene(bg);
     }
 
-    /**
-     * Create background mesh with shader material
-     */
-    private _createBackgroundMesh() {
+    private createBackgroundMesh() {
         // Load shader code
         const vertShader = require("raw-loader!shaders/bg.vert").default;
         const fragShader = require("raw-loader!shaders/waves.frag").default;
@@ -852,173 +391,9 @@ export class Game {
             })
         );
     }
-    onUpdate(delta: number) {
-        this.renderingSystem.render()
-        this.updateDaycycle(delta)
-        this.updateThings(delta);
-        this.updatePhysics(delta)
-    }
-    onFixedUpdate(delta: number) {
-        this.updatePhysics(delta)
-    }
-    updateDaycycle(updateTime: number) {
-        // Update day/night cycle if enabled
-        if (this.dayCycleEnabled && !this.paused) {
-            // Convert frameTime from ms to seconds for timer
-            const secondsElapsed = updateTime / 1000;
 
-            // Update the day cycle timer
-            this.dayCycleTimer += secondsElapsed;
-
-            // Check if it's time to change hour
-            if (this.dayCycleTimer >= this.dayCycleDuration / this.hoursCount) {
-                // Reset timer
-                this.dayCycleTimer = 0;
-
-                // Advance to next hour (cycle through all hours)
-                this.hour = (this.hour + 1) % this.hoursCount;
-
-                // Update the daytime with a smooth transition
-                this.setDaytime(this.hour);
-            }
-        }
-    }
-    updatePhysics(updateTime: number) {
-        Matter.Engine.update(this.matterEngine, 1000 / 60);
-    }
-    updateThings(delta) {
-
-        let cameraOffset = config.cameraOffset;
-        this.renderingSystem.camera.position.y =
-            this.gameObjects.car.parts.wheelA.mesh.position.y + cameraOffset.y;
-        this.renderingSystem.camera.position.x =
-            this.gameObjects.car.parts.wheelA.mesh.position.x + cameraOffset.x;
-
-        // Position the single directional light
-        // Only update Y and Z coordinates, keep X fixed to maintain consistent lighting direction
-        this.sunLight.position.set(
-            this.sunOffset.x, // Fixed X position - not tied to camera/car movement
-            this.renderingSystem.camera.position.y + this.sunOffset.y, // Y position still follows terrain
-            this.renderingSystem.camera.position.z * 4 * this.sunOffset.z // Z position for height
-        );
-
-        this.renderingSystem.camera.position.z = _.smoothstep(
-            config.cameraPosition,
-            config.cameraSpeedPosition,
-            Math.abs(this.acceleration) / carConfig.wheelVelocity
-        );
-
-        /* engine/break */
-
-        if (this.engineActive || this.breakActive) {
-            Matter.Body.setAngularVelocity(
-                this.gameObjects.car.parts.wheelA.matterBody,
-                this.acceleration
-            );
-            Matter.Body.setAngularVelocity(
-                this.gameObjects.car.parts.wheelB.matterBody,
-                this.acceleration
-            );
-        }
-
-        forEach(this.gameObjects.motos, (moto, name) => {
-            Matter.Body.setAngularVelocity(moto.parts.wheelA.matterBody, 0.811);
-            Matter.Body.setAngularVelocity(moto.parts.wheelB.matterBody, 0.811);
-
-            if (moto.parts.corpse.matterBody.position.y > 1500) {
-                this.spawnObject(moto.composite, {
-                    x: this.gameObjects.car.parts.corpse.matterBody.position.x - 659,
-                    y:
-                        this.getSpawnPosition(
-                            this.gameObjects.car.parts.corpse.matterBody.position.x - 659
-                        ) - 100,
-                });
-            }
-        });
-
-
-        /****************/
-        forEach(this.gameObjects, (object, name) => {
-            forEach(object.parts, (part, name) => {
-                part.mesh.position.x = part.matterBody.position.x;
-                part.mesh.position.y = part.matterBody.position.y;
-                part.mesh.rotation.z = part.matterBody.angle;
-            });
-        });
-
-
-
-        // forEach(this.objects.stuff, (object, name) => {
-        //     let offset =
-        //         (Math.random() > 0.5 ? 2000 : -2000) * (0.5 + Math.random() * 0.5);
-
-        //     if (object.parts.corpse.matterBody.position.y > 1500) {
-        //         this.spawnObject(object, {
-        //             x:
-        //                 this.objects.car.parts.corpse.matterBody.position.x +
-        //                 offset,
-        //             y:
-        //                 this.getSpawnPosition(
-        //                     this.objects.car.parts.corpse.matterBody.position.x +
-        //                     offset
-        //                 ) - 50,
-        //         });
-        //     }
-        // });
-
-
-        if (this.gameObjects.car.parts.corpse) {
-            let chunkLength = this.chunkLength;
-
-            let currentChunkIndex =
-                _.nearestMult(
-                    this.gameObjects.car.parts.corpse.mesh.position.x,
-                    chunkLength,
-                    false,
-                    true
-                ) / chunkLength;
-
-            if (true || currentChunkIndex !== this.currentChunkIndex) {
-                this.checkChunks();
-            }
-
-            this.currentChunkIndex = currentChunkIndex;
-
-            // Position the headlight relative to the car if it exists
-            if (this.headLight && this.headlightOffset) {
-                const carPosition = this.gameObjects.car.parts.corpse.mesh.position;
-                const carRotation =
-                    this.gameObjects.car.parts.corpse.mesh.rotation.z;
-
-                // Calculate position with offset relative to car's current rotation
-                const offsetX = Math.cos(carRotation) * this.headlightOffset.x;
-                const offsetY =
-                    Math.sin(carRotation) * this.headlightOffset.x +
-                    this.headlightOffset.y;
-
-                // Position the headlight
-                this.headLight.position.set(
-                    carPosition.x + offsetX,
-                    carPosition.y + offsetY,
-                    this.headlightOffset.z
-                );
-            }
-        }
-    }
-
-    setBodiesPosition(bodies, position) {
-        forEach(bodies, (body) => {
-            Matter.Body.setPosition(body, position);
-        });
-    }
-    freezeComposite(composite) {
-        forEach(composite.bodies, (body) => {
-            Matter.Body.setVelocity(body, { x: 0, y: 0 });
-            Matter.Body.setAngularVelocity(body, 0);
-        });
-    }
-    createCar() {
-        this.createObject({
+    private async createCar() {
+        await this.createObject({
             objectName: "car",
             config: carConfig
         });
@@ -1028,7 +403,7 @@ export class Game {
         });
     }
     // Define an interface for the object creation parameters
-    createObject(params: {
+    private async createObject(params: {
         objectName: string;
         config: any;
         spawnX?: number;
@@ -1051,10 +426,10 @@ export class Game {
         const collisionGroup = params.collisionGroup !== undefined ?
             params.collisionGroup : (config.collisionGroup || 0);
 
-        forEach(config.bodies, (bodyConfig, name) => {
+        await forEachAsync(config.bodies, async (bodyConfig, name) => {
             let geometry;
             let material;
-            let matterBody;
+            let physicBody;
 
             let x = spawnX + (bodyConfig.x || 0);
             let y = spawnY + (bodyConfig.y || 0);
@@ -1073,182 +448,48 @@ export class Game {
                         bodyConfig.height,
                         1
                     );
-                    // geometry.translate( bodyConfig.width/2, 0, 0 )
-                    matterBody = Matter.Bodies.rectangle(
-                        x,
-                        y,
-                        bodyConfig.width,
-                        bodyConfig.height,
-                        {
-                            collisionFilter: {
-                                group: collisionGroup,
-                            },
-                            chamfer: {
-                                radius: bodyConfig.chamfer || 0,
-                            },
-                            render: {
-                                fillStyle: bodyConfig.color,
-                            },
-                        }
-                    );
-
-                    // Matter.Body.translate( matterBody, { x: -bodyConfig.width / 2, y: 0 } )
                     break;
                 case "circle":
                     geometry = new CircleBufferGeometry(bodyConfig.radius, 32);
-                    matterBody = Matter.Bodies.circle(
-                        x,
-                        y,
-                        bodyConfig.radius,
-                        {
-                            collisionFilter: {
-                                group: collisionGroup,
-                            },
-                        },
-                        32
-                    );
                     break;
             }
 
+            physicBody = this.physicsSystem.createBody(
+                {
+                    type: bodyConfig.geometry == "rectangle" ? EPhysicBodyType.Rectangle : EPhysicBodyType.Circle,
+                    x,
+                    y,
+                    radius: bodyConfig.radius,
+                    width: bodyConfig.width,
+                    height: bodyConfig.height,
+                    colGroup: collisionGroup
+                },
+                {
+
+                    restitution: isNumber(bodyConfig.restitution) ? bodyConfig.restitution : 0.01,
+                    frictionAir: isNumber(bodyConfig.frictionAir) ? bodyConfig.frictionAir : 0.001,
+                    friction: isNumber(bodyConfig.friction) ? bodyConfig.friction : 0.2,
+                    mass: bodyConfig.mass,
+                    density: bodyConfig.density,
+                    angle: bodyConfig.angle,
+                    isStatic: bodyConfig.static
+                })
+
             let color = bodyConfig.color;
-            let texture;
 
             if (color) {
-                color = _.cssHex2Hex(bodyConfig.color);
+                color = cssHex2Hex(bodyConfig.color);
             }
-
-            if (bodyConfig.texture) texture = this.loadTexture(bodyConfig.texture);
-
-            // Create basic material properties object
-            const materialProps = {
-                color,
-                map: texture,
-                transparent: true,
-                metalness: 0.5,
-                roughness: 0.5,
-                side: DoubleSide,
-                shininess: 10, // Lower shininess for less glossy look
-                specular: new Color(0x222222), // Reduce specular highlights
-                emissive: new Color(0x000000), // Black = no emission by default
-                emissiveIntensity: 0.0, // No emission by default
-            };
 
             // Create the material with basic properties
-            material = new MeshStandardMaterial(materialProps);
-
-            // Add universal direct emission map loading for all textures
-            if (bodyConfig.texture) {
-                // Extract the base name and extension
-                const dotIndex = bodyConfig.texture.lastIndexOf(".");
-                if (dotIndex > 0) {
-                    const baseName = bodyConfig.texture.substring(0, dotIndex);
-                    const extension = bodyConfig.texture.substring(dotIndex);
-                    const emissionMapName = baseName + "_e" + extension;
-
-                    console.log(
-                        "🔧 Attempting direct emission map loading for:",
-                        emissionMapName
-                    );
-
-                    // Create a new texture loader
-                    const loader = new TextureLoader();
-
-                    // Load emission map directly for any texture
-                    loader.load(
-                        "res/pics/" + emissionMapName,
-                        // Success callback
-                        function (texture) {
-                            console.log("✅ DIRECT LOADING SUCCESS for:", emissionMapName);
-
-                            // Match texture settings to main texture
-                            if (material.map) {
-                                texture.flipY = material.map.flipY;
-                                texture.wrapS = material.map.wrapS || RepeatWrapping;
-                                texture.wrapT = material.map.wrapT || RepeatWrapping;
-
-                                // Copy UV transformations
-                                if (material.map.offset)
-                                    texture.offset.copy(material.map.offset);
-                                if (material.map.repeat)
-                                    texture.repeat.copy(material.map.repeat);
-                            }
-
-                            // Apply to material
-                            material.emissiveMap = texture;
-                            material.emissive.setRGB(1, 1, 1); // Pure white for maximum emission
-                            material.emissiveIntensity = 25.0; // Very high intensity
-                            material.needsUpdate = true;
-                            texture.needsUpdate = true;
-
-                            // Adjust material properties for better emission visibility
-                            material.metalness = 0.1; // Lower metalness helps emission show better
-                        },
-                        // Progress callback
-                        undefined,
-                        // Error callback - silently fail for files that don't exist
-                        function (err) { }
-                    );
-                }
-            }
-
-            if (texture && typeof bodyConfig.textureFlip == "boolean") {
-                material.map.flipY = !bodyConfig.textureFlip;
-                material.map.needsUpdate = true;
-            }
-
-            // Always use the naming convention for normal maps
-            let normalMap = null;
-
-            // Check for emission map with _e suffix
-            let emissionMap = null;
-
-            if (bodyConfig.texture) {
-                console.log(
-                    "LOADING TEXTURES FOR:",
-                    bodyConfig.texture,
-                    "PART:",
-                    bodyConfig.name || "unnamed"
-                );
-
-                normalMap = this.loadNormalMap(bodyConfig.texture);
-                emissionMap = this.loadEmissionMap(bodyConfig.texture);
-
-                // Log detailed emission map status for debugging
-                if (emissionMap) {
-                    console.log(
-                        "✓✓✓ SUCCESSFUL EMISSION MAP LOAD for",
-                        bodyConfig.name || "unnamed part"
-                    );
-                    console.log("    - Texture source:", bodyConfig.texture);
-                    console.log("    - Has image:", emissionMap.image ? "YES" : "NO");
-                    console.log(
-                        "    - Is valid texture:",
-                        emissionMap instanceof Texture ? "YES" : "NO"
-                    );
-                } else {
-                    console.log(
-                        "✗✗✗ NO EMISSION MAP for",
-                        bodyConfig.name || "unnamed part",
-                        "texture:",
-                        bodyConfig.texture
-                    );
-                }
-            }
-
-            if (normalMap) {
-                _.getter(material, "normalMap", () => {
-                    return normalMap;
-                });
-
-                if (typeof bodyConfig.textureFlip == "boolean") {
-                    normalMap.flipY = !bodyConfig.textureFlip;
-                    normalMap.needsUpdate = true;
-                }
-            }
-
-            if (typeof bodyConfig.opacity == "number") {
-                material.opacity = bodyConfig.opacity;
-            }
+            console.log(bodyConfig.textureFlip)
+            material = await this.renderingSystem.createMaterial(objectName + name, {
+                texture: bodyConfig.texture,
+                metallic: 0.5,
+                roughness: 0.5,
+                transparent: true,
+                flipY: bodyConfig.textureFlip === false
+            });
 
             let mesh = new Mesh(geometry, material);
             mesh.position.z = zIndex;
@@ -1258,127 +499,86 @@ export class Game {
                 mesh.scale.y = bodyConfig.scale.y;
             }
 
-            matterBody.restitution =
-                typeof bodyConfig.restitution == "number"
-                    ? bodyConfig.restitution
-                    : 0.01;
-            matterBody.frictionAir =
-                typeof bodyConfig.frictionAir == "number"
-                    ? bodyConfig.frictionAir
-                    : 0.001;
-            matterBody.friction =
-                typeof bodyConfig.friction == "number" ? bodyConfig.friction : 0.2;
-
-            if (typeof bodyConfig.density == "number") {
-                Matter.Body.setDensity(matterBody, bodyConfig.density);
-            }
-
-            if (typeof bodyConfig.mass == "number") {
-                Matter.Body.setMass(matterBody, bodyConfig.mass);
-            }
-
-            if (typeof bodyConfig.angle == "number") {
-                Matter.Body.setAngle(matterBody, bodyConfig.angle);
-            }
-
-            if (typeof bodyConfig.static == "boolean") {
-                Matter.Body.setStatic(matterBody, bodyConfig.static);
-            }
-
             this.gameObjects[objectName].parts[name] = {
                 mesh,
-                matterBody,
+                physicBody,
             };
 
-            this.gameObjects[objectName].bodies.push(matterBody);
+            this.gameObjects[objectName].bodies.push(physicBody);
 
-            this.renderingSystem.getRenderGroup(ERenderGroup.Props).add(mesh);
+            this.renderingSystem.addToRenderGroup(ERenderGroup.Props, mesh)
 
             if (!config.composite) {
-                Matter.World.add(this.matterEngine.world, [matterBody]);
+                this.physicsSystem.addBody(physicBody)
             }
         });
 
         if (config.composite) {
-            composite = Matter.Composite.create({});
+            composite = this.physicsSystem.createComposite();
 
-            forEach(config.bodies, (bodyConfig, name) => {
-                let bodyA = this.gameObjects[objectName].parts[name].matterBody;
+            await forEachAsync(config.bodies, (bodyConfig, name) => {
+                let bodyA = this.gameObjects[objectName].parts[name].physicBody;
 
-                Matter.Composite.add(composite, [bodyA]);
+                this.physicsSystem.addToComposite(composite, bodyA);
 
                 if (bodyConfig.constraint) {
                     let constraint = bodyConfig.constraint;
-                    let bodyA = this.gameObjects[objectName].parts[name].matterBody;
+                    let bodyA = this.gameObjects[objectName].parts[name].physicBody;
                     let bodyB = this.gameObjects[objectName].parts[constraint.body]
-                        ? this.gameObjects[objectName].parts[constraint.body].matterBody
+                        ? this.gameObjects[objectName].parts[constraint.body].physicBody
                         : undefined;
 
-                    Matter.Composite.add(
+                    this.physicsSystem.addToComposite(
                         composite,
-                        Matter.Constraint.create({
+                        this.physicsSystem.createConstraint(
                             bodyA,
                             bodyB,
-                            pointA: constraint.pointA,
-                            pointB: constraint.pointB,
-                            stiffness:
-                                typeof constraint.stiffness == "number"
-                                    ? constraint.stiffness
-                                    : 1,
-                            length:
-                                typeof constraint.length == "number" ? constraint.length : 1,
-                        })
+                            constraint.pointA,
+                            constraint.pointB,
+                            constraint.stiffness,
+                            constraint.length,
+                        )
                     );
                 }
 
                 if (bodyConfig.constraints) {
                     forEach(bodyConfig.constraints, (constraint, index) => {
-                        let bodyA = this.gameObjects[objectName].parts[name].matterBody;
+                        let bodyA = this.gameObjects[objectName].parts[name].physicBody;
                         let bodyB = this.gameObjects[objectName].parts[constraint.body]
-                            ? this.gameObjects[objectName].parts[constraint.body].matterBody
+                            ? this.gameObjects[objectName].parts[constraint.body].physicBody
                             : undefined;
 
-                        Matter.Composite.add(
+                        this.physicsSystem.addToComposite(
                             composite,
-                            Matter.Constraint.create({
+                            this.physicsSystem.createConstraint(
                                 bodyA,
                                 bodyB,
-                                pointA: constraint.pointA,
-                                pointB: constraint.pointB,
-                                stiffness:
-                                    typeof constraint.stiffness == "number"
-                                        ? constraint.stiffness
-                                        : 1,
-                                length:
-                                    typeof constraint.length == "number" ? constraint.length : 1,
-                            })
+                                constraint.pointA,
+                                constraint.pointB,
+                                constraint.stiffness,
+                                constraint.length,
+                            )
                         );
                     });
                 }
             });
 
             this.gameObjects[objectName].composite = composite;
-            Matter.World.add(this.matterEngine.world, [composite]);
+            this.physicsSystem.addBody(composite)
         }
 
         return this.gameObjects[objectName];
     }
-    /**
-     * Generate terrain points for a chunk based on its index
-     * Delegates to TerrainGenerator
-     */
-    generatePoints(chunkIndex: number): Point[] {
-        return this.terrainGenerator.generatePoints(chunkIndex);
-    }
-    checkChunks() {
+
+    private async checkChunks() {
         let currentChunkIndex = this.currentChunkIndex;
 
         let prevChunkIndex = currentChunkIndex - 1;
         let nextChunkIndex = currentChunkIndex + 1;
 
-        this.addChunk(currentChunkIndex);
-        this.addChunk(prevChunkIndex);
-        this.addChunk(nextChunkIndex);
+        await this.addChunk(currentChunkIndex);
+        await this.addChunk(prevChunkIndex);
+        await this.addChunk(nextChunkIndex);
 
         forEach(this.activeChunks, (active, chunkIndex) => {
             if (active) {
@@ -1392,30 +592,23 @@ export class Game {
             }
         });
     }
-    hideChunk(chunkIndex: number, remove: boolean = false) {
+
+    private hideChunk(chunkIndex: number, remove: boolean = false) {
         if (!this.activeChunks[chunkIndex]) {
             return;
         } else {
             delete this.activeChunks[chunkIndex];
 
-            this.renderingSystem.getRenderGroup(ERenderGroup.Front).remove(
-                this.chunks[chunkIndex].mesh
-            );
-            this.renderingSystem.getRenderGroup(ERenderGroup.Back).remove(
-                this.chunks[chunkIndex].greenery
-            );
+            this.renderingSystem.removeFromRenderGroup(ERenderGroup.Front, this.chunks[chunkIndex].mesh)
+            this.renderingSystem.removeFromRenderGroup(ERenderGroup.Back, this.chunks[chunkIndex].greenery)
 
             if (remove) {
                 this.chunks[chunkIndex].mesh.geometry.dispose();
                 this.chunks[chunkIndex].greenery.geometry.dispose();
             }
 
-            if (this.chunks[chunkIndex].matterBody) {
-                Matter.Composite.remove(this.matterEngine.world, [
-                    this.chunks[chunkIndex].matterBody
-                ]);
-                // Matter.Composite.remove( this.matter.world, [ y ] )
-                // this.matter.world.remove( this.chunks[ chunkIndex ].matterBod )
+            if (this.chunks[chunkIndex].physicBody) {
+                this.physicsSystem.removeBody(this.chunks[chunkIndex].physicBody)
             }
 
             if (remove) {
@@ -1423,24 +616,20 @@ export class Game {
             }
         }
     }
-    showChunk(chunkIndex) {
+
+    private showChunk(chunkIndex) {
         if (this.activeChunks[chunkIndex]) {
             return;
         } else {
             this.activeChunks[chunkIndex] = true;
-            this.renderingSystem.getRenderGroup(ERenderGroup.Front).add(
-                this.chunks[chunkIndex].mesh
-            );
-            this.renderingSystem.getRenderGroup(ERenderGroup.Back).add(
-                this.chunks[chunkIndex].greenery
-            );
-            Matter.World.add(this.matterEngine.world, [
-                this.chunks[chunkIndex].matterBody
-            ]);
+            this.renderingSystem.addToRenderGroup(ERenderGroup.Front, this.chunks[chunkIndex].mesh)
+            this.renderingSystem.addToRenderGroup(ERenderGroup.Back, this.chunks[chunkIndex].greenery)
+
+            this.physicsSystem.addBody(this.chunks[chunkIndex].physicBody)
         }
     }
 
-    addChunk(chunkIndex: number) {
+    private async addChunk(chunkIndex: number) {
         if (this.chunks[chunkIndex]) {
             this.showChunk(chunkIndex);
             return;
@@ -1457,28 +646,24 @@ export class Game {
             normalZ: 1,
         });
 
-        // Always create a new material for consistency with environment switching
-        // Don't use cached materials since they may have outdated textures
-        let groundMaterial = new MeshStandardMaterial({
-            side: DoubleSide,
-            color: _.cssHex2Hex(config.groundColor),
-            map: this.groundTexture, // Current texture from active environment
-            normalMap: this.groundNormalMap,
-            transparent: true,
-            metalness: 0, // Non-metallic (organic material)
-            roughness: 1.0, // Completely rough/matte
-        });
+        let groundMaterial = await this.renderingSystem.createMaterial('ground-material', {
+            texture: config.groundSkins.forest.texture,
+            transparent: false,
+            metallic: 0,
+            roughness: 1
+        })
 
         let groundMesh = new Mesh(groundGeometry, groundMaterial);
-        this.renderingSystem.getRenderGroup(ERenderGroup.Front).add(groundMesh);
+        this.renderingSystem.addToRenderGroup(ERenderGroup.Front, groundMesh)
 
-        let matterBody = this.generateCurveMatterBody(points);
+        let physicBody = this.physicsSystem.generateCurvedBody(points, {
+            friction: config.groundFriction,
+            restitution: config.groundRestirution,
+            frictionAir: config.groundFrictionAir,
+        });
 
-        matterBody.friction = config.groundFriction;
-        matterBody.restitution = config.groundRestirution;
-        matterBody.frictionAir = config.groundFrictionAir;
 
-        Matter.World.add(this.matterEngine.world, [matterBody]);
+        this.physicsSystem.addBody(physicBody)
 
         /*greenery*/
         let greeneryGeometry = new ChunkBufferGeometry({
@@ -1491,63 +676,28 @@ export class Game {
         });
 
         // Always create a fresh material for greenery to ensure consistent appearance
-        let greeneryMaterial = new MeshStandardMaterial({
-            map: this.greeneryTexture,
-            normalMap: this.greeneryNormalMap,
-            side: DoubleSide,
+        let greeneryMaterial = await this.renderingSystem.createMaterial("greenery", {
+            texture: config.groundSkins.forest.greenery.texture,
             transparent: true,
-            alphaTest: 0.5, // Needed for proper transparency in plants
-            metalness: 0, // Non-metallic (plants)
-            roughness: 1.0, // Completely rough/matte
-        });
-
+            metallic: 0,
+            roughness: 1,
+            flipY: true
+        })
         // Don't store for reuse - we want fresh materials for consistent appearance
         // this.data.greeneryMaterial = greeneryMaterial
 
         let greeneryMesh = new Mesh(greeneryGeometry, greeneryMaterial);
-        this.renderingSystem.getRenderGroup(ERenderGroup.Back).add(greeneryMesh);
+        this.renderingSystem.addToRenderGroup(ERenderGroup.Back, greeneryMesh)
 
         this.chunks[chunkIndex] = {
             mesh: groundMesh,
-            matterBody,
+            physicBody: physicBody,
             points,
             greenery: greeneryMesh,
         };
 
         this.activeChunks[chunkIndex] = true;
     }
-    fillChunk(chunkIndex) {
-        let chunk = this.chunks[chunkIndex];
-    }
-    generateCurveMatterBody(points) {
-        let matterPoints = points.slice();
 
-        let lastPoint = points[points.length - 1];
-        let firstPoint = points[0];
 
-        forEachRight(points, (point) => {
-            matterPoints.push({
-                x: point.x,
-                y: config.groundHeight,
-            });
-        });
-
-        let body = Matter.Bodies.fromVertices(0, 0, matterPoints, {
-            isStatic: true,
-            render: {
-                fillStyle: "#ff0000",
-            },
-        });
-
-        Matter.Body.translate(body, {
-            x: firstPoint.x - body.bounds.min.x,
-            y: config.groundHeight - body.bounds.max.y,
-        });
-
-        body.restitution = 0;
-
-        // body.static = true
-
-        return body;
-    }
 }

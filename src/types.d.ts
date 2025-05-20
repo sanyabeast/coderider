@@ -3,47 +3,6 @@
 // Import THREE types as a base
 import * as THREE from 'three';
 
-// GSAP TweenMax declarations
-declare module 'gsap/TweenMax' {
-  export class TweenMax {
-    static to(target: any, duration: number, vars: any): TweenMax;
-    static from(target: any, duration: number, vars: any): TweenMax;
-    static fromTo(target: any, duration: number, fromVars: any, toVars: any): TweenMax;
-    static set(target: any, vars: any): TweenMax;
-    static killTweensOf(target: any, onlyActive?: boolean): void;
-    static getTweensOf(target: any, onlyActive?: boolean): TweenMax[];
-    static getAllTweens(includeTimelines?: boolean): TweenMax[];
-    static pauseAll(tweens?: boolean, delayedCalls?: boolean): void;
-    static resumeAll(tweens?: boolean, delayedCalls?: boolean): void;
-    static killAll(tweens?: boolean, delayedCalls?: boolean, timelines?: boolean): void;
-
-    kill(vars?: any, target?: any): TweenMax;
-    pause(atTime?: number): TweenMax;
-    resume(fromTime?: number): TweenMax;
-    restart(includeDelay?: boolean, suppressEvents?: boolean): TweenMax;
-    seek(time: number, suppressEvents?: boolean): TweenMax;
-    play(from?: any, suppressEvents?: boolean): TweenMax;
-    reverse(from?: any, suppressEvents?: boolean): TweenMax;
-    timeScale(value: number): any;
-    progress(value: number): any;
-    time(value: number, suppressEvents?: boolean): any;
-    duration(value: number): any;
-    delay(value: number): any;
-    invalidate(): TweenMax;
-  }
-
-  export function to(target: any, duration: number, vars: any): TweenMax;
-  export function from(target: any, duration: number, vars: any): TweenMax;
-  export function fromTo(target: any, duration: number, fromVars: any, toVars: any): TweenMax;
-  export function set(target: any, vars: any): TweenMax;
-  export function killTweensOf(target: any, onlyActive?: boolean): void;
-  export function getTweensOf(target: any, onlyActive?: boolean): TweenMax[];
-  export function getAllTweens(includeTimelines?: boolean): TweenMax[];
-  export function pauseAll(tweens?: boolean, delayedCalls?: boolean): void;
-  export function resumeAll(tweens?: boolean, delayedCalls?: boolean): void;
-  export function killAll(tweens?: boolean, delayedCalls?: boolean, timelines?: boolean): void;
-}
-
 // Three.js EffectComposer declarations
 declare module 'three_fx/postprocessing/EffectComposer' {
   export default class EffectComposer {

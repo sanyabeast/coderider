@@ -26,18 +26,8 @@
 
 <script lang="ts">
 
-
-import { forEach, forEachRight } from "lodash"
-import _ from "Helpers"
-import SoundBlaster from "components/Game/SoundBlaster"
 import { mapState } from 'vuex'
-import { config, daynight, objects, carConfig } from "../../res/data/data.ts"
-
 import { Game } from "components/Game/Game"
-
-import decomp from 'poly-decomp'
-window.decomp = decomp
-
 
 export default {
     components: {},
