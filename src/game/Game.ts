@@ -9,17 +9,18 @@ import {
     ShaderMaterial,
     Vector3,
 } from "three";
-import AudioSystem from "./AudioSystem";
+import AudioSystem from "./audio_system";
 
-import { config, objects, carConfig, daycycleConfig, landscapeSkins, cameraConfig, physicsConfig, renderingConfig } from "../data/data";
+import { config, daycycleConfig, landscapeSkins, cameraConfig, physicsConfig, renderingConfig } from "../data/data";
 import { forEach, isNumber } from "lodash";
-import ChunkBufferGeometry from "./ChunkBufferGeometry";
-import { TerrainGenerator } from "./TerrainGenerator";
+import ChunkBufferGeometry from "./chunk_buffer_geometry";
+import { TerrainGenerator } from "./terrain_generator";
 import { Point } from "./types";
-import { ERenderGroup, RenderingSystem } from "./RenderingSystem";
-import { Ticker } from "./Ticker";
+import { ERenderGroup, RenderingSystem } from "./rendering_system";
 import { cssHex2Hex, forEachAsync, nearestMult, lerp, moveTo, lerpColor, lerpV3 } from "@/Helpers";
-import { EPhysicBodyType, PhysicsSystem as PhysicsSystem } from "./PhysicsSystem";
+import { EPhysicBodyType, PhysicsSystem as PhysicsSystem } from "./physics_system";
+import { carObjectLayout, objectsLayout } from "@/data/objects";
+import { Ticker } from "./ticker";
 
 const DAYCYCLE_SPEED = 0.01
 
@@ -182,7 +183,7 @@ export class Game {
         this.renderingSystem.camera.position.z = lerp(
             cameraConfig.position,
             cameraConfig.speedPosition,
-            Math.abs(this.acceleration) / carConfig.wheelVelocity
+            Math.abs(this.acceleration) / carObjectLayout.wheelVelocity
         );
 
         /* engine/break */
@@ -224,18 +225,18 @@ export class Game {
 
 
 
-        // forEach(this.objects.stuff, (object, name) => {
+        // forEach(this.objectsLayout.stuff, (object, name) => {
         //     let offset =
         //         (Math.random() > 0.5 ? 2000 : -2000) * (0.5 + Math.random() * 0.5);
 
         //     if (object.parts.corpse.physicBody.position.y > 1500) {
         //         this.spawnObject(object, {
         //             x:
-        //                 this.objects.car.parts.corpse.physicBody.position.x +
+        //                 this.objectsLayout.car.parts.corpse.physicBody.position.x +
         //                 offset,
         //             y:
         //                 this.getSpawnPosition(
-        //                     this.objects.car.parts.corpse.physicBody.position.x +
+        //                     this.objectsLayout.car.parts.corpse.physicBody.position.x +
         //                     offset
         //                 ) - 50,
         //         });
@@ -298,7 +299,7 @@ export class Game {
         for (let i = 0; i < count; i++) {
             this.gameObjects.stuff[`can${i}`] = await this.createObject({
                 objectName: `can${i}`,
-                config: objects.can,
+                config: objectsLayout.can,
                 spawnX: 300,
                 spawnY: -250
             });
@@ -308,7 +309,7 @@ export class Game {
         for (let i = 0; i < count; i++) {
             this.gameObjects.stuff[`box${i}`] = await this.createObject({
                 objectName: `box${i}`,
-                config: objects.box,
+                config: objectsLayout.box,
                 spawnX: 300,
                 spawnY: -250
             });
@@ -319,7 +320,7 @@ export class Game {
         for (let i = 0; i < motoCount; i++) {
             this.gameObjects.motos[`moto${i}`] = await this.createObject({
                 objectName: `moto${i}`,
-                config: objects.moto,
+                config: objectsLayout.moto,
                 spawnX: 300,
                 spawnY: -225,
                 collisionGroup: -1,
@@ -333,12 +334,12 @@ export class Game {
     }
 
     public setEngineActive(active: boolean) {
-        this.targetForwardAcceleration = active ? carConfig.wheelVelocity : 0
+        this.targetForwardAcceleration = active ? carObjectLayout.wheelVelocity : 0
         this.engineActive = active;
     }
 
     public setBreakActive(active: boolean) {
-        this.targetbackwardAcceleration = active ? carConfig.wheelVelocity / 2 : 0
+        this.targetbackwardAcceleration = active ? carObjectLayout.wheelVelocity / 2 : 0
         this.breakActive = active;
     }
 
@@ -360,12 +361,12 @@ export class Game {
     }
 
     public respawn() {
-        // let car = this.objects.car
+        // let car = this.objectsLayout.car
         // this.physicsSystem.setAngularVelocity( car.parts.hanger.physicBody, -0.1 )
 
         this.spawnObject(this.gameObjects.car.composite, {
-            x: carConfig.spawnPosition.x,
-            y: this.getSpawnPosition(carConfig.spawnPosition.x) - 100,
+            x: carObjectLayout.spawnPosition.x,
+            y: this.getSpawnPosition(carObjectLayout.spawnPosition.x) - 100,
         });
 
     }
@@ -415,11 +416,11 @@ export class Game {
     private async createCar() {
         await this.createObject({
             objectName: "car",
-            config: carConfig
+            config: carObjectLayout
         });
         this.spawnObject(this.gameObjects.car.composite, {
-            x: carConfig.spawnPosition.x,
-            y: this.getSpawnPosition(carConfig.spawnPosition.x) - 10,
+            x: carObjectLayout.spawnPosition.x,
+            y: this.getSpawnPosition(carObjectLayout.spawnPosition.x) - 10,
         });
     }
     // Define an interface for the object creation parameters

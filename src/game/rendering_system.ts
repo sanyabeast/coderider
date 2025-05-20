@@ -9,7 +9,7 @@ import ColorCorrectionShader from "../three_fx/shaders/ColorCorrectionShader";
 import FilmPass from "../three_fx/passes/FilmPass";
 import UnrealBloomPass from "../three_fx/passes/UnrealBloomPass";
 
-import { Game } from "./Game";
+import { Game } from "./game";
 import { isObject, isString, isUndefined } from "lodash";
 import { makeGetter } from "@/Helpers";
 

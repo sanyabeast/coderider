@@ -1,5 +1,5 @@
 import Matter from "matter-js";
-import { Game } from "./Game";
+import { Game } from "./game";
 import { config, physicsConfig } from "../data/data";
 import { forEach, forEachRight, isBoolean, isNumber } from "lodash";
 

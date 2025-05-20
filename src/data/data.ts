@@ -1,10 +1,63 @@
 
-// Entity configs
-import carJson from './entities/car.json';
-import objectsJson from './entities/objects.json';
 import { Color, Vector3 } from 'three';
 
 // UI configs
+
+
+export interface IGameObjectPart {
+  texture?: string,
+  textureFlip?: boolean
+  geometry: string
+  color?: string
+  radius?: number
+  width?: number
+  height?: number
+  mass?: number
+  x: number
+  y: number
+  restitution?: number
+  zIndex?: number
+  friction?: number
+  frictionAir?: number
+  chamfer?: number
+  opacity?: number
+  constraint?: IGameObjectPartConstraint
+  constraints?: IGameObjectPartConstraint[]
+  scale?: {
+    x: number
+    y: number
+  }
+}
+
+export interface IGameObjectPartConstraint {
+  body: string
+  pointA?: {
+    x: number
+    y: number
+  }
+  pointB: {
+    x: number
+    y: number
+  },
+  stiffness: number
+  length: number
+}
+
+export interface IGameObjectLayout {
+  composite: boolean,
+  spawnPosition?: {
+    x: number,
+    y: number
+  },
+  accelerationTime?: number,
+  decelerationTime?: number,
+  wheelVelocity?: number,
+  corpseSpeed?: number,
+  collisionGroup?: number,
+  bodies: {
+    [x: string]: IGameObjectPart
+  }
+}
 
 export interface IDaycycleItem {
   sunOffset: Vector3
@@ -150,10 +203,6 @@ export const landscapeSkins: { [x: string]: ILandscapeSkin } = {
     }
   }
 }
-
-export const carConfig = carJson;
-export const objects = objectsJson;
-
 
 // Create a merged config that mirrors the old structure for backwards compatibility
 export const config = {

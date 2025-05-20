@@ -2,12 +2,9 @@
 import "vuetify/dist/vuetify.min.css"
 
 import Vue from "vue"
-import Vuex, { Store } from 'vuex'
+import Vuex from 'vuex'
 import Vuetify from 'vuetify'
 import AppComponent from "./components/App.vue"
-
-// Import store modules directly
-import state from "./store/state"
 
 // Setup Vue plugins
 Vue.use(Vuex)
@@ -32,16 +29,11 @@ class App {
 		new Vue({
 			el: this.dom,
 			render: createElement => {
-				const context = {
-					props: {
-
-					},
-				};
-
+				const context = { props: {}, };
 				return createElement(AppComponent, context);
 			},
 			store: new Vuex.Store({
-				state: { ...state },
+				state: { paused: false },
 			}),
 			components: { App: AppComponent },
 			template: '<App/>'
