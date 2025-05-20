@@ -16,7 +16,7 @@ declare module 'gsap/TweenMax' {
     static pauseAll(tweens?: boolean, delayedCalls?: boolean): void;
     static resumeAll(tweens?: boolean, delayedCalls?: boolean): void;
     static killAll(tweens?: boolean, delayedCalls?: boolean, timelines?: boolean): void;
-    
+
     kill(vars?: any, target?: any): TweenMax;
     pause(atTime?: number): TweenMax;
     resume(fromTime?: number): TweenMax;
@@ -48,14 +48,14 @@ declare module 'gsap/TweenMax' {
 declare module 'three_fx/postprocessing/EffectComposer' {
   export default class EffectComposer {
     constructor(renderer: THREE.WebGLRenderer, renderTarget?: THREE.WebGLRenderTarget);
-    
+
     renderTarget1: THREE.WebGLRenderTarget;
     renderTarget2: THREE.WebGLRenderTarget;
     writeBuffer: THREE.WebGLRenderTarget;
     readBuffer: THREE.WebGLRenderTarget;
     renderToScreen: boolean;
     passes: any[];
-    
+
     swapBuffers(): void;
     addPass(pass: any): void;
     insertPass(pass: any, index: number): void;
@@ -69,7 +69,7 @@ declare module 'three_fx/postprocessing/EffectComposer' {
 declare module 'three_fx/passes/RenderPass' {
   export default class RenderPass {
     constructor(scene: THREE.Scene, camera: THREE.Camera, overrideMaterial?: THREE.Material, clearColor?: THREE.Color, clearAlpha?: number);
-    
+
     scene: THREE.Scene;
     camera: THREE.Camera;
     overrideMaterial: THREE.Material;
@@ -81,7 +81,7 @@ declare module 'three_fx/passes/RenderPass' {
     clear: boolean;
     needsSwap: boolean;
     renderToScreen: boolean;
-    
+
     render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, deltaTime: number, maskActive: boolean): void;
   }
 }
@@ -90,7 +90,7 @@ declare module 'three_fx/passes/RenderPass' {
 declare module 'three_fx/passes/ShaderPass' {
   export default class ShaderPass {
     constructor(shader: any, textureID?: string);
-    
+
     textureID: string;
     uniforms: any;
     material: THREE.ShaderMaterial;
@@ -101,7 +101,7 @@ declare module 'three_fx/passes/ShaderPass' {
     camera: THREE.Camera;
     scene: THREE.Scene;
     quad: THREE.Mesh;
-    
+
     render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, deltaTime: number, maskActive: boolean): void;
   }
 }
@@ -110,7 +110,7 @@ declare module 'three_fx/passes/ShaderPass' {
 declare module 'three_fx/passes/FilmPass' {
   export default class FilmPass {
     constructor(noiseIntensity?: number, scanlinesIntensity?: number, scanlinesCount?: number, grayscale?: boolean);
-    
+
     uniforms: any;
     material: THREE.ShaderMaterial;
     camera: THREE.Camera;
@@ -120,7 +120,7 @@ declare module 'three_fx/passes/FilmPass' {
     enabled: boolean;
     needsSwap: boolean;
     clear: boolean;
-    
+
     render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, deltaTime: number, maskActive: boolean): void;
   }
 }
@@ -129,7 +129,7 @@ declare module 'three_fx/passes/FilmPass' {
 declare module 'three_fx/passes/UnrealBloomPass' {
   export default class UnrealBloomPass {
     constructor(resolution: THREE.Vector2, strength?: number, radius?: number, threshold?: number);
-    
+
     renderTargetsHorizontal: THREE.WebGLRenderTarget[];
     renderTargetsVertical: THREE.WebGLRenderTarget[];
     nMips: number;
@@ -147,7 +147,7 @@ declare module 'three_fx/passes/UnrealBloomPass' {
     enabled: boolean;
     needsSwap: boolean;
     renderToScreen: boolean;
-    
+
     dispose(): void;
     getSeperableBlurMaterial(): THREE.ShaderMaterial;
     getCompositeMaterial(): THREE.ShaderMaterial;

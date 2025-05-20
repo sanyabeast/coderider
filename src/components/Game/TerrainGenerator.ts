@@ -1,13 +1,7 @@
 import { forEach } from "lodash";
 import { config } from "../../../res/data/data";
+import { Point } from "./types";
 
-/**
- * Interface for a 2D point with x and y coordinates
- */
-export interface Point {
-    x: number;
-    y: number;
-}
 
 /**
  * TerrainGenerator class responsible for procedural terrain generation

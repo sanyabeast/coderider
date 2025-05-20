@@ -89,7 +89,8 @@ class ChunkBufferGeometry extends BufferGeometry {
         return this
     }
 
-    kill() {
+    dispose() {
+        // super.dispose()
         pool.push(this)
         // super.dispose()
     }
