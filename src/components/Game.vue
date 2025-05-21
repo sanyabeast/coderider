@@ -1,71 +1,110 @@
 <template>
-    <div ref="root" class="game root" @keydown.right.stop.prevent="engineActive = true"
-        @keyup.right.stop.prevent="engineActive = false" @keydown.left.stop.prevent="breakActive = true"
-        @keyup.left.stop.prevent="breakActive = false" @keydown.68.stop.prevent="engineActive = true"
-        @keyup.68.stop.prevent="engineActive = false" @keydown.65.stop.prevent="breakActive = true"
-        @keyup.65.stop.prevent="breakActive = false"
-        @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
-        @keydown.27.stop.prevent="$store.state.paused = false;" @keydown.69.stop.prevent="respawn()"
-        @keydown.81.stop.prevent="revoke()" tabindex="-1">
+    <div ref="root" class="game root" tabindex="-1"
+        @keydown="handleKeyDown"
+        @keyup="handleKeyUp">
 
         <canvas ref="canvas"></canvas>
 
         <div class="car-control engine" v-bind:class="{ active: engineActive }" @mousedown="engineActive = true"
             @mouseup="engineActive = false" @touchstart="engineActive = true" @touchend="engineActive = false"
-            v-show="!(paused)" title="'Up' key or 'D' key ">
+            v-show="!(store.paused)" title="'Up' key or 'D' key">
             <p>Engine</p>
         </div>
-        <div class="car-control break" v-bind:class="{ active: breakActive }" @mousedown="breakActive = true"
+        <div class="car-control brake" v-bind:class="{ active: breakActive }" @mousedown="breakActive = true"
             @mouseup="breakActive = false" @touchstart="breakActive = true" @touchend="breakActive = false"
-            v-show="!(paused)" title="'Down' key or 'A' key">
-            <p>Break</p>
+            v-show="!(store.paused)" title="'Down' key or 'A' key">
+            <p>Brake</p>
         </div>
 
     </div>
 </template>
 
-<script lang="ts">
-
-import { mapState } from 'vuex'
+<script setup lang="ts">
+import * as Vue from 'vue'
 import { Game } from "../game/game"
+import { useGameStore } from '../App'
 
-export default {
-    components: {},
-    data() {
-        return {
-            engineActive: false,
-            breakActive: false
-        }
-    },
-    computed: {
-        ...mapState([
-            "paused"
-        ])
-    },
-    watch: {
-        paused(value) {
-            this.game.setPaused(value)
-        },
-        engineActive(value) {
-            this.game.setEngineActive(value);
-        },
-        breakActive(value) {
-            this.game.setBreakActive(value)
-        }
-    },
-    mounted() {
-        this.game = new Game(this.$refs.root, this.$refs.canvas)
-    },
-    methods: {
-        revoke() {
-            this.game.revoke()
-        },
-        respawn() {
-            this.game.respawn()
-        }
+const store = useGameStore()
+const root = Vue.ref<HTMLElement | null>(null)
+const canvas = Vue.ref<HTMLCanvasElement | null>(null)
+const engineActive = Vue.ref(false)
+const breakActive = Vue.ref(false)
+
+let game: Game
+
+Vue.watch(() => store.paused, (value) => {
+    game.setPaused(value)
+})
+
+Vue.watch(engineActive, (value) => {
+    game.setEngineActive(value)
+})
+
+Vue.watch(breakActive, (value) => {
+    game.setBreakActive(value)
+})
+
+Vue.onMounted(() => {
+    game = new Game(root.value!, canvas.value!)
+})
+
+function togglePause() {
+    store.paused = !store.paused
+}
+
+function revoke() {
+    game.revoke()
+}
+
+function respawn() {
+    game.respawn()
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Arrow keys and WASD for engine/brake
+    if (event.keyCode === 39 || event.keyCode === 68) { // Right arrow or D
+        engineActive.value = true;
+    } else if (event.keyCode === 37 || event.keyCode === 65) { // Left arrow or A
+        breakActive.value = true;
+    }
+    
+    // Other controls
+    if (event.keyCode === 32) { // Space
+        togglePause();
+    } else if (event.keyCode === 27) { // Escape
+        store.paused = false;
+    } else if (event.keyCode === 82 || event.keyCode === 87) { // R or W
+        respawn();
+    } else if (event.keyCode === 81 || event.keyCode === 83) { // Q or S
+        revoke();
     }
 }
 
+function handleKeyUp(event: KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Arrow keys and WASD for engine/brake
+    if (event.keyCode === 39 || event.keyCode === 68) { // Right arrow or D
+        engineActive.value = false;
+    } else if (event.keyCode === 37 || event.keyCode === 65) { // Left arrow or A
+        breakActive.value = false;
+    }
+}
+
+// Explicitly expose methods and the game instance to parent components
+Vue.defineExpose({
+    revoke: () => {
+        if (game) game.revoke();
+    },
+    respawn: () => {
+        if (game) game.respawn();
+    },
+    getGameInstance: () => game
+})
 </script>
 
 <style lang="scss">

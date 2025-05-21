@@ -1,136 +1,104 @@
 <template>
-    <div class="pause-menu-container">
-        <div class="pause-menu">
-            <div class="game-title">CODE RIDER</div>
-            <div class="menu-buttons">
-                <button class="game-button continue-button" @click="onResumeClick">CONTINUE</button>
-                <button class="game-button restart-button" @click="reload()">RESTART</button>
-            </div>
-
-            <div class="game-controls-info">
-                <div class="control-item">
-                    <span class="key">←/→</span> Drive
-                </div>
-                <div class="control-item">
-                    <span class="key">SPACE</span> Pause
-                </div>
-            </div>
+    <div class="pause-menu">
+        <div class="game-title">CODE RIDER</div>
+        <div class="menu-buttons">
+            <button class="game-button continue-button" @click="onResumeClick">CONTINUE</button>
+            <button class="game-button restart-button" @click="reload">RESTART</button>
         </div>
     </div>
 </template>
 
 <script>
-export default {
-    methods: {
-        onResumeClick(evt) {
-            this.$emit("resume")
-        },
-        reload() {
+import * as Vue from 'vue'
+
+export default Vue.defineComponent({
+    emits: ['resume'],
+    setup(props, { emit }) {
+        function onResumeClick(evt) {
+            emit("resume")
+        }
+
+        function reload() {
             window.location.reload()
         }
+
+        return {
+            onResumeClick,
+            reload
+        }
     }
-}
+})
 </script>
 
 <style lang="scss">
-.pause-menu-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-}
-
+/* Compact pause menu styling */
 .pause-menu {
-    background-color: rgba(30, 30, 60, 0.9);
-    border-radius: 15px;
-    padding: 30px;
-    width: 400px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 10px rgba(100, 200, 255, 0.5);
-    color: white;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-    border: 2px solid rgba(100, 200, 255, 0.5);
+    background: linear-gradient(to bottom, rgba(40, 40, 60, 0.9), rgba(30, 30, 45, 0.95)) !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    width: 250px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    font-family: 'Arial', sans-serif !important;
+    text-align: center !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    max-height: 300px !important;
 }
 
 .game-title {
-    font-size: 36px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #4fc3f7;
-    text-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 15px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-transform: uppercase !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 .menu-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 30px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
 }
 
 .game-button {
-    padding: 15px 20px;
-    font-size: 20px;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2);
-
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background-color: rgba(40, 40, 60, 0.6) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+    
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+        background-color: rgba(50, 50, 70, 0.8) !important;
     }
-
+    
     &:active {
-        transform: translateY(2px);
-        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 0 5px rgba(0, 0, 0, 0.2);
+        transform: translateY(1px) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
     }
 }
 
 .continue-button {
-    background-color: #4caf50;
-    color: white;
-}
-
-.restart-button {
-    background-color: #f44336;
-    color: white;
-}
-
-.game-controls-info {
-    background-color: rgba(0, 0, 0, 0.3);
-    padding: 15px;
-    border-radius: 8px;
-    text-align: left;
-}
-
-.control-item {
-    margin-bottom: 8px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-
-    &:last-child {
-        margin-bottom: 0;
+    background: linear-gradient(to bottom, rgba(50, 50, 70, 0.8), rgba(40, 40, 55, 0.9)) !important;
+    
+    &:hover, &:active {
+        background: linear-gradient(to bottom, rgba(255, 132, 0, 0.8), rgba(200, 100, 0, 0.7)) !important;
+        color: white !important;
     }
 }
 
-.key {
-    display: inline-block;
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin-right: 10px;
-    font-family: monospace;
-    font-weight: bold;
-    font-size: 14px;
+.restart-button {
+    background: linear-gradient(to bottom, rgba(40, 40, 60, 0.7), rgba(30, 30, 45, 0.8)) !important;
 }
 </style>

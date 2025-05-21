@@ -1,6 +1,4 @@
-const {
-    VueLoaderPlugin
-} = require("vue-loader");
+const { VueLoaderPlugin } = require("vue-loader");
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -20,7 +18,7 @@ let webpackConfig = {
         port: 8000,
         // https: true
     },
-    devtool: sourceMap ? 'cheap-module-eval-source-map' : undefined,
+    devtool: sourceMap ? 'eval-source-map' : undefined,
     mode: 'development', // Explicitly set mode to development
     output: {
         filename: '[name].min.js',
@@ -88,15 +86,14 @@ let webpackConfig = {
             }]
         }, {
             test: /\.vue$/,
-            use: [
-                {
-                    loader: "vue-loader",
-                    options: {
-                        hot: true
+            use: [{
+                loader: "vue-loader",
+                options: {
+                    compilerOptions: {
+                        isCustomElement: tag => tag === 'v-app'
                     }
-
                 }
-            ],
+            }],
         }, {
             test: /\.(ttf|eot|svg|png|woff(2)?)(\?[a-z0-9]+)?$/,
             use: [{

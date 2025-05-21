@@ -1,20 +1,15 @@
 
-import "vuetify/dist/vuetify.min.css"
-
-import Vue from "vue"
-import Vuex from 'vuex'
-import Vuetify from 'vuetify'
+import * as Vue from "vue"
+import * as Pinia from 'pinia'
 import AppComponent from "./components/App.vue"
 
-// Setup Vue plugins
-Vue.use(Vuex)
-Vue.use(Vuetify, {
-	theme: {
-		primary: '#ff8400',
-		secondary: '#ffffff',
-		accent: '#ff8400',
-		error: '#b71c1c'
-	}
+// Create Pinia store
+export const useGameStore = Pinia.defineStore('game', {
+	state: () => ({
+		paused: false,
+		browserName: navigator.userAgent,
+		mobileDevice: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+	})
 })
 
 class App {
@@ -26,21 +21,13 @@ class App {
 
 		document.body.appendChild(this.dom);
 
-		new Vue({
-			el: this.dom,
-			render: createElement => {
-				const context = { props: {}, };
-				return createElement(AppComponent, context);
-			},
-			store: new Vuex.Store({
-				state: { paused: false },
-			}),
-			components: { App: AppComponent },
-			template: '<App/>'
-		})
+		// Create Vue 3 app with Pinia
+		const app = Vue.createApp(AppComponent);
+		const pinia = Pinia.createPinia();
+		app.use(pinia);
+		app.mount(this.dom);
 
 		console.log("%c Coded by @sanyabeast https://github.com/sanyabeast", "color: #f44336; font-weight: bold; font-family: monospace;")
-
 	}
 }
 
