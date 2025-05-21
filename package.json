@@ -33,7 +33,7 @@
     "sass-loader": "^13.3.2",
     "screenfull": "4.2.0",
     "style-loader": "^3.3.3",
-    "three": "^0.105.2",
+    "three": "^0.176.0",
     "ts-loader": "^9.4.4",
     "typescript": "^5.8.3",
     "vue": "2.6.10",

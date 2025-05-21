@@ -8,19 +8,19 @@ class ChunkBufferGeometry extends BufferGeometry {
     needsUpdate: boolean
 
     constructor(params) {
-        let fromPool = pool.pop()
+        // let fromPool = pool.pop()
 
-        if (fromPool) {
-            fromPool.update(params)
-            // console.log(fromPool)
-            return fromPool
-        }
+        // if (fromPool) {
+        //     fromPool.update(params)
+        //     // console.log(fromPool)
+        //     return fromPool
+        // }
 
         super()
 
-        this.addAttribute("position", new BufferAttribute(new Float32Array(params.points.length * 18), 3));
-        this.addAttribute("normal", new BufferAttribute(new Float32Array(params.points.length * 18), 3));
-        this.addAttribute("uv", new BufferAttribute(new Float32Array(params.points.length * 12), 2));
+        this.setAttribute("position", new BufferAttribute(new Float32Array(params.points.length * 18), 3));
+        this.setAttribute("normal", new BufferAttribute(new Float32Array(params.points.length * 18), 3));
+        this.setAttribute("uv", new BufferAttribute(new Float32Array(params.points.length * 12), 2));
 
         this.update(params)
     }
