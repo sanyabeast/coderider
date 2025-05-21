@@ -1,14 +1,5 @@
 import { AmbientLight, Color, DirectionalLight, DoubleSide, Group, Material, MeshStandardMaterial, Object3D, PerspectiveCamera, RepeatWrapping, Scene, Texture, TextureLoader, Vector2, Vector3, WebGLRenderer } from "three";
 
-import EffectComposer from "../three_fx/EffectComposer";
-import RenderPass from "../three_fx/passes/RenderPass";
-import CopyShader from "../three_fx/shaders/CopyShader";
-import ShaderPass from "../three_fx/passes/ShaderPass";
-import RGBShiftShader from "../three_fx/shaders/RGBShiftShader";
-import ColorCorrectionShader from "../three_fx/shaders/ColorCorrectionShader";
-import FilmPass from "../three_fx/passes/FilmPass";
-import UnrealBloomPass from "../three_fx/passes/UnrealBloomPass";
-
 import { Game } from "./game";
 import { isObject, isString, isUndefined } from "lodash-es";;
 import { makeGetter } from "@/Helpers";
@@ -43,7 +34,6 @@ export class RenderingSystem {
     public camera: PerspectiveCamera
 
     private scene: Scene
-    private composer: EffectComposer
     private renderer: WebGLRenderer
     private canvas: HTMLCanvasElement;
 
@@ -73,7 +63,7 @@ export class RenderingSystem {
         this.game = game
 
         // Create core rendering components
-        const { scene, camera, renderer, composer } = this.createRenderingCore();
+        const { scene, camera, renderer } = this.createRenderingCore();
         // Create scene structure with groups for different types of objects
         this._createSceneStructure(scene);
 
@@ -83,9 +73,6 @@ export class RenderingSystem {
         this.addToRenderGroup(ERenderGroup.Light, this.sunLight)
         this.addToRenderGroup(ERenderGroup.Light, this.ambLight)
 
-
-        // Set up post-processing effects
-        this.setupComposer();
 
         this.updateSize();
 
@@ -97,12 +84,7 @@ export class RenderingSystem {
 
 
     render() {
-        // Add safety check to prevent error when composer is not initialized
-        if (this.composer) {
-            this.composer.render();
-        } else {
-            this.renderer.render(this.scene, this.camera);
-        }
+        this.renderer.render(this.scene, this.camera);
     }
 
     addToScene(object3d: Object3D) {
@@ -206,7 +188,6 @@ export class RenderingSystem {
 
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
-        this.composer.setSize(width, height);
 
         console.log(`renderer size: ${width} - ${height}`);
     }
@@ -242,132 +223,9 @@ export class RenderingSystem {
         renderer.autoClearStencil = false;
         renderer.setClearColor(0xfff17f);
 
-        // Create effect composer for post-processing
-        const composer = this.composer = new EffectComposer(renderer);
 
-        return { scene, camera, renderer, composer };
+        return { scene, camera, renderer };
     }
-
-    private createPostProcessingPasses() {
-        // Basic render pass
-        const renderPass = new RenderPass(this.scene, this.camera);
-
-        // Color correction for better contrast and vibrancy
-        const colorCorPass = new ShaderPass(ColorCorrectionShader);
-        colorCorPass.uniforms.powRGB.value = new Vector3(1.1, 1.1, 1.15); // Slightly increase blue for sky
-        colorCorPass.uniforms.mulRGB.value = new Vector3(1.2, 1.15, 1.1); // Better contrast
-
-        // Subtle RGB shift for a slight chromatic aberration effect
-        const rgbsPass = new ShaderPass(RGBShiftShader);
-        rgbsPass.material.uniforms.amount.value = 0.0015; // Reduced for subtlety
-        rgbsPass.material.uniforms.angle.value = 0.5; // Angle of shift
-
-        // Minimal film grain without strong scanlines
-        // Parameters: (noise intensity, scanline intensity, scanline count, grayscale)
-        const filmPass = new FilmPass(0.15, 0.1, 480, false); // Reduced scanline intensity
-
-        // Almost imperceptible bloom effect
-        const bloomParams = {
-            strength: 0.05, // Reduced bloom strength
-            radius: 0.2,   // Small bloom radius
-            threshold: 0.95, // High threshold for subtle effect
-        };
-
-        const bloomPass = new UnrealBloomPass(
-            new Vector2(window.innerWidth, window.innerHeight),
-            bloomParams.strength,
-            bloomParams.radius,
-            bloomParams.threshold
-        );
-
-        // Final copy to screen
-        const copyPass = new ShaderPass(CopyShader);
-        copyPass.renderToScreen = true;
-
-        return { renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass, bloomParams };
-    }
-
-    /**
-     * Add passes to composer in the correct order
-     */
-    private addPassesToComposer(
-        renderPass: RenderPass,
-        bloomPass: UnrealBloomPass,
-        colorCorPass: ShaderPass,
-        rgbsPass: ShaderPass,
-        filmPass: FilmPass,
-        copyPass: ShaderPass
-    ) {
-        this.composer.addPass(renderPass);   // Render the scene
-        this.composer.addPass(bloomPass);    // Add bloom first
-        this.composer.addPass(colorCorPass); // Then correct colors
-        // this.composer.addPass(rgbsPass);     // Add subtle RGB shift
-        this.composer.addPass(filmPass);     // Add film grain last
-        this.composer.addPass(copyPass);     // Copy to screen
-    }
-
-    /**
-         * Set up post-processing effects composer
-         */
-    private setupComposer() {
-        // Create all post-processing passes
-        const { renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass, bloomParams } =
-            this.createPostProcessingPasses();
-
-        // Store passes for reference
-        this.storePostProcessingPasses(renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass);
-
-        // Configure pass properties and behavior
-        this._configurePassProperties(renderPass, colorCorPass, rgbsPass, bloomPass, filmPass, copyPass);
-
-        // Add passes to composer in correct order
-        this.addPassesToComposer(renderPass, bloomPass, colorCorPass, rgbsPass, filmPass, copyPass);
-
-    }
-
-
-    private storePostProcessingPasses(
-        renderPass: RenderPass,
-        colorCorPass: ShaderPass,
-        rgbsPass: ShaderPass,
-        bloomPass: UnrealBloomPass,
-        filmPass: FilmPass,
-        copyPass: ShaderPass
-    ) {
-        this.fxPasses = {
-            renderPass,
-            colorCorPass,
-            rgbsPass,
-            bloomPass,
-            filmPass,
-            copyPass,
-        };
-    }
-
-    private _configurePassProperties(
-        renderPass: RenderPass,
-        colorCorPass: ShaderPass,
-        rgbsPass: ShaderPass,
-        bloomPass: UnrealBloomPass,
-        filmPass: FilmPass,
-        copyPass: ShaderPass
-    ) {
-        // Configure render pass to not render to screen directly
-        makeGetter(
-            renderPass,
-            "renderToScreen",
-            () => false,
-            () => { }
-        );
-
-        // Enable all effect passes
-        makeGetter(
-            [colorCorPass, rgbsPass, bloomPass, filmPass, copyPass],
-            "enabled",
-            () => true
-        );
-    }
-
     private _createSceneStructure(scene: Scene) {
         // Create light group for scene-wide lights
         const lightRenderGroup = this.groups[ERenderGroup.Light] = new Group();
