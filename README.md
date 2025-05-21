@@ -17,17 +17,18 @@ A 2D platformer with dynamic lighting, physics, and visual effects.
 ## Controls
 
 - A/D or Left/Right arrows: Accelerate and brake
-- E: Respawn
-- Space: Pause
-- N: Toggle day/night
-- P: Toggle automatic day/night cycle
+- R: Respawn
+- Q: Revoke (reset car position)
+- Space: Pause/Resume
+- Escape: Close pause menu
 
 ## Tech Stack
 
 - Three.js: 3D rendering engine for visual effects
-- Vue.js: Frontend framework for UI and state management
+- Vue 3: Frontend framework for UI and state management
+- Pinia: State management (replacing Vuex)
 - Matter.js: 2D physics engine
-- GSAP (TweenMax): Animation library for smooth transitions
+- TypeScript: For type safety and better development experience
 
 ## Project Structure
 
@@ -40,11 +41,13 @@ The project uses a modular configuration system:
 
 ## Recent Updates
 
-- Modernized for compatibility with current Node.js versions
-- Added dynamic day/night cycle with smooth transitions
-- Implemented emission maps for glowing effects (using _e.png naming convention)
-- Ground and car positioned at same Z-coordinate for consistent lighting
-- English UI translation
+- Migrated from Vue 2 to Vue 3 with Composition API
+- Replaced Vuex with Pinia for state management
+- Modernized build system with latest Babel and webpack
+- Improved keyboard controls for better compatibility with different layouts
+- Refined UI with more compact and consistent styling
+- Simplified build configuration by removing unnecessary Babel plugins
+- Added TypeScript support throughout the codebase
 
 ## Development
 

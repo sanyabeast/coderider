@@ -3,13 +3,12 @@
     [
       "@babel/preset-env",
       {
-        "modules": false
+        "modules": false,
+        "targets": {
+          "browsers": ["last 2 versions", "not dead"]
+        }
       }
     ],
     "@babel/preset-typescript"
-  ],
-  "plugins": [
-    "@babel/plugin-syntax-dynamic-import",
-    "@babel/plugin-transform-class-properties"
   ]
 }
