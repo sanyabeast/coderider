@@ -125,7 +125,7 @@ export const daycycleConfig: {
       offset: new Vector3(32, -5, 0)
     },
     ambientIntensity: 0.5,
-    ambientColor: new Color(0x2200ff)
+    ambientColor: new Color(0x5749b6)
   }
 }
 

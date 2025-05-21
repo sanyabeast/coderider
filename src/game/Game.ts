@@ -109,10 +109,11 @@ export class Game {
         this.updateValues(delta, factor)
         this.updateThings(delta, factor);
         // this.updatePhysics(delta)
+        this.physicsSystem.update(delta)
     }
 
     private onFixedUpdate(delta: number, factor: number) {
-        this.physicsSystem.update(delta)
+
     }
 
     private updateValues(delta: number, factor: number) {

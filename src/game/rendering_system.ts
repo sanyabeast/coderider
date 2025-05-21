@@ -1,4 +1,17 @@
-import { AmbientLight, Color, DirectionalLight, DoubleSide, Group, Material, MeshStandardMaterial, Object3D, PerspectiveCamera, RepeatWrapping, Scene, Texture, TextureLoader, Vector2, Vector3, WebGLRenderer } from "three";
+import {
+    AmbientLight,
+    Color,
+    DirectionalLight,
+    DoubleSide, Group,
+    Material, MeshStandardMaterial,
+    Object3D, PerspectiveCamera,
+    RepeatWrapping, Scene, Texture,
+    TextureLoader, Vector2, Vector3,
+    WebGLRenderer, ACESFilmicToneMapping,
+    SRGBColorSpace,
+    ReinhardToneMapping,
+    CineonToneMapping,
+} from "three";
 
 import { Game } from "./game";
 import { isObject, isString, isUndefined } from "lodash-es";;
@@ -68,8 +81,8 @@ export class RenderingSystem {
         this._createSceneStructure(scene);
 
         // main lightings
-        this.sunLight = new DirectionalLight(0xffffff, 1);
-        this.ambLight = new AmbientLight(0x3300ff, 0.5);
+        this.sunLight = new DirectionalLight(0xffffff, 1.5); // Increased intensity
+        this.ambLight = new AmbientLight(0x6666ff, 0.8); // Increased intensity and adjusted color
         this.addToRenderGroup(ERenderGroup.Light, this.sunLight)
         this.addToRenderGroup(ERenderGroup.Light, this.ambLight)
 
@@ -114,7 +127,7 @@ export class RenderingSystem {
             roughnessMap: await this.loadTexture(params.texture, ETextureType.Roughness, { repeat: params.repeat, flipY: params.flipY }),
             metalnessMap: await this.loadTexture(params.texture, ETextureType.Metallness, { repeat: params.repeat, flipY: params.flipY }),
             side: DoubleSide,
-            emissiveIntensity: emissiveMap === null ? 0.0 : 1.0,
+            emissiveIntensity: emissiveMap === null ? 0.0 : 1.5, // Increased emissive intensity
             emissive: new Color(1, 1, 1),
             transparent: params.transparent,
             alphaTest: 0.5, // Needed for proper transparency in plants
@@ -212,16 +225,21 @@ export class RenderingSystem {
 
         // Create renderer
         const renderer = this.renderer = new WebGLRenderer({
-            antialias: false,
+            antialias: true,
             canvas: this.canvas,
         });
 
         // Configure renderer settings
-        renderer.autoClear = false;
-        renderer.autoClearColor = false;
-        renderer.autoClearDepth = false;
-        renderer.autoClearStencil = false;
+        // renderer.autoClear = false;
+        // renderer.autoClearColor = false;
+        // renderer.autoClearDepth = false;
+        // renderer.autoClearStencil = false;
         renderer.setClearColor(0xfff17f);
+
+        // Add tone mapping for better brightness and contrast
+        renderer.toneMapping = CineonToneMapping;
+        renderer.toneMappingExposure = 1.5; // Increase exposure for brighter scene
+        renderer.outputColorSpace = SRGBColorSpace; // Use sRGB encoding for more accurate colors
 
 
         return { scene, camera, renderer };

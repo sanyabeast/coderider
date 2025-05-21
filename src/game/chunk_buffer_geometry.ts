@@ -8,13 +8,13 @@ class ChunkBufferGeometry extends BufferGeometry {
     needsUpdate: boolean
 
     constructor(params) {
-        // let fromPool = pool.pop()
+        let fromPool = pool.pop()
 
-        // if (fromPool) {
-        //     fromPool.update(params)
-        //     // console.log(fromPool)
-        //     return fromPool
-        // }
+        if (fromPool) {
+            fromPool.update(params)
+            // console.log(fromPool)
+            return fromPool
+        }
 
         super()
 

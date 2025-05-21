@@ -45,6 +45,7 @@ export class PhysicsSystem {
 
     update(delta: number) {
         Matter.Engine.update(this.engine, delta * 1000);
+        // Matter.Engine.update(this.engine, 1000 / 60);
     }
 
     private setupMatterEngine() {

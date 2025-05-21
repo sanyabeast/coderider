@@ -26,7 +26,7 @@
     "howler": "2.1.2",
     "html-webpack-plugin": "^5.5.3",
     "lodash-es": "^4.17.21",
-    "matter-js": "0.14.2",
+    "matter-js": "0.20.0",
     "poly-decomp": "0.3.0",
     "raw-loader": "^4.0.2",
     "sass": "^1.63.6",

@@ -5,8 +5,8 @@
         @keyup.68.stop.prevent="engineActive = false" @keydown.65.stop.prevent="breakActive = true"
         @keyup.65.stop.prevent="breakActive = false"
         @keydown.space.stop.prevent="$store.state.paused = !$store.state.paused"
-        @keydown.27.stop.prevent="$store.state.paused = false;" @keydown.69.stop.prevent="game.respawn()"
-        @keydown.81.stop.prevent="game.revoke()" tabindex="-1">
+        @keydown.27.stop.prevent="$store.state.paused = false;" @keydown.69.stop.prevent="respawn()"
+        @keydown.81.stop.prevent="revoke()" tabindex="-1">
 
         <canvas ref="canvas"></canvas>
 
@@ -55,11 +55,19 @@ export default {
     },
     mounted() {
         this.game = new Game(this.$refs.root, this.$refs.canvas)
+    },
+    methods: {
+        revoke() {
+            this.game.revoke()
+        },
+        respawn() {
+            this.game.respawn()
+        }
     }
 }
 
 </script>
 
 <style lang="scss">
-    @import "../../res/sass/game.scss";
+@import "../../res/sass/game.scss";
 </style>
