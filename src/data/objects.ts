@@ -322,6 +322,17 @@ export const carObjectLayout: IGameObjectLayout = {
             "textureFlip": true,
             "geometry": "rectangle",
             "color": "#ffffff",
+            light: {
+                color: "#ffffff",
+                intensity: 16,
+                offset: {
+                    x: 64,
+                    y: 0,
+                    z: -1
+                },
+                distance: 500,
+                decay: 1
+            },
             "width": 80,
             "height": 32,
             "mass": 1,

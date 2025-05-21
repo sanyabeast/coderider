@@ -30,7 +30,3 @@ function onClick(evt: Event) {
     emit("click", {})
 }
 </script>
-
-<style lang="sass">
-
-</style>

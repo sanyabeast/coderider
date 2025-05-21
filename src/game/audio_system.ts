@@ -1,10 +1,12 @@
 import { Howl, Howler } from 'howler';
 
-const soundsContext = require.context("sounds")
+const soundsContext = require.context("audio")
 
 class SoundBlaster {
-	Howler: any;
-	sounds: {};
+	Howler: Howler;
+	sounds: {
+		[x: string]: Howl
+	};
 	constructor() {
 		this.sounds = {}
 		this.Howler = Howler
@@ -17,9 +19,8 @@ class SoundBlaster {
 			let name = path.split("/")[1].split(".")[0]
 
 			let sound = new Howl({
-				src: [`res/sounds/${name}.ogg`, `res/sounds/${name}.mp3`],
+				src: [`res/audio/${name}.ogg`, `res/audio/${name}.mp3`],
 				autoplay: false,
-				// loop: true,
 				html5: false
 			});
 
@@ -28,18 +29,17 @@ class SoundBlaster {
 
 	}
 
-
-	play(name, volume, loop) {
-		this.sounds[name].volume(volume || 0.333)
-		this.sounds[name].loop(loop || false)
+	play(name: string, volume: number = 0.333, loop: boolean = false) {
+		this.sounds[name].volume(volume)
+		this.sounds[name].loop(loop)
 		this.sounds[name].play()
 	}
 
-	stop(name) {
+	stop(name: string) {
 		this.sounds[name].stop()
 	}
 
-	mute(muted) {
+	mute(muted: boolean = true) {
 		this.Howler.mute(muted)
 	}
 }

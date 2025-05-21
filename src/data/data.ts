@@ -21,6 +21,17 @@ export interface IGameObjectPart {
   frictionAir?: number
   chamfer?: number
   opacity?: number
+  light?: {
+    color: string
+    intensity: number,
+    distance: number,
+    decay: number,
+    offset: {
+      x: number,
+      y: number,
+      z: number
+    }
+  },
   constraint?: IGameObjectPartConstraint
   constraints?: IGameObjectPartConstraint[]
   scale?: {
@@ -62,14 +73,11 @@ export interface IGameObjectLayout {
 export interface IDaycycleItem {
   sunOffset: Vector3
   sunColor: Color
-  skyColorB: Color
-  skyColor: Color
+  skyColor2: Color
+  skyColor1: Color
   sunIntensity: number
   ambientColor: Color
   ambientIntensity: number
-  grid: number
-  waves: number
-  amplitude: number
   headlight: {
     color: Color
     intensity: number
@@ -94,30 +102,24 @@ export const daycycleConfig: {
   day: {
     sunOffset: new Vector3(128, -1024, 1),
     sunColor: new Color(0xffffff),
-    skyColorB: new Color(0xcacaca),
-    skyColor: new Color(0xbdf8ff),
-    sunIntensity: 1,
-    grid: 3,
-    waves: 14,
-    amplitude: 0.4,
+    skyColor1: new Color(0xaeefff),        // Horizon (warm cyan-blue)
+    skyColor2: new Color(0x87ceeb),        // Zenith (clear sky blue)
+    sunIntensity: 1.2,
     headlight: {
       color: new Color(0xffcc88),
       intensity: 0.5,
       distance: 256,
       offset: new Vector3(32, -5, 0)
     },
-    ambientIntensity: 0.5,
-    ambientColor: new Color(0xffffff)
+    ambientIntensity: 0.65,
+    ambientColor: new Color(0xcfd8dc) // soft daylight bounce
   },
   night: {
     sunOffset: new Vector3(0, -128, 1),
     sunColor: new Color(0xc0cdff),
-    skyColorB: new Color(0x000000),
-    skyColor: new Color(0x111111),
+    skyColor1: new Color(0x050510),         // Horizon (near black with hint of blue)
+    skyColor2: new Color(0x0a0a30),         // Zenith (deep night blue)
     sunIntensity: 0.25,
-    grid: 3,
-    waves: 14,
-    amplitude: 0.4,
     headlight: {
       color: new Color(0xffcc88),
       intensity: 0.5,
@@ -221,3 +223,4 @@ export const config = {
 
 };
 
+export const chunkLength = renderingConfig.chunkSize * config.curve.pointsStep

@@ -123,8 +123,8 @@ let webpackConfig = {
         new CopyWebpackPlugin({
             patterns: [
                 { from: 'res/fonts', to: 'res/fonts' },
-                { from: 'res/pics', to: 'res/pics' },
-                { from: 'res/sounds', to: 'res/sounds' },
+                { from: 'res/textures', to: 'res/textures' },
+                { from: 'res/audio', to: 'res/audio' },
                 { from: 'res/shaders', to: 'res/shaders', noErrorOnMissing: true }
             ]
         }),

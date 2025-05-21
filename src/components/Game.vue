@@ -1,7 +1,5 @@
 <template>
-    <div ref="root" class="game root" tabindex="-1"
-        @keydown="handleKeyDown"
-        @keyup="handleKeyUp">
+    <div ref="root" class="game root" tabindex="-1" @keydown="handleKeyDown" @keyup="handleKeyUp">
 
         <canvas ref="canvas"></canvas>
 
@@ -63,14 +61,14 @@ function respawn() {
 function handleKeyDown(event: KeyboardEvent) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     // Arrow keys and WASD for engine/brake
     if (event.keyCode === 39 || event.keyCode === 68) { // Right arrow or D
         engineActive.value = true;
     } else if (event.keyCode === 37 || event.keyCode === 65) { // Left arrow or A
         breakActive.value = true;
     }
-    
+
     // Other controls
     if (event.keyCode === 32) { // Space
         togglePause();
@@ -86,7 +84,7 @@ function handleKeyDown(event: KeyboardEvent) {
 function handleKeyUp(event: KeyboardEvent) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     // Arrow keys and WASD for engine/brake
     if (event.keyCode === 39 || event.keyCode === 68) { // Right arrow or D
         engineActive.value = false;
@@ -108,5 +106,79 @@ Vue.defineExpose({
 </script>
 
 <style lang="scss">
-@import "../../res/sass/game.scss";
+.game {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
+
+    .svg-layer {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .matter-renderer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            background: 0% 0% / contain #0000007d !important;
+        }
+    }
+
+    .car-control {
+        position: absolute;
+        bottom: 36px;
+        width: 128px;
+        height: 80px;
+        background: #0000001f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+        border-radius: 8px;
+        transition: transform 0.1s ease-out;
+        transform-origin: bottom center;
+        cursor: pointer;
+
+        &:hover {
+            background-color: #00000033;
+        }
+
+        &.engine {
+            left: 64px;
+        }
+
+        &.break {
+            right: 64px;
+        }
+
+        &.active {
+            transform: translateY(16px);
+        }
+
+        p {
+            margin: 0;
+            color: #fff;
+            font-family: 'Montserrat';
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 18px;
+        }
+    }
+}
 </style>

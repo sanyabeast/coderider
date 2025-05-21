@@ -208,7 +208,7 @@ export class PhysicsSystem {
     }
 
 
-    freezeComposite(composite) {
+    freezeComposite(composite: Matter.Composite) {
         forEach(composite.bodies, (body) => {
             this.setVelocity(body, { x: 0, y: 0 });
             this.setAngularVelocity(body, 0);
@@ -232,4 +232,13 @@ export class PhysicsSystem {
             length: isNumber(length) ? length : 1
         });
     }
+
+
+    public spawnObject(object, position) {
+        this.setStatic(object.bodies[0], true);
+        this.setBodiesPosition(object.bodies, position);
+        this.setStatic(object.bodies[0], false);
+        this.freezeComposite(object);
+    }
+
 }
