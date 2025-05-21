@@ -79,10 +79,10 @@ let webpackConfig = {
         }, {
             test: /\.(mp3|ogg)$/,
             use: [{
-              loader: 'file-loader',
-              options: {
-                name: '[path][name].[ext]'
-              }
+                loader: 'file-loader',
+                options: {
+                    name: '[path][name].[ext]'
+                }
             }]
         }, {
             test: /\.vue$/,
