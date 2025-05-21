@@ -1,4 +1,4 @@
-import { forEach, isArray } from "lodash"
+import { forEach, isArray } from "lodash-es";
 import { Color, Vector3 } from "three";
 
 export function copytoClipboard(str) {

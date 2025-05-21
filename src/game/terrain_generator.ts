@@ -1,4 +1,4 @@
-import { forEach } from "lodash";
+import { forEach } from "lodash-es";;
 import { config, renderingConfig } from "../data/data";
 import { Point } from "./types";
 

@@ -60,6 +60,6 @@ export default {
 
 </script>
 
-<style lang="sass">
-    import "sass/game.scss"
+<style lang="scss">
+    @import "../../res/sass/game.scss";
 </style>

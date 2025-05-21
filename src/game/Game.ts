@@ -1,10 +1,9 @@
 import {
-    CircleBufferGeometry,
+    CircleGeometry,
     Color,
     Texture,
     DoubleSide,
     Mesh,
-    PlaneBufferGeometry,
     PlaneGeometry,
     ShaderMaterial,
     Vector3,
@@ -12,7 +11,7 @@ import {
 import AudioSystem from "./audio_system";
 
 import { config, daycycleConfig, landscapeSkins, cameraConfig, physicsConfig, renderingConfig } from "../data/data";
-import { forEach, isNumber } from "lodash";
+import { forEach, isNumber } from "lodash-es";;
 import ChunkBufferGeometry from "./chunk_buffer_geometry";
 import { TerrainGenerator } from "./terrain_generator";
 import { Point } from "./types";
@@ -464,14 +463,14 @@ export class Game {
 
             switch (bodyConfig.geometry) {
                 case "rectangle":
-                    geometry = new PlaneBufferGeometry(
+                    geometry = new PlaneGeometry(
                         bodyConfig.width,
                         bodyConfig.height,
                         1
                     );
                     break;
                 case "circle":
-                    geometry = new CircleBufferGeometry(bodyConfig.radius, 32);
+                    geometry = new CircleGeometry(bodyConfig.radius, 32);
                     break;
             }
 

@@ -10,7 +10,7 @@ import FilmPass from "../three_fx/passes/FilmPass";
 import UnrealBloomPass from "../three_fx/passes/UnrealBloomPass";
 
 import { Game } from "./game";
-import { isObject, isString, isUndefined } from "lodash";
+import { isObject, isString, isUndefined } from "lodash-es";;
 import { makeGetter } from "@/Helpers";
 
 const CAMERA_FOV = 90;

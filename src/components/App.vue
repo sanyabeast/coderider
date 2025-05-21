@@ -69,8 +69,8 @@ export default {
 
 </script>
 
-<style lang="sass">
-    import "sass/app.scss"
-    import "sass/fonts.scss"
-    import "sass/material-overrides.scss"
+<style lang="scss">
+    @import "../../res/sass/app.scss";
+    @import "../../res/sass/fonts.scss";
+    @import "../../res/sass/material-overrides.scss";
 </style>

@@ -3,6 +3,7 @@ const {
 } = require("vue-loader");
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpack = require('webpack');
 
 // Simplified configuration
@@ -121,6 +122,14 @@ let webpackConfig = {
             filename: path.join(__dirname, 'dist', 'index.html'),
             template: path.join(__dirname, 'static', 'index.html'),
             inject: true,
+        }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'res/fonts', to: 'res/fonts' },
+                { from: 'res/pics', to: 'res/pics' },
+                { from: 'res/sounds', to: 'res/sounds' },
+                { from: 'res/shaders', to: 'res/shaders', noErrorOnMissing: true }
+            ]
         }),
         new webpack.ProvidePlugin({
             "THREE": "three"

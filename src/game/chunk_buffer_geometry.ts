@@ -1,4 +1,4 @@
-import { forEach, forEachRight } from "lodash"
+import { forEach, forEachRight } from "lodash-es";
 import { BufferAttribute, BufferGeometry } from "three"
 
 let pool = []

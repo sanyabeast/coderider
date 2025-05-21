@@ -7,7 +7,7 @@ import CopyShader from "three_fx/shaders/CopyShader"
 import ShaderPass from "three_fx/passes/ShaderPass"
 import ClearMaskPass from "three_fx/passes/ClearMaskPass"
 import MaskPass from "three_fx/passes/MaskPass"
-import { forEach } from "lodash"
+import { forEach } from "lodash-es";
 
 class EffectComposer {
 
