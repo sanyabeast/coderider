@@ -13,9 +13,6 @@ import {
     ShaderMaterial,
     PlaneGeometry,
     Mesh,
-    DataTexture,
-    RGBFormat,
-    CubeTexture,
 } from "three";
 
 import { Game } from "./game";
