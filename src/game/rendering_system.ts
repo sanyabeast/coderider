@@ -19,6 +19,7 @@ import { Game } from "./game";
 import { isObject, isString, isUndefined } from "lodash-es";
 import { daycycleConfig } from "@/data/data";
 import { lerp, lerpColor, makeGetter } from "@/Helpers";
+import Matter from "matter-js";
 
 const CAMERA_FOV = 90;
 const DAYCYCLE_SPEED = 0.01
@@ -82,6 +83,7 @@ export class RenderingSystem {
             materials: {}
         }
 
+
     constructor(game: Game, params: { canvas: HTMLCanvasElement }) {
         this.canvas = params.canvas
         this.game = game
@@ -99,6 +101,7 @@ export class RenderingSystem {
 
         this.setupBackground()
         this.updateSize();
+
 
         // Add resize event listener
         window.addEventListener("resize", () => {
@@ -357,6 +360,17 @@ export class RenderingSystem {
         // Store reference and add to scene
         this.backgroundMesh = bg;
         this.addToScene(bg);
+    }
+
+    getViewSize(): { width: number; height: number } {
+        const cam = this.camera;
+        const z = cam.position.z;
+        const fovInRadians = cam.fov * (Math.PI / 180);
+
+        const height = 2 * Math.tan(fovInRadians / 2) * z;
+        const width = height * cam.aspect;
+
+        return { width: Math.abs(width), height: Math.abs(height) };
     }
 
 }

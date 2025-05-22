@@ -36,15 +36,65 @@ export interface IPhysicBodyParams {
 
 export class PhysicsSystem {
     game: Game;
-    engine: Matter.Engine;
+    private engine: Matter.Engine;
+
+    // matter render
+    private matterRenderer: Matter.Render
+    public rendering = false;
 
     constructor(game: Game) {
         this.game = game
         this.setupMatterEngine()
+
+
+        // matter renderer
+        this.matterRenderer = Matter.Render.create({
+            element: this.game.rootElement,
+            engine: this.engine,
+            options: {
+                width: 800,
+                height: 600,
+                wireframes: false, // set true to see wireframes only (useful for debugging)
+                background: 'transparent',
+            }
+        });
+
+        this.matterRenderer.canvas.style.position = "absolute"
+        this.matterRenderer.canvas.style.top = "0"
+        this.matterRenderer.canvas.style.left = "0"
+        this.matterRenderer.canvas.style.width = "100%"
+        this.matterRenderer.canvas.style.height = "100%"
+        this.matterRenderer.canvas.style.opacity = "0.5"
+        this.matterRenderer.canvas.style.pointerEvents = "none"
     }
 
     update(delta: number) {
         Matter.Engine.update(this.engine, delta * 1000);
+
+        // rendering
+        if (this.rendering) {
+            const { width, height } = this.game.renderingSystem.getViewSize();
+
+            const center = {
+                x: this.game.renderingSystem.camera.position.x,
+                y: this.game.renderingSystem.camera.position.y
+            };
+            const bounds = {
+                min: {
+                    x: center.x - width / 2,
+                    y: center.y - height / 2
+                },
+                max: {
+                    x: center.x + width / 2,
+                    y: center.y + height / 2
+                }
+            };
+
+            console.log(width, height)
+
+            Matter.Render.lookAt(this.matterRenderer, bounds);
+            Matter.Render.run(this.matterRenderer);
+        }
         // Matter.Engine.update(this.engine, 1000 / 60);
     }
 

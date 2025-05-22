@@ -21,7 +21,7 @@ import { Ticker } from "./ticker";
 
 
 export class Game {
-    private rootElement: HTMLElement;
+    public rootElement: HTMLElement;
 
     public renderingSystem: RenderingSystem
     public audioSystem: AudioSystem = new AudioSystem()
@@ -59,9 +59,9 @@ export class Game {
         this.rootElement = rootElement;
         this.ticker = new Ticker(this.onUpdate.bind(this), this.onFixedUpdate.bind(this))
         this.terrainManager = new TerrainManager(this);
-        this.renderingSystem = new RenderingSystem(this, { canvas })
         this.physicsSystem = new PhysicsSystem(this)
-
+        this.renderingSystem = new RenderingSystem(this, { canvas })
+        
         this.initialize()
         this.rootElement.focus();
 
